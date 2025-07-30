@@ -10,6 +10,7 @@ BidFlow is Uganda's premier contract intelligence and bid management platform. I
 - **Analytics Dashboard**: Track performance metrics, win rates, and market insights
 - **Competition Analysis**: Historical bid data and competitor insights
 - **Real-time Notifications**: Contract alerts and deadline reminders
+- **User Authentication**: Secure login and registration with Supabase
 
 ### Key Capabilities
 - **Contract Discovery**: Find relevant contracts with advanced search filters
@@ -24,6 +25,7 @@ BidFlow is Uganda's premier contract intelligence and bid management platform. I
 - **Language**: TypeScript
 - **Styling**: Tailwind CSS
 - **Icons**: Lucide React
+- **Authentication & Database**: Supabase
 - **Deployment**: Vercel-ready
 
 ## 📦 Installation
@@ -39,13 +41,141 @@ BidFlow is Uganda's premier contract intelligence and bid management platform. I
    npm install
    ```
 
-3. **Start the development server**
+3. **Set up Supabase**
+   - Create a Supabase project at [supabase.com](https://supabase.com)
+   - Get your project URL and anon key from Settings > API
+   - Copy `env.example` to `.env.local`
+   - Add your Supabase credentials to `.env.local`
+
+4. **Start the development server**
    ```bash
    npm run dev
    ```
 
-4. **Open your browser**
+5. **Open your browser**
    Navigate to [http://localhost:3000](http://localhost:3000)
+
+## 🔐 Supabase Setup
+
+### 1. Create Supabase Project
+1. Go to [supabase.com](https://supabase.com)
+2. Click "New Project"
+3. Choose your organization
+4. Enter project details:
+   - **Name**: bidflow-platform
+   - **Database Password**: (choose a strong password)
+   - **Region**: Choose closest to Uganda
+5. Click "Create new project"
+
+### 2. Get API Keys
+1. Go to Settings > API in your Supabase dashboard
+2. Copy the **Project URL** and **anon public** key
+3. Add them to your `.env.local` file:
+
+```env
+NEXT_PUBLIC_SUPABASE_URL=your_project_url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your_anon_key
+```
+
+### 3. Database Schema
+The platform uses the following tables:
+
+#### `profiles` table
+```sql
+CREATE TABLE profiles (
+  id UUID REFERENCES auth.users(id) PRIMARY KEY,
+  email TEXT UNIQUE NOT NULL,
+  first_name TEXT,
+  last_name TEXT,
+  company TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### `contracts` table
+```sql
+CREATE TABLE contracts (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  title TEXT NOT NULL,
+  client TEXT NOT NULL,
+  location TEXT NOT NULL,
+  value NUMERIC NOT NULL,
+  deadline DATE NOT NULL,
+  category TEXT NOT NULL,
+  description TEXT,
+  status TEXT DEFAULT 'open' CHECK (status IN ('open', 'closed', 'awarded')),
+  posted_date DATE DEFAULT CURRENT_DATE,
+  requirements TEXT[],
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### `bids` table
+```sql
+CREATE TABLE bids (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  contract_id UUID REFERENCES contracts(id) NOT NULL,
+  status TEXT DEFAULT 'active' CHECK (status IN ('active', 'submitted', 'won', 'lost')),
+  progress INTEGER DEFAULT 0 CHECK (progress >= 0 AND progress <= 100),
+  submitted_date DATE,
+  priority TEXT DEFAULT 'medium' CHECK (priority IN ('high', 'medium', 'low')),
+  notes TEXT,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
+  updated_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+#### `notifications` table
+```sql
+CREATE TABLE notifications (
+  id UUID DEFAULT gen_random_uuid() PRIMARY KEY,
+  user_id UUID REFERENCES auth.users(id) NOT NULL,
+  title TEXT NOT NULL,
+  message TEXT NOT NULL,
+  type TEXT DEFAULT 'info' CHECK (type IN ('info', 'warning', 'success', 'error')),
+  read BOOLEAN DEFAULT FALSE,
+  created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW()
+);
+```
+
+### 4. Row Level Security (RLS)
+Enable RLS and create policies:
+
+```sql
+-- Enable RLS on all tables
+ALTER TABLE profiles ENABLE ROW LEVEL SECURITY;
+ALTER TABLE contracts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE bids ENABLE ROW LEVEL SECURITY;
+ALTER TABLE notifications ENABLE ROW LEVEL SECURITY;
+
+-- Profiles: Users can only see their own profile
+CREATE POLICY "Users can view own profile" ON profiles
+  FOR SELECT USING (auth.uid() = id);
+
+CREATE POLICY "Users can update own profile" ON profiles
+  FOR UPDATE USING (auth.uid() = id);
+
+-- Contracts: Everyone can view contracts
+CREATE POLICY "Anyone can view contracts" ON contracts
+  FOR SELECT USING (true);
+
+-- Bids: Users can only see their own bids
+CREATE POLICY "Users can view own bids" ON bids
+  FOR SELECT USING (auth.uid() = user_id);
+
+CREATE POLICY "Users can insert own bids" ON bids
+  FOR INSERT WITH CHECK (auth.uid() = user_id);
+
+CREATE POLICY "Users can update own bids" ON bids
+  FOR UPDATE USING (auth.uid() = user_id);
+
+-- Notifications: Users can only see their own notifications
+CREATE POLICY "Users can view own notifications" ON notifications
+  FOR SELECT USING (auth.uid() = user_id);
+```
 
 ## 🏗️ Project Structure
 
@@ -62,6 +192,14 @@ src/
 │   ├── globals.css         # Global styles
 │   ├── layout.tsx          # Root layout
 │   └── page.tsx            # Landing page
+├── components/              # Reusable components
+│   └── ProtectedRoute.tsx  # Authentication protection
+├── contexts/               # React contexts
+│   └── AuthContext.tsx     # Authentication state
+├── lib/                    # Utility libraries
+│   └── supabase.ts         # Supabase client
+└── types/                  # TypeScript types
+    └── database.ts         # Database schema types
 ```
 
 ## 🎯 Key Pages
@@ -71,10 +209,16 @@ src/
 - Feature highlights and pricing
 - Call-to-action for registration
 
+### Authentication (`/login`, `/register`)
+- Secure user registration and login
+- Form validation and error handling
+- Supabase authentication integration
+
 ### Dashboard (`/dashboard`)
 - Overview metrics and recent activity
 - Quick access to key features
 - Recent contracts and notifications
+- Protected by authentication
 
 ### Contracts (`/dashboard/contracts`)
 - Advanced search and filtering
@@ -119,6 +263,10 @@ The project is configured for easy deployment on Vercel:
    vercel --prod
    ```
 
+3. **Add environment variables** in Vercel dashboard:
+   - `NEXT_PUBLIC_SUPABASE_URL`
+   - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
+
 ## 🔧 Development
 
 ### Available Scripts
@@ -135,22 +283,21 @@ The project is configured for easy deployment on Vercel:
 
 ## 📊 Data Structure
 
-The platform uses mock data for demonstration, including:
-- **Contracts**: Title, client, value, deadline, requirements
-- **Bids**: Status, progress, notes, priority
-- **Analytics**: Performance metrics, trends, insights
-- **Users**: Company information and preferences
+The platform uses Supabase for data storage:
+- **Users**: Authentication and profile information
+- **Contracts**: Government and private sector contracts
+- **Bids**: User bid tracking and status
+- **Notifications**: Real-time alerts and updates
 
 ## 🔮 Future Enhancements
 
-- **Database Integration**: PostgreSQL with Prisma ORM
-- **Authentication**: NextAuth.js with multiple providers
 - **Payment Integration**: Flutterwave API implementation
 - **Real-time Updates**: WebSocket connections
 - **Advanced Analytics**: Chart.js or D3.js visualizations
 - **API Development**: RESTful API for mobile apps
 - **Email Notifications**: Nodemailer integration
 - **File Upload**: Contract document management
+- **Mobile App**: React Native application
 
 ## 🤝 Contributing
 
