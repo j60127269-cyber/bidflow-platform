@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Search, TrendingUp, Bell, BarChart3, Users, Award } from "lucide-react";
+import { Search, TrendingUp, Bell, BarChart3, Users, Award, CheckCircle, Star, ArrowRight } from "lucide-react";
 
 export default function Home() {
   return (
@@ -26,28 +26,43 @@ export default function Home() {
                 </Link>
               </div>
             </div>
+            {/* Mobile menu button */}
+            <div className="md:hidden">
+              <button className="text-slate-600 hover:text-blue-600">
+                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
+                </svg>
+              </button>
+            </div>
           </div>
         </div>
       </nav>
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
-        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-24">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="text-center">
-            <h1 className="text-4xl md:text-6xl font-bold text-slate-900 mb-6">
+            <div className="mb-8">
+              <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-4">
+                <Star className="w-4 h-4 mr-2" />
+                Trusted by 500+ Ugandan businesses
+              </span>
+            </div>
+            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
               Win More Contracts with
-              <span className="text-blue-600"> Data-Driven Intelligence</span>
+              <span className="text-blue-600 block"> Data-Driven Intelligence</span>
             </h1>
-            <p className="text-xl text-slate-600 mb-8 max-w-3xl mx-auto">
+            <p className="text-lg sm:text-xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               Uganda's premier contract intelligence platform. Track contracts, analyze competition, 
               and make informed bidding decisions with real-time data and analytics.
             </p>
-            <div className="flex flex-col sm:flex-row gap-4 justify-center">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link 
                 href="/register" 
-                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors"
+                className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
               >
                 Start Free Trial
+                <ArrowRight className="w-5 h-5 ml-2 inline" />
               </Link>
               <Link 
                 href="#demo" 
@@ -56,8 +71,25 @@ export default function Home() {
                 Watch Demo
               </Link>
             </div>
+            
+            {/* Stats */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto">
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600 mb-2">500+</div>
+                <div className="text-slate-600">Active Users</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600 mb-2">2,000+</div>
+                <div className="text-slate-600">Contracts Tracked</div>
+              </div>
+              <div className="text-center">
+                <div className="text-3xl font-bold text-blue-600 mb-2">85%</div>
+                <div className="text-slate-600">Success Rate</div>
+              </div>
+            </div>
+            
             <div className="mt-8 text-sm text-slate-500">
-              <span className="font-semibold text-blue-600">30,000 UGX</span> per month • No setup fees
+              <span className="font-semibold text-blue-600">30,000 UGX</span> per month • No setup fees • 7-day free trial
             </div>
           </div>
         </div>
@@ -77,7 +109,7 @@ export default function Home() {
           </div>
 
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
-            <div className="bg-slate-50 p-8 rounded-xl">
+            <div className="bg-slate-50 p-8 rounded-xl hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mb-6">
                 <Search className="w-6 h-6 text-blue-600" />
               </div>
@@ -88,7 +120,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="bg-slate-50 p-8 rounded-xl">
+            <div className="bg-slate-50 p-8 rounded-xl hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mb-6">
                 <TrendingUp className="w-6 h-6 text-green-600" />
               </div>
@@ -99,7 +131,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="bg-slate-50 p-8 rounded-xl">
+            <div className="bg-slate-50 p-8 rounded-xl hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mb-6">
                 <Bell className="w-6 h-6 text-purple-600" />
               </div>
@@ -110,7 +142,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="bg-slate-50 p-8 rounded-xl">
+            <div className="bg-slate-50 p-8 rounded-xl hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-orange-100 rounded-lg flex items-center justify-center mb-6">
                 <BarChart3 className="w-6 h-6 text-orange-600" />
               </div>
@@ -121,7 +153,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="bg-slate-50 p-8 rounded-xl">
+            <div className="bg-slate-50 p-8 rounded-xl hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-red-100 rounded-lg flex items-center justify-center mb-6">
                 <Users className="w-6 h-6 text-red-600" />
               </div>
@@ -132,7 +164,7 @@ export default function Home() {
               </p>
             </div>
 
-            <div className="bg-slate-50 p-8 rounded-xl">
+            <div className="bg-slate-50 p-8 rounded-xl hover:shadow-lg transition-shadow">
               <div className="w-12 h-12 bg-indigo-100 rounded-lg flex items-center justify-center mb-6">
                 <Award className="w-6 h-6 text-indigo-600" />
               </div>
@@ -146,8 +178,84 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Testimonials Section */}
+      <section className="py-24 bg-slate-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="text-center mb-16">
+            <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
+              Trusted by Leading Businesses
+            </h2>
+            <p className="text-xl text-slate-600 max-w-2xl mx-auto">
+              See how BidFlow is helping Ugandan companies win more contracts
+            </p>
+          </div>
+
+          <div className="grid md:grid-cols-3 gap-8">
+            <div className="bg-white p-8 rounded-xl shadow-sm">
+              <div className="flex items-center mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                ))}
+              </div>
+              <p className="text-slate-600 mb-6">
+                "BidFlow has transformed how we approach contract bidding. We've increased our win rate by 40% in just 6 months."
+              </p>
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-blue-600 font-semibold">JK</span>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900">John Kato</div>
+                  <div className="text-sm text-slate-500">Construction Manager, Kampala Builders</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-xl shadow-sm">
+              <div className="flex items-center mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                ))}
+              </div>
+              <p className="text-slate-600 mb-6">
+                "The competition analysis feature is incredible. We now know exactly what to expect and can price our bids competitively."
+              </p>
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-green-600 font-semibold">SM</span>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900">Sarah Muwonge</div>
+                  <div className="text-sm text-slate-500">CEO, Tech Solutions Uganda</div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white p-8 rounded-xl shadow-sm">
+              <div className="flex items-center mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 text-yellow-400 fill-current" />
+                ))}
+              </div>
+              <p className="text-slate-600 mb-6">
+                "Real-time notifications ensure we never miss a deadline. The platform has streamlined our entire bidding process."
+              </p>
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-purple-600 font-semibold">DN</span>
+                </div>
+                <div>
+                  <div className="font-semibold text-slate-900">David Nalukenge</div>
+                  <div className="text-sm text-slate-500">Procurement Director, Uganda Logistics</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Pricing Section */}
-      <section id="pricing" className="py-24 bg-slate-50">
+      <section id="pricing" className="py-24 bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
@@ -159,7 +267,12 @@ export default function Home() {
           </div>
 
           <div className="max-w-md mx-auto">
-            <div className="bg-white rounded-2xl shadow-xl p-8 border border-slate-200">
+            <div className="bg-gradient-to-br from-blue-50 to-indigo-50 rounded-2xl shadow-xl p-8 border border-blue-200 relative">
+              <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
+                <span className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
+                  Most Popular
+                </span>
+              </div>
               <div className="text-center">
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Professional Plan</h3>
                 <div className="mb-6">
@@ -169,46 +282,60 @@ export default function Home() {
                 </div>
                 <ul className="text-left space-y-4 mb-8">
                   <li className="flex items-center">
-                    <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
                     Unlimited contract searches
                   </li>
                   <li className="flex items-center">
-                    <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
                     Advanced analytics & insights
                   </li>
                   <li className="flex items-center">
-                    <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
                     Real-time notifications
                   </li>
                   <li className="flex items-center">
-                    <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
                     Team collaboration tools
                   </li>
                   <li className="flex items-center">
-                    <div className="w-5 h-5 bg-green-100 rounded-full flex items-center justify-center mr-3">
-                      <div className="w-2 h-2 bg-green-600 rounded-full"></div>
-                    </div>
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
                     Mobile money & card payments
+                  </li>
+                  <li className="flex items-center">
+                    <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                    Priority customer support
                   </li>
                 </ul>
                 <Link 
                   href="/register" 
-                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors block"
+                  className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-6 rounded-lg font-semibold transition-colors block shadow-lg hover:shadow-xl transform hover:-translate-y-0.5"
                 >
                   Start Free Trial
+                  <ArrowRight className="w-5 h-5 ml-2 inline" />
                 </Link>
                 <p className="text-sm text-slate-500 mt-4">7-day free trial, no credit card required</p>
               </div>
             </div>
           </div>
+        </div>
+      </section>
+
+      {/* CTA Section */}
+      <section className="py-24 bg-blue-600">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+          <h2 className="text-3xl md:text-4xl font-bold text-white mb-4">
+            Ready to Win More Contracts?
+          </h2>
+          <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
+            Join hundreds of Ugandan businesses already using BidFlow to increase their contract win rates.
+          </p>
+          <Link 
+            href="/register" 
+            className="bg-white text-blue-600 hover:bg-slate-100 px-8 py-4 rounded-lg text-lg font-semibold transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 inline-flex items-center"
+          >
+            Get Started Today
+            <ArrowRight className="w-5 h-5 ml-2" />
+          </Link>
         </div>
       </section>
 

@@ -48,8 +48,8 @@ BidFlow is Uganda's premier contract intelligence and bid management platform. I
    - Add your Supabase credentials to `.env.local`
 
 4. **Start the development server**
-   ```bash
-   npm run dev
+```bash
+npm run dev
    ```
 
 5. **Open your browser**
