@@ -300,11 +300,11 @@ export default function Home() {
                   <li className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
                     Mobile money & card payments
-                  </li>
+          </li>
                   <li className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
                     Priority customer support
-                  </li>
+          </li>
                 </ul>
                 <Link 
                   href="/register" 

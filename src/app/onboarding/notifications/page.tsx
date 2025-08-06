@@ -281,23 +281,6 @@ export default function OnboardingNotifications() {
             </div>
           </div>
 
-          {/* Preview */}
-          <div className="bg-blue-50 rounded-xl p-6 mb-8">
-            <h3 className="font-semibold text-slate-900 mb-3">Preview of your notifications:</h3>
-            <div className="space-y-3">
-              <div className="bg-white p-3 rounded-lg border">
-                <div className="text-sm font-medium text-slate-900">New Construction Contract</div>
-                <div className="text-xs text-slate-600">Road construction project in Kampala - 5M UGX</div>
-                <div className="text-xs text-blue-600 mt-1">Deadline: 15 days</div>
-              </div>
-              <div className="bg-white p-3 rounded-lg border">
-                <div className="text-sm font-medium text-slate-900">Competition Update</div>
-                <div className="text-xs text-slate-600">3 new bidders for IT consulting contract</div>
-                <div className="text-xs text-blue-600 mt-1">Market trend alert</div>
-              </div>
-            </div>
-          </div>
-
           {/* Navigation */}
           <div className="flex justify-between">
             <button
