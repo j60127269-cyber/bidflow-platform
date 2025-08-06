@@ -28,7 +28,9 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      router.push("/dashboard");
+      // Check if user has completed onboarding (we'll implement this later)
+      // For now, redirect to onboarding for all users
+      router.push('/onboarding/welcome');
     }
   };
 

@@ -49,8 +49,8 @@ export default function RegisterPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      // Redirect to dashboard or show success message
-      router.push("/dashboard");
+      // Redirect to onboarding instead of dashboard
+      router.push('/onboarding/welcome');
     }
   };
 
