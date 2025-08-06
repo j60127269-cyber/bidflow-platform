@@ -44,39 +44,39 @@ export default function OnboardingSubscription() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50">
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 z-50">
-        <div className="bg-white border-b border-slate-200">
+        <div className="bg-white border-b border-gray-200">
           <div className="max-w-4xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
+                  <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     1
                   </div>
-                  <span className="text-sm text-slate-500">Welcome</span>
+                  <span className="text-sm text-gray-500">Welcome</span>
                 </div>
-                <div className="w-8 h-0.5 bg-slate-300"></div>
+                <div className="w-8 h-0.5 bg-gray-300"></div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
+                  <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     2
                   </div>
-                  <span className="text-sm text-slate-500">Preferences</span>
+                  <span className="text-sm text-gray-500">Preferences</span>
                 </div>
-                <div className="w-8 h-0.5 bg-slate-300"></div>
+                <div className="w-8 h-0.5 bg-gray-300"></div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
+                  <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     3
                   </div>
-                  <span className="text-sm text-slate-500">Notifications</span>
+                  <span className="text-sm text-gray-500">Notifications</span>
                 </div>
-                <div className="w-8 h-0.5 bg-slate-300"></div>
+                <div className="w-8 h-0.5 bg-gray-300"></div>
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
                     4
                   </div>
-                  <span className="text-sm font-medium text-slate-900">Subscription</span>
+                  <span className="text-sm font-medium text-gray-900">Subscription</span>
                 </div>
               </div>
             </div>
@@ -88,16 +88,16 @@ export default function OnboardingSubscription() {
       <div className="pt-20 pb-12">
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 mb-4">
+            <h1 className="text-3xl font-bold text-gray-900 mb-4">
               Choose Your Plan
             </h1>
-            <p className="text-lg text-slate-600">
+            <p className="text-lg text-gray-600">
               Choose your plan and unlock all BidFlow features
             </p>
           </div>
 
           {/* Single Pricing Card */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8 relative border">
+          <div className="card p-8 mb-8 relative border">
             {/* Popular Badge */}
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
               <span className="bg-blue-600 text-white px-4 py-2 rounded-full text-sm font-semibold">
@@ -107,11 +107,11 @@ export default function OnboardingSubscription() {
             
             {/* Plan Title & Price */}
             <div className="text-center mb-8">
-              <h2 className="text-2xl font-bold text-slate-900 mb-2">Basic</h2>
+              <h2 className="text-2xl font-bold text-gray-900 mb-2">Basic</h2>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-slate-900">30,000</span>
-                <span className="text-slate-600"> UGX</span>
-                <span className="text-slate-500 text-sm">/month</span>
+                <span className="text-4xl font-bold text-blue-600">30,000</span>
+                <span className="text-gray-600"> UGX</span>
+                <span className="text-gray-500 text-sm">/month</span>
               </div>
             </div>
 
@@ -120,7 +120,7 @@ export default function OnboardingSubscription() {
               {features.map((feature, index) => (
                 <div key={index} className="flex items-center">
                   <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0" />
-                  <span className="text-slate-700">{feature}</span>
+                  <span className="text-gray-700">{feature}</span>
                 </div>
               ))}
             </div>
@@ -136,7 +136,7 @@ export default function OnboardingSubscription() {
 
             {/* Subscription Info */}
             <div className="mt-6 text-center">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-gray-600">
                 Cancel anytime • No setup fees
               </p>
             </div>
@@ -146,7 +146,7 @@ export default function OnboardingSubscription() {
           <div className="text-center">
             <button
               onClick={handleSkip}
-              className="text-slate-600 hover:text-slate-800 transition-colors"
+              className="text-gray-600 hover:text-gray-800 transition-colors"
             >
               Skip for now
             </button>
@@ -159,8 +159,8 @@ export default function OnboardingSubscription() {
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Welcome to BidFlow!</h3>
-                <p className="text-slate-600 mb-4">
+                <h3 className="text-xl font-bold text-gray-900 mb-2">Welcome to BidFlow!</h3>
+                <p className="text-gray-600 mb-4">
                   Your account has been created successfully. Redirecting to your dashboard...
                 </p>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
@@ -172,7 +172,7 @@ export default function OnboardingSubscription() {
           <div className="flex justify-between mt-8">
             <button
               onClick={handleBack}
-              className="flex items-center px-6 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
+              className="flex items-center px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back

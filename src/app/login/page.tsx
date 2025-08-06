@@ -45,11 +45,11 @@ export default function LoginPage() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50 flex items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <div className="flex justify-center mb-6">
-            <div className="w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center">
+            <div className="w-16 h-16 bg-blue-600 rounded-2xl flex items-center justify-center">
               <svg className="w-8 h-8 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
@@ -57,7 +57,7 @@ export default function LoginPage() {
           </div>
           <h2 className="text-3xl font-bold text-gray-900 mb-2">
             Welcome back to
-            <span className="text-gradient"> BidFlow</span>
+            <span className="text-blue-600"> BidFlow</span>
           </h2>
           <p className="text-gray-600">
             Sign in to your account to continue
@@ -133,14 +133,14 @@ export default function LoginPage() {
                   id="remember-me"
                   name="remember-me"
                   type="checkbox"
-                  className="h-4 w-4 text-indigo-600 focus:ring-indigo-500 border-gray-300 rounded"
+                  className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
                 />
                 <label htmlFor="remember-me" className="ml-2 block text-sm text-gray-700">
                   Remember me
                 </label>
               </div>
               <div className="text-sm">
-                <a href="#" className="font-medium text-indigo-600 hover:text-indigo-500">
+                <a href="#" className="font-medium text-blue-600 hover:text-blue-500">
                   Forgot your password?
                 </a>
               </div>
@@ -198,7 +198,7 @@ export default function LoginPage() {
           <div className="mt-8 text-center">
             <p className="text-sm text-gray-600">
               Don't have an account?{" "}
-              <Link href="/register" className="font-medium text-indigo-600 hover:text-indigo-500">
+              <Link href="/register" className="font-medium text-blue-600 hover:text-blue-500">
                 Sign up
               </Link>
             </p>

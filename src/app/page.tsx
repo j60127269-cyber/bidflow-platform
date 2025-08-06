@@ -64,17 +64,17 @@ const stats = [
 
 export default function HomePage() {
   return (
-    <div className="min-h-screen bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50">
       {/* Navigation */}
       <nav className="relative z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="flex justify-between items-center py-6">
             <div className="flex items-center">
               <div className="flex items-center space-x-2">
-                <div className="w-10 h-10 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center">
+                <div className="w-10 h-10 bg-blue-600 rounded-xl flex items-center justify-center">
                   <Shield className="w-6 h-6 text-white" />
                 </div>
-                <span className="text-2xl font-bold text-gradient">BidFlow</span>
+                <span className="text-2xl font-bold text-blue-600">BidFlow</span>
               </div>
             </div>
             <div className="hidden md:flex items-center space-x-8">
@@ -96,13 +96,13 @@ export default function HomePage() {
 
       {/* Hero Section */}
       <section className="relative pt-20 pb-32 overflow-hidden">
-        <div className="absolute inset-0 bg-gradient-to-br from-indigo-600/10 via-purple-600/10 to-pink-600/10"></div>
+        <div className="absolute inset-0 bg-gradient-to-br from-blue-600/10 via-sky-600/10 to-indigo-600/10"></div>
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center">
             <div className="animate-fade-in-up">
               <h1 className="text-5xl md:text-7xl font-bold text-gray-900 mb-6">
                 Win More
-                <span className="text-gradient"> Contracts</span>
+                <span className="text-blue-600"> Contracts</span>
               </h1>
               <p className="text-xl md:text-2xl text-gray-600 mb-8 max-w-3xl mx-auto">
                 Uganda's premier contract intelligence platform. Discover opportunities, track competition, and boost your win rate with data-driven insights.
@@ -122,7 +122,7 @@ export default function HomePage() {
             <div className="grid grid-cols-2 md:grid-cols-4 gap-8 mt-16">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center animate-fade-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
-                  <div className="text-3xl md:text-4xl font-bold text-gradient mb-2">{stat.number}</div>
+                  <div className="text-3xl md:text-4xl font-bold text-blue-600 mb-2">{stat.number}</div>
                   <div className="text-gray-600">{stat.label}</div>
                 </div>
               ))}
@@ -137,7 +137,7 @@ export default function HomePage() {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Everything You Need to
-              <span className="text-gradient"> Succeed</span>
+              <span className="text-blue-600"> Succeed</span>
             </h2>
             <p className="text-xl text-gray-600 max-w-2xl mx-auto">
               Powerful tools designed specifically for the Ugandan market to help you find, track, and win more contracts.
@@ -147,7 +147,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
             {features.map((feature, index) => (
               <div key={index} className="card card-hover p-8 animate-fade-in-up" style={{ animationDelay: `${index * 0.1}s` }}>
-                <div className="w-12 h-12 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-xl flex items-center justify-center mb-6">
+                <div className="w-12 h-12 bg-blue-600 rounded-xl flex items-center justify-center mb-6">
                   <feature.icon className="w-6 h-6 text-white" />
                 </div>
                 <h3 className="text-xl font-semibold text-gray-900 mb-4">{feature.title}</h3>
@@ -164,7 +164,7 @@ export default function HomePage() {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Trusted by
-              <span className="text-gradient"> Leading Businesses</span>
+              <span className="text-blue-600"> Leading Businesses</span>
             </h2>
             <p className="text-xl text-gray-600">
               See what our customers are saying about BidFlow
@@ -196,7 +196,7 @@ export default function HomePage() {
           <div className="text-center mb-16">
             <h2 className="text-4xl font-bold text-gray-900 mb-4">
               Simple,
-              <span className="text-gradient"> Transparent</span> Pricing
+              <span className="text-blue-600"> Transparent</span> Pricing
             </h2>
             <p className="text-xl text-gray-600">
               Start winning more contracts today
@@ -205,7 +205,7 @@ export default function HomePage() {
 
           <div className="card p-8 relative">
             <div className="absolute -top-4 left-1/2 transform -translate-x-1/2">
-              <span className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white px-6 py-2 rounded-full text-sm font-semibold">
+              <span className="bg-blue-600 text-white px-6 py-2 rounded-full text-sm font-semibold">
                 Most Popular
               </span>
             </div>
@@ -213,7 +213,7 @@ export default function HomePage() {
             <div className="text-center mb-8">
               <h3 className="text-2xl font-bold text-gray-900 mb-2">Professional Plan</h3>
               <div className="mb-6">
-                <span className="text-5xl font-bold text-gradient">30,000</span>
+                <span className="text-5xl font-bold text-blue-600">30,000</span>
                 <span className="text-gray-600 text-xl"> UGX</span>
                 <span className="text-gray-500">/month</span>
               </div>
@@ -248,16 +248,16 @@ export default function HomePage() {
       </section>
 
       {/* CTA Section */}
-      <section className="py-20 bg-gradient-to-r from-indigo-600 to-purple-600">
+      <section className="py-20 bg-blue-600">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
           <h2 className="text-4xl font-bold text-white mb-6">
             Ready to Transform Your
             <span className="text-yellow-300"> Bidding Strategy?</span>
           </h2>
-          <p className="text-xl text-indigo-100 mb-8">
+          <p className="text-xl text-blue-100 mb-8">
             Join 500+ businesses already winning more contracts with BidFlow
           </p>
-          <Link href="/register" className="bg-white text-indigo-600 hover:bg-gray-50 font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-lg">
+          <Link href="/register" className="bg-white text-blue-600 hover:bg-gray-50 font-semibold py-4 px-8 rounded-xl shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 transition-all duration-200 text-lg">
             Start Your Free Trial
             <ArrowRight className="w-5 h-5 ml-2 inline" />
           </Link>
@@ -270,7 +270,7 @@ export default function HomePage() {
           <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
             <div>
               <div className="flex items-center space-x-2 mb-4">
-                <div className="w-8 h-8 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-lg flex items-center justify-center">
+                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
                   <Shield className="w-5 h-5 text-white" />
                 </div>
                 <span className="text-xl font-bold">BidFlow</span>
