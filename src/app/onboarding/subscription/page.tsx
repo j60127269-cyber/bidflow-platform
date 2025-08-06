@@ -92,7 +92,7 @@ export default function OnboardingSubscription() {
               Choose Your Plan
             </h1>
             <p className="text-lg text-slate-600">
-              Start your free trial and unlock all BidFlow features
+              Choose your plan and unlock all BidFlow features
             </p>
           </div>
 
@@ -131,13 +131,13 @@ export default function OnboardingSubscription() {
               disabled={loading}
               className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed"
             >
-              {loading ? "Processing..." : "Start Basic Plan"}
+              {loading ? "Processing..." : "Subscribe Now"}
             </button>
 
-            {/* Trial Info */}
+            {/* Subscription Info */}
             <div className="mt-6 text-center">
               <p className="text-sm text-slate-600">
-                7-day free trial • Cancel anytime
+                Cancel anytime • No setup fees
               </p>
             </div>
           </div>
