@@ -1,25 +1,25 @@
 import { 
+  BarChart3, 
   TrendingUp, 
   TrendingDown, 
   DollarSign, 
   Target, 
   Award,
   Calendar,
-  Users,
-  BarChart3,
-  PieChart,
-  Activity
+  Users
 } from "lucide-react";
 
 export default function AnalyticsPage() {
-  // Mock analytics data
-  const overviewStats = [
+  // Sample analytics data
+  const stats = [
     {
       name: "Total Bids",
-      value: "156",
-      change: "+12%",
+      value: "12",
+      change: "+2",
       changeType: "positive",
       icon: Target,
+      color: "text-blue-600",
+      bgColor: "bg-blue-50",
     },
     {
       name: "Win Rate",
@@ -27,6 +27,8 @@ export default function AnalyticsPage() {
       change: "+5%",
       changeType: "positive",
       icon: Award,
+      color: "text-green-600",
+      bgColor: "bg-green-50",
     },
     {
       name: "Total Value",
@@ -34,58 +36,51 @@ export default function AnalyticsPage() {
       change: "+18%",
       changeType: "positive",
       icon: DollarSign,
+      color: "text-purple-600",
+      bgColor: "bg-purple-50",
     },
     {
       name: "Active Bids",
-      value: "12",
-      change: "-2",
+      value: "3",
+      change: "-1",
       changeType: "negative",
       icon: Calendar,
+      color: "text-orange-600",
+      bgColor: "bg-orange-50",
     },
   ];
 
   const categoryPerformance = [
-    { category: "Construction", bids: 45, wins: 32, value: "1.2M UGX" },
-    { category: "Technology", bids: 28, wins: 18, value: "450K UGX" },
-    { category: "Healthcare", bids: 22, wins: 15, value: "380K UGX" },
-    { category: "Agriculture", bids: 35, wins: 24, value: "220K UGX" },
-    { category: "Energy", bids: 18, wins: 12, value: "150K UGX" },
+    { category: "Construction", bids: 5, wins: 3, value: "1.2M UGX" },
+    { category: "Technology", bids: 3, wins: 2, value: "450K UGX" },
+    { category: "Healthcare", bids: 2, wins: 1, value: "380K UGX" },
+    { category: "Agriculture", bids: 2, wins: 1, value: "220K UGX" },
   ];
 
   const monthlyTrends = [
-    { month: "Jan", bids: 12, wins: 8, value: "180K UGX" },
-    { month: "Feb", bids: 15, wins: 10, value: "220K UGX" },
-    { month: "Mar", bids: 18, wins: 12, value: "280K UGX" },
-    { month: "Apr", bids: 14, wins: 9, value: "200K UGX" },
-    { month: "May", bids: 20, wins: 14, value: "320K UGX" },
-    { month: "Jun", bids: 16, wins: 11, value: "250K UGX" },
-  ];
-
-  const topClients = [
-    { name: "Uganda National Roads Authority", contracts: 8, value: "850K UGX" },
-    { name: "Ministry of ICT", contracts: 6, value: "420K UGX" },
-    { name: "Mulago National Hospital", contracts: 5, value: "380K UGX" },
-    { name: "Ministry of Agriculture", contracts: 4, value: "220K UGX" },
-    { name: "National Water Corporation", contracts: 3, value: "180K UGX" },
+    { month: "Jan", bids: 2, wins: 1, value: "180K UGX" },
+    { month: "Feb", bids: 3, wins: 2, value: "220K UGX" },
+    { month: "Mar", bids: 4, wins: 3, value: "280K UGX" },
+    { month: "Apr", bids: 3, wins: 2, value: "200K UGX" },
   ];
 
   return (
     <div className="space-y-6">
-      {/* Page header */}
+      {/* Page Header */}
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Analytics</h1>
         <p className="mt-1 text-sm text-slate-600">
-          Track your bidding performance and market insights
+          Track your bidding performance and insights
         </p>
       </div>
 
-      {/* Overview stats */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-        {overviewStats.map((stat) => (
+      {/* Overview Stats */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+        {stats.map((stat) => (
           <div key={stat.name} className="bg-white rounded-lg shadow p-6">
             <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <stat.icon className="h-8 w-8 text-slate-400" />
+              <div className={`flex-shrink-0 w-12 h-12 ${stat.bgColor} rounded-lg flex items-center justify-center`}>
+                <stat.icon className={`h-6 w-6 ${stat.color}`} />
               </div>
               <div className="ml-4 flex-1">
                 <p className="text-sm font-medium text-slate-600">{stat.name}</p>
@@ -108,7 +103,7 @@ export default function AnalyticsPage() {
         ))}
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         {/* Category Performance */}
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-slate-200">
@@ -166,36 +161,8 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Top Clients */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-medium text-slate-900">Top Clients</h3>
-        </div>
-        <div className="divide-y divide-slate-200">
-          {topClients.map((client, index) => (
-            <div key={client.name} className="px-6 py-4">
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3">
-                    <span className="text-blue-600 text-sm font-medium">{index + 1}</span>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-slate-900">{client.name}</h4>
-                    <p className="text-xs text-slate-500">{client.contracts} contracts</p>
-                  </div>
-                </div>
-                <div className="text-right">
-                  <div className="text-sm font-medium text-slate-900">{client.value}</div>
-                  <div className="text-xs text-slate-500">Total value</div>
-                </div>
-              </div>
-            </div>
-          ))}
-        </div>
-      </div>
-
       {/* Insights */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+      <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
         <div className="bg-white rounded-lg shadow">
           <div className="px-6 py-4 border-b border-slate-200">
             <h3 className="text-lg font-medium text-slate-900">Key Insights</h3>
@@ -206,21 +173,21 @@ export default function AnalyticsPage() {
                 <div className="w-2 h-2 bg-green-400 rounded-full mt-2 mr-3"></div>
                 <div>
                   <p className="text-sm font-medium text-slate-900">Construction sector shows highest win rate</p>
-                  <p className="text-xs text-slate-500">71% success rate in road and building projects</p>
+                  <p className="text-xs text-slate-500">60% success rate in construction projects</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <div className="w-2 h-2 bg-blue-400 rounded-full mt-2 mr-3"></div>
                 <div>
                   <p className="text-sm font-medium text-slate-900">Technology bids increasing</p>
-                  <p className="text-xs text-slate-500">15% more IT contracts this quarter</p>
+                  <p className="text-xs text-slate-500">67% success rate in IT projects</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <div className="w-2 h-2 bg-yellow-400 rounded-full mt-2 mr-3"></div>
                 <div>
                   <p className="text-sm font-medium text-slate-900">Healthcare sector opportunity</p>
-                  <p className="text-xs text-slate-500">High demand for medical equipment suppliers</p>
+                  <p className="text-xs text-slate-500">50% success rate, room for improvement</p>
                 </div>
               </div>
             </div>
@@ -237,21 +204,21 @@ export default function AnalyticsPage() {
                 <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3"></div>
                 <div>
                   <p className="text-sm font-medium text-slate-900">Focus on construction projects</p>
-                  <p className="text-xs text-slate-500">Your expertise in this area yields best results</p>
+                  <p className="text-xs text-slate-500">Your expertise yields best results</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3"></div>
                 <div>
-                  <p className="text-sm font-medium text-slate-900">Expand healthcare portfolio</p>
-                  <p className="text-xs text-slate-500">Growing market with less competition</p>
+                  <p className="text-sm font-medium text-slate-900">Improve healthcare bidding</p>
+                  <p className="text-xs text-slate-500">Research requirements more thoroughly</p>
                 </div>
               </div>
               <div className="flex items-start">
                 <div className="w-2 h-2 bg-purple-400 rounded-full mt-2 mr-3"></div>
                 <div>
-                  <p className="text-sm font-medium text-slate-900">Improve bid preparation time</p>
-                  <p className="text-xs text-slate-500">Earlier submissions show higher success rates</p>
+                  <p className="text-sm font-medium text-slate-900">Submit bids earlier</p>
+                  <p className="text-xs text-slate-500">Earlier submissions show higher success</p>
                 </div>
               </div>
             </div>
@@ -259,28 +226,24 @@ export default function AnalyticsPage() {
         </div>
       </div>
 
-      {/* Quick Actions */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-medium text-slate-900">Analytics Tools</h3>
-        </div>
-        <div className="p-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <button className="flex items-center justify-center px-4 py-3 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-              <BarChart3 className="h-5 w-5 mr-2" />
-              Export Report
-            </button>
-            <button className="flex items-center justify-center px-4 py-3 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-              <PieChart className="h-5 w-5 mr-2" />
-              Detailed Analysis
-            </button>
-            <button className="flex items-center justify-center px-4 py-3 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 hover:bg-slate-50 transition-colors">
-              <Activity className="h-5 w-5 mr-2" />
-              Performance Tracking
-            </button>
-          </div>
+      {/* Empty State */}
+      <div className="bg-white rounded-lg shadow p-12 text-center">
+        <BarChart3 className="h-12 w-12 text-slate-400 mx-auto mb-4" />
+        <h3 className="text-lg font-medium text-slate-900 mb-2">Start tracking your performance</h3>
+        <p className="text-slate-600 mb-6">
+          Track your first bid to see analytics and insights
+        </p>
+        <div className="flex justify-center space-x-4">
+          <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+            <Target className="w-4 h-4 mr-2" />
+            Track New Bid
+          </button>
+          <button className="inline-flex items-center px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
+            <Users className="w-4 h-4 mr-2" />
+            View Examples
+          </button>
         </div>
       </div>
     </div>
   );
-} 
+}

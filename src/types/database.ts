@@ -115,6 +115,41 @@ export interface Database {
           updated_at?: string
         }
       }
+      bid_tracking: {
+        Row: {
+          id: string
+          user_id: string
+          contract_id: string
+          email_alerts: boolean
+          sms_alerts: boolean
+          push_alerts: boolean
+          tracking_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          user_id: string
+          contract_id: string
+          email_alerts?: boolean
+          sms_alerts?: boolean
+          push_alerts?: boolean
+          tracking_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          user_id?: string
+          contract_id?: string
+          email_alerts?: boolean
+          sms_alerts?: boolean
+          push_alerts?: boolean
+          tracking_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+      }
       notifications: {
         Row: {
           id: string

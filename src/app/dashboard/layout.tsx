@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, usePathname } from "next/navigation";
 import ProtectedRoute from "@/components/ProtectedRoute";
 import { 
   Search, 
@@ -19,8 +19,12 @@ import {
   FileText,
   Target,
   Calendar,
-  Bell as BellIcon
+  Bookmark,
+  ChevronDown,
+  User,
+  Star
 } from "lucide-react";
+import { useState } from "react";
 
 export default function DashboardLayout({
   children,
@@ -29,6 +33,9 @@ export default function DashboardLayout({
 }) {
   const { user, signOut } = useAuth();
   const router = useRouter();
+  const pathname = usePathname();
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const handleSignOut = async () => {
     await signOut();
@@ -57,138 +64,169 @@ export default function DashboardLayout({
     return user.email || "";
   };
 
+  // Navigation items with active state
+  const navigation = [
+    { name: 'Dashboard', href: '/dashboard', icon: Home, current: pathname === '/dashboard' },
+    { name: 'Recommended', href: '/dashboard/recommended', icon: Star, current: pathname === '/dashboard/recommended' },
+    { name: 'My Bids', href: '/dashboard/tracking', icon: Target, current: pathname.startsWith('/dashboard/tracking') },
+    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, current: pathname.startsWith('/dashboard/analytics') },
+  ];
+
   return (
     <ProtectedRoute>
       <div className="min-h-screen bg-slate-50">
-        {/* Mobile sidebar overlay */}
-        <div className="fixed inset-0 z-40 lg:hidden" style={{ display: 'none' }}>
-          <div className="fixed inset-0 bg-slate-600 bg-opacity-75"></div>
-        </div>
-
-        {/* Sidebar */}
-        <div className="fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-xl transform -translate-x-full lg:translate-x-0 lg:static lg:inset-0">
-          <div className="flex items-center justify-between h-16 px-4 border-b border-slate-200">
+        {/* Header */}
+        <header className="bg-white shadow-sm border-b border-slate-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div className="flex items-center justify-between h-16">
+              {/* Logo and primary navigation */}
+              <div className="flex items-center">
             <Link href="/dashboard" className="flex items-center">
               <h1 className="text-xl font-bold text-blue-600">BidFlow</h1>
             </Link>
-            <button className="lg:hidden">
-              <X className="h-6 w-6 text-slate-400" />
-            </button>
-          </div>
 
-          <nav className="mt-8 px-4">
-            <div className="space-y-1">
+                {/* Desktop navigation */}
+                <nav className="hidden md:flex ml-10 space-x-8">
+                  {navigation.map((item) => (
               <Link
-                href="/dashboard"
-                className="flex items-center px-3 py-2 text-sm font-medium text-slate-900 rounded-lg hover:bg-slate-100 transition-colors"
-              >
-                <Home className="mr-3 h-5 w-5" />
-                Dashboard
+                      key={item.name}
+                      href={item.href}
+                      className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
+                        item.current
+                          ? 'text-blue-600 bg-blue-50'
+                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                      }`}
+                    >
+                      <item.icon className="mr-2 h-4 w-4" />
+                      {item.name}
               </Link>
-              <Link
-                href="/dashboard/contracts"
-                className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors"
-              >
-                <FileText className="mr-3 h-5 w-5" />
-                Contracts
-              </Link>
-              <Link
-                href="/dashboard/tracking"
-                className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors"
-              >
-                <Target className="mr-3 h-5 w-5" />
-                Track Bids
-              </Link>
-              <Link
-                href="/dashboard/analytics"
-                className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors"
-              >
-                <BarChart3 className="mr-3 h-5 w-5" />
-                Analytics
-              </Link>
-              <Link
-                href="/dashboard/calendar"
-                className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors"
-              >
-                <Calendar className="mr-3 h-5 w-5" />
-                Calendar
-              </Link>
-              <Link
-                href="/dashboard/team"
-                className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors"
-              >
-                <Users className="mr-3 h-5 w-5" />
-                Team
-              </Link>
-            </div>
+                  ))}
+                </nav>
+              </div>
 
-            <div className="mt-8 pt-8 border-t border-slate-200">
-              <div className="space-y-1">
+              {/* Right side - Search, notifications, user menu */}
+              <div className="flex items-center space-x-4">
+                {/* Search */}
+                <div className="hidden lg:block relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                    <Search className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search contracts, clients..."
+                    className="block w-64 pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+
+                {/* Notifications */}
+                <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
+                  <Bell className="h-5 w-5" />
+                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
+                </button>
+
+                {/* User menu */}
+                <div className="relative">
+                  <button
+                    onClick={() => setUserMenuOpen(!userMenuOpen)}
+                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                  >
+                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
+                      <span className="text-white text-sm font-medium">{getUserInitials()}</span>
+                    </div>
+                    <div className="hidden md:block text-left">
+                      <div className="text-sm font-medium text-slate-900">{getUserName()}</div>
+                      <div className="text-xs text-slate-500">{getUserEmail()}</div>
+                    </div>
+                    <ChevronDown className="h-4 w-4 text-slate-400" />
+                  </button>
+
+                  {/* User dropdown menu */}
+                  {userMenuOpen && (
+                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
+                      <div className="px-4 py-2 border-b border-slate-100">
+                        <div className="text-sm font-medium text-slate-900">{getUserName()}</div>
+                        <div className="text-xs text-slate-500">{getUserEmail()}</div>
+                      </div>
+              <Link
+                        href="/dashboard/profile"
+                        className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        <User className="mr-3 h-4 w-4" />
+                        Profile
+              </Link>
                 <Link
                   href="/dashboard/settings"
-                  className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                        className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                        onClick={() => setUserMenuOpen(false)}
                 >
-                  <Settings className="mr-3 h-5 w-5" />
+                        <Settings className="mr-3 h-4 w-4" />
                   Settings
                 </Link>
                 <button 
                   onClick={handleSignOut}
-                  className="flex items-center w-full px-3 py-2 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-100 hover:text-slate-900 transition-colors"
+                        className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
                 >
-                  <LogOut className="mr-3 h-5 w-5" />
+                        <LogOut className="mr-3 h-4 w-4" />
                   Sign out
                 </button>
               </div>
-            </div>
-          </nav>
+                  )}
         </div>
 
-        {/* Main content */}
-        <div className="lg:pl-64">
-          {/* Top header */}
-          <div className="sticky top-0 z-30 bg-white border-b border-slate-200">
-            <div className="flex items-center justify-between h-16 px-4 sm:px-6 lg:px-8">
-              <div className="flex items-center">
-                <button className="lg:hidden mr-4">
+                {/* Mobile menu button */}
+                <button
+                  className="md:hidden"
+                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                >
                   <Menu className="h-6 w-6 text-slate-400" />
                 </button>
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-5 w-5 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search contracts..."
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                  <BellIcon className="h-6 w-6" />
-                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
-                </button>
-                <div className="flex items-center space-x-3">
-                  <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                    <span className="text-white text-sm font-medium">{getUserInitials()}</span>
-                  </div>
-                  <div className="hidden md:block">
-                    <div className="text-sm font-medium text-slate-900">{getUserName()}</div>
-                    <div className="text-xs text-slate-500">{getUserEmail()}</div>
-                  </div>
-                </div>
               </div>
             </div>
           </div>
 
-          {/* Page content */}
-          <main className="py-6">
-            <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Mobile search */}
+          <div className="lg:hidden border-t border-slate-200 px-4 py-3">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <Search className="h-4 w-4 text-slate-400" />
+                  </div>
+                  <input
+                    type="text"
+                placeholder="Search contracts, clients..."
+                    className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                  />
+                </div>
+              </div>
+        </header>
+
+        {/* Mobile menu */}
+        {mobileMenuOpen && (
+          <div className="md:hidden">
+            <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-b border-slate-200">
+              {navigation.map((item) => (
+                <Link
+                  key={item.name}
+                  href={item.href}
+                  className={`flex items-center px-3 py-2 text-base font-medium rounded-md transition-colors ${
+                    item.current
+                      ? 'text-blue-600 bg-blue-50'
+                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
+                  }`}
+                  onClick={() => setMobileMenuOpen(false)}
+                >
+                  <item.icon className="mr-3 h-5 w-5" />
+                  {item.name}
+                </Link>
+              ))}
+                  </div>
+                </div>
+        )}
+
+        {/* Main content */}
+        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
               {children}
-            </div>
           </main>
-        </div>
       </div>
     </ProtectedRoute>
   );
