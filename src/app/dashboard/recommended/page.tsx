@@ -127,7 +127,7 @@ export default function RecommendedPage() {
 
     let filtered = contracts.map(contract => {
       let score = 0;
-      let reasons: string[] = [];
+             const reasons: string[] = [];
 
       // Category match (40% weight)
       if (userProfile.preferred_categories && userProfile.preferred_categories.includes(contract.category)) {
@@ -208,8 +208,8 @@ export default function RecommendedPage() {
       });
     }
 
-    // Sort by recommendation score (highest first)
-    filtered.sort((a, b) => (b as any).recommendationScore - (a as any).recommendationScore);
+         // Sort by recommendation score (highest first)
+     filtered.sort((a, b) => (b as { recommendationScore: number }).recommendationScore - (a as { recommendationScore: number }).recommendationScore);
 
     setFilteredContracts(filtered);
   }, [contracts, userProfile, searchTerm, selectedCategory, selectedLocation, selectedValue]);
@@ -323,9 +323,9 @@ export default function RecommendedPage() {
               </div>
             </div>
             <div className="text-right">
-              <div className="text-2xl font-bold text-blue-600">
-                {filteredContracts.filter(c => (c as any).recommendationScore >= 60).length}
-              </div>
+                             <div className="text-2xl font-bold text-blue-600">
+                 {filteredContracts.filter(c => (c as { recommendationScore: number }).recommendationScore >= 60).length}
+               </div>
               <div className="text-sm text-slate-600">Good Matches</div>
             </div>
           </div>
@@ -417,9 +417,9 @@ export default function RecommendedPage() {
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {filteredContracts.map((contract) => {
-            const score = (contract as any).recommendationScore || 0;
-            const reasons = (contract as any).recommendationReasons || [];
+                     {filteredContracts.map((contract) => {
+             const score = (contract as { recommendationScore: number }).recommendationScore || 0;
+             const reasons = (contract as { recommendationReasons: string[] }).recommendationReasons || [];
             
             return (
                              <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200">
