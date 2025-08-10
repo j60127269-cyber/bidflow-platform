@@ -91,39 +91,39 @@ export default function OnboardingNotifications() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 via-sky-50 to-indigo-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
       {/* Progress Bar */}
       <div className="fixed top-0 left-0 right-0 z-50">
-        <div className="bg-white border-b border-gray-200">
+        <div className="bg-white border-b border-slate-200">
           <div className="max-w-4xl mx-auto px-4 py-3">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-4">
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">
+                  <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     1
                   </div>
-                  <span className="text-sm text-gray-500">Welcome</span>
+                  <span className="text-sm text-slate-500">Welcome</span>
                 </div>
-                <div className="w-8 h-0.5 bg-gray-300"></div>
+                <div className="w-8 h-0.5 bg-slate-300"></div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">
+                  <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     2
                   </div>
-                  <span className="text-sm text-gray-500">Preferences</span>
+                  <span className="text-sm text-slate-500">Preferences</span>
                 </div>
-                <div className="w-8 h-0.5 bg-gray-300"></div>
+                <div className="w-8 h-0.5 bg-slate-300"></div>
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
                     3
                   </div>
-                  <span className="text-sm font-medium text-gray-900">Notifications</span>
+                  <span className="text-sm font-medium text-slate-900">Notifications</span>
                 </div>
-                <div className="w-8 h-0.5 bg-gray-300"></div>
+                <div className="w-8 h-0.5 bg-slate-300"></div>
                 <div className="flex items-center space-x-2">
-                  <div className="w-8 h-8 bg-gray-200 text-gray-500 rounded-full flex items-center justify-center text-sm font-semibold">
+                  <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     4
                   </div>
-                  <span className="text-sm text-gray-500">Subscription</span>
+                  <span className="text-sm text-slate-500">Subscription</span>
                 </div>
               </div>
             </div>
@@ -135,31 +135,31 @@ export default function OnboardingNotifications() {
       <div className="pt-20 pb-12">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
-            <h1 className="text-3xl font-bold text-gray-900 mb-4">
+            <h1 className="text-3xl font-bold text-slate-900 mb-4">
               Stay Informed About Opportunities
             </h1>
-            <p className="text-lg text-gray-600">
+            <p className="text-lg text-slate-600">
               Choose how you'd like to receive notifications about new contracts and updates
             </p>
           </div>
 
-          <div className="card p-8 mb-8">
+          <div className="bg-white rounded-2xl shadow-lg p-8 mb-8">
             {/* Notification Channels */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-6">
+              <h2 className="text-xl font-semibold text-slate-900 mb-6">
                 How would you like to receive notifications?
               </h2>
               
               <div className="space-y-4">
                 {/* Email Notifications */}
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-blue-100 rounded-lg flex items-center justify-center mr-4">
                       <Mail className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">Email Notifications</h3>
-                      <p className="text-sm text-gray-600">Receive updates at {user?.email}</p>
+                      <h3 className="font-semibold text-slate-900">Email Notifications</h3>
+                      <p className="text-sm text-slate-600">Receive updates at {user?.email}</p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -169,19 +169,19 @@ export default function OnboardingNotifications() {
                       onChange={(e) => setEmailNotifications(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
 
                 {/* WhatsApp Notifications */}
-                <div className="flex items-center justify-between p-4 border border-gray-200 rounded-lg">
+                <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
                   <div className="flex items-center">
                     <div className="w-10 h-10 bg-green-100 rounded-lg flex items-center justify-center mr-4">
                       <MessageCircle className="w-5 h-5 text-green-600" />
                     </div>
                     <div>
-                      <h3 className="font-semibold text-gray-900">WhatsApp Notifications</h3>
-                      <p className="text-sm text-gray-600">Get instant messages on WhatsApp</p>
+                      <h3 className="font-semibold text-slate-900">WhatsApp Notifications</h3>
+                      <p className="text-sm text-slate-600">Get instant messages on WhatsApp</p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -191,7 +191,7 @@ export default function OnboardingNotifications() {
                       onChange={(e) => setWhatsappNotifications(e.target.checked)}
                       className="sr-only peer"
                     />
-                    <div className="w-11 h-6 bg-gray-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
+                    <div className="w-11 h-6 bg-slate-200 peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-300 rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-blue-600"></div>
                   </label>
                 </div>
               </div>
@@ -199,20 +199,20 @@ export default function OnboardingNotifications() {
               {/* WhatsApp Number Input */}
               {whatsappNotifications && (
                 <div className="mt-4 p-4 bg-green-50 border border-green-200 rounded-lg">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-slate-700 mb-2">
                     WhatsApp Number
                   </label>
                   <div className="flex items-center">
-                    <span className="text-gray-500 mr-2">+256</span>
+                    <span className="text-slate-500 mr-2">+256</span>
                     <input
                       type="tel"
                       value={whatsappNumber}
                       onChange={(e) => setWhatsappNumber(formatWhatsAppNumber(e.target.value))}
                       placeholder="Enter your phone number"
-                      className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     />
                   </div>
-                  <p className="text-xs text-gray-500 mt-1">
+                  <p className="text-xs text-slate-500 mt-1">
                     We'll send you a test message to verify your number
                   </p>
                 </div>
@@ -221,7 +221,7 @@ export default function OnboardingNotifications() {
 
             {/* Notification Types */}
             <div className="mb-8">
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">
                 What would you like to be notified about?
               </h2>
               
@@ -232,7 +232,7 @@ export default function OnboardingNotifications() {
                     className={`p-4 border rounded-lg cursor-pointer transition-colors ${
                       selectedTypes.includes(type.id)
                         ? 'border-blue-500 bg-blue-50'
-                        : 'border-gray-200 hover:border-gray-300'
+                        : 'border-slate-200 hover:border-slate-300'
                     }`}
                     onClick={() => handleNotificationTypeToggle(type.id)}
                   >
@@ -240,15 +240,15 @@ export default function OnboardingNotifications() {
                       <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 ${
                         selectedTypes.includes(type.id)
                           ? 'bg-blue-600 text-white'
-                          : 'border-2 border-gray-300'
+                          : 'border-2 border-slate-300'
                       }`}>
                         {selectedTypes.includes(type.id) && (
                           <CheckCircle className="w-4 h-4" />
                         )}
                       </div>
                       <div>
-                        <h3 className="font-semibold text-gray-900 mb-1">{type.title}</h3>
-                        <p className="text-sm text-gray-600">{type.description}</p>
+                        <h3 className="font-semibold text-slate-900 mb-1">{type.title}</h3>
+                        <p className="text-sm text-slate-600">{type.description}</p>
                       </div>
                     </div>
                   </div>
@@ -258,7 +258,7 @@ export default function OnboardingNotifications() {
 
             {/* Notification Frequency */}
             <div>
-              <h2 className="text-xl font-semibold text-gray-900 mb-4">
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">
                 How often would you like to receive notifications?
               </h2>
               
@@ -270,7 +270,7 @@ export default function OnboardingNotifications() {
                     className={`p-4 rounded-lg border text-left transition-colors ${
                       frequency === freq.value
                         ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-gray-200 hover:border-gray-300'
+                        : 'border-slate-200 hover:border-slate-300'
                     }`}
                   >
                     <div className="font-medium">{freq.label}</div>
@@ -285,7 +285,7 @@ export default function OnboardingNotifications() {
           <div className="flex justify-between">
             <button
               onClick={handleBack}
-              className="flex items-center px-6 py-3 border border-gray-300 rounded-lg hover:bg-gray-50 transition-colors"
+              className="flex items-center px-6 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
@@ -293,7 +293,7 @@ export default function OnboardingNotifications() {
             <button
               onClick={handleContinue}
               disabled={loading}
-              className="btn-primary"
+              className="flex items-center px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loading ? "Saving..." : "Continue"}
               <ArrowRight className="w-4 h-4 ml-2" />
