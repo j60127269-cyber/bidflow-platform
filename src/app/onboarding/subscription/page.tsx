@@ -50,19 +50,25 @@ export default function OnboardingSubscription() {
     resetPaymentState();
     
     try {
-      await initializePayment('Professional');
+      // Start free trial immediately without payment
+      if (user) {
+        const trialStarted = await subscriptionService.startTrial(user.id, 7);
+        
+        if (trialStarted) {
+          // Redirect to dashboard with trial active
+          router.push('/dashboard');
+        } else {
+          throw new Error('Failed to start trial');
+        }
+      }
     } catch (error) {
-      console.error('Payment initialization error:', error);
+      console.error('Trial start error:', error);
       setLoading(false);
     }
   };
 
   const handleBack = () => {
     router.push('/onboarding/notifications');
-  };
-
-  const handleSkip = () => {
-    router.push('/dashboard');
   };
 
   // If user already has active subscription, show success state
@@ -199,11 +205,29 @@ export default function OnboardingSubscription() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-slate-900 mb-4">
-              Choose Your Plan
+              Start Your Free Trial
             </h1>
             <p className="text-lg text-slate-600">
-              Choose your plan and unlock all BidFlow features
+              Get 7 days free access to all BidFlow features - no payment required
             </p>
+          </div>
+
+          {/* Free Trial Banner */}
+          <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-2xl p-6 mb-8">
+            <div className="text-center">
+              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
+                <Zap className="w-6 h-6 text-green-600" />
+              </div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                7-Day Free Trial
+              </h3>
+              <p className="text-slate-600 mb-3">
+                Try all features risk-free. No payment required during trial.
+              </p>
+              <div className="text-sm text-slate-500">
+                After trial: <strong>20,000 UGX/month</strong>
+              </div>
+            </div>
           </div>
 
           {/* Single Pricing Card */}
@@ -219,6 +243,7 @@ export default function OnboardingSubscription() {
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-slate-900 mb-2">Professional</h2>
               <div className="mb-6">
+                <div className="text-sm text-slate-500 mb-2">Free for 7 days, then</div>
                 <span className="text-4xl font-bold text-slate-900">20,000</span>
                 <span className="text-slate-600"> UGX</span>
                 <span className="text-slate-500 text-sm">/month</span>
@@ -266,7 +291,7 @@ export default function OnboardingSubscription() {
                   Processing...
                 </>
               ) : (
-                'Subscribe Now'
+                'Start Free Trial'
               )}
             </button>
 
@@ -280,19 +305,9 @@ export default function OnboardingSubscription() {
             {/* Subscription Info */}
             <div className="mt-6 text-center">
               <p className="text-sm text-slate-600">
-                Cancel anytime • No setup fees • Secure payment via Flutterwave
+                No payment during trial • Cancel anytime • Secure payment via Flutterwave after trial
               </p>
             </div>
-          </div>
-
-          {/* Skip Option */}
-          <div className="text-center">
-            <button
-              onClick={handleSkip}
-              className="text-slate-600 hover:text-slate-800 transition-colors"
-            >
-              Skip for now
-            </button>
           </div>
 
           {/* Success Message */}

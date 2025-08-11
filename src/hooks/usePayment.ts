@@ -3,6 +3,7 @@ import { useAuth } from '@/contexts/AuthContext';
 import { flutterwaveService } from '@/lib/flutterwaveService';
 import { subscriptionService } from '@/lib/subscriptionService';
 import { FlutterwavePaymentData } from '@/lib/flutterwaveService';
+import { supabase } from '@/lib/supabase';
 
 interface PaymentState {
   loading: boolean;
@@ -129,7 +130,7 @@ export const usePayment = (): UsePaymentReturn => {
         const paymentData = verificationResponse.data;
 
         // Find payment record by transaction reference
-        const { data: payment, error: paymentError } = await flutterwaveService['supabase']
+        const { data: payment, error: paymentError } = await supabase
           .from('payments')
           .select('*')
           .eq('flutterwave_reference', paymentData.tx_ref)

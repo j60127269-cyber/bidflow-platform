@@ -89,7 +89,7 @@ INSERT INTO subscription_plans (name, description, price, currency, billing_inte
 VALUES (
   'Professional',
   'Complete access to all BidFlow features for small to medium businesses',
-  2000,
+  20000,
   'UGX',
   'month',
   '{

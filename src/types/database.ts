@@ -122,9 +122,15 @@ export interface Payment {
 }
 
 export interface UserActiveSubscription {
-  subscription_id: string;
-  plan_name: string;
-  plan_price: number;
-  status: string;
+  status: 'active' | 'cancelled' | 'expired' | 'trial' | 'none';
+  trialEndsAt?: string;
+  subscriptionEndsAt?: string;
+  planName?: string;
+  trialEnded?: boolean;
+  trialEndedAt?: string;
+  // Legacy properties for backward compatibility
+  subscription_id?: string;
+  plan_name?: string;
+  plan_price?: number;
   current_period_end?: string;
 } 

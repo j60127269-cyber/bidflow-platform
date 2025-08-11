@@ -375,6 +375,14 @@ class SubscriptionService {
             status: 'trial',
             trialEndsAt: data.trial_ends_at,
           };
+        } else {
+          // Trial has expired, update status to none
+          await this.endTrial(userId);
+          return { 
+            status: 'none',
+            trialEnded: true,
+            trialEndedAt: data.trial_ends_at
+          };
         }
       }
 
@@ -382,6 +390,34 @@ class SubscriptionService {
     } catch (error) {
       console.error('Error in getUserSubscriptionStatus:', error);
       return { status: 'none' };
+    }
+  }
+
+  async checkTrialExpiration(userId: string): Promise<{ expiringSoon: boolean; daysLeft: number }> {
+    try {
+      const { data, error } = await supabase
+        .rpc('get_user_active_subscription', { user_id: userId });
+
+      if (error) {
+        console.error('Error checking trial expiration:', error);
+        return { expiringSoon: false, daysLeft: 0 };
+      }
+
+      if (data?.subscription_status === 'trial' && data?.trial_ends_at) {
+        const trialEndDate = new Date(data.trial_ends_at);
+        const now = new Date();
+        const daysLeft = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        
+        return {
+          expiringSoon: daysLeft <= 3 && daysLeft > 0,
+          daysLeft: Math.max(0, daysLeft)
+        };
+      }
+
+      return { expiringSoon: false, daysLeft: 0 };
+    } catch (error) {
+      console.error('Error checking trial expiration:', error);
+      return { expiringSoon: false, daysLeft: 0 };
     }
   }
 }

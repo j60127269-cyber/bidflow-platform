@@ -1,125 +1,52 @@
 'use client'
 
 import { useState, useEffect } from "react";
+import { useRouter } from "next/navigation";
+import { CheckCircle, CreditCard, AlertCircle, Calendar } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { usePayment } from "@/hooks/usePayment";
 import { subscriptionService } from "@/lib/subscriptionService";
-import { supabase } from "@/lib/supabase";
-import { 
-  CreditCard, 
-  Calendar, 
-  CheckCircle, 
-  XCircle, 
-  AlertCircle,
-  Download,
-  RefreshCw,
-  Settings
-} from "lucide-react";
-
-interface Subscription {
-  id: string;
-  status: string;
-  current_period_end: string;
-  subscription_plans: {
-    name: string;
-    price: number;
-    currency: string;
-    billing_interval: string;
-  };
-}
-
-interface Payment {
-  id: string;
-  amount: number;
-  currency: string;
-  status: string;
-  created_at: string;
-  flutterwave_reference: string;
-}
 
 export default function SubscriptionPage() {
+  const router = useRouter();
   const { user } = useAuth();
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [payments, setPayments] = useState<Payment[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState<string | null>(null);
+  const { paymentState, initializePayment, resetPaymentState } = usePayment();
+  
+  const [loading, setLoading] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
 
   useEffect(() => {
-    if (user) {
-      loadSubscriptionData();
-    }
+    const checkSubscriptionStatus = async () => {
+      if (user) {
+        const status = await subscriptionService.getUserSubscriptionStatus(user.id);
+        setSubscriptionStatus(status);
+      }
+    };
+
+    checkSubscriptionStatus();
   }, [user]);
 
-  const loadSubscriptionData = async () => {
+  const handleSubscribe = async () => {
+    setLoading(true);
+    resetPaymentState();
+    
     try {
-      setLoading(true);
-      setError(null);
-
-      // Load subscription details
-      const subscriptionData = await subscriptionService.getUserActiveSubscription(user?.id || '');
-      setSubscription(subscriptionData);
-
-      // Load payment history
-      const { data: paymentHistory, error: paymentError } = await supabase
-        .from('payments')
-        .select('*')
-        .eq('user_id', user?.id)
-        .order('created_at', { ascending: false });
-
-      if (paymentError) {
-        console.error('Error loading payments:', paymentError);
-      } else {
-        setPayments(paymentHistory || []);
-      }
+      await initializePayment('Professional');
     } catch (error) {
-      console.error('Error loading subscription data:', error);
-      setError('Failed to load subscription data');
-    } finally {
+      console.error('Payment initialization error:', error);
       setLoading(false);
     }
   };
 
-  const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      year: 'numeric',
-      month: 'long',
-      day: 'numeric',
-    });
+  const getTrialDaysRemaining = (trialEndsAt: string) => {
+    const endDate = new Date(trialEndsAt);
+    const now = new Date();
+    const diffTime = endDate.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return Math.max(0, diffDays);
   };
 
-  const formatCurrency = (amount: number, currency: string) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: currency,
-    }).format(amount);
-  };
-
-  const getStatusColor = (status: string) => {
-    switch (status) {
-      case 'active':
-        return 'text-green-600 bg-green-100';
-      case 'cancelled':
-        return 'text-red-600 bg-red-100';
-      case 'expired':
-        return 'text-orange-600 bg-orange-100';
-      default:
-        return 'text-gray-600 bg-gray-100';
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status) {
-      case 'active':
-        return <CheckCircle className="w-4 h-4" />;
-      case 'cancelled':
-        return <XCircle className="w-4 h-4" />;
-      case 'expired':
-        return <AlertCircle className="w-4 h-4" />;
-      default:
-        return <AlertCircle className="w-4 h-4" />;
-    }
-  };
-
-  if (loading) {
+  if (!subscriptionStatus) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
         <div className="text-center">
@@ -132,180 +59,137 @@ export default function SubscriptionPage() {
 
   return (
     <div className="min-h-screen bg-slate-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900">Subscription Management</h1>
-          <p className="text-slate-600 mt-2">Manage your subscription and billing</p>
+          <h1 className="text-3xl font-bold text-slate-900 mb-2">Subscription Management</h1>
+          <p className="text-slate-600">Manage your BidFlow subscription and billing</p>
         </div>
 
-        {error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-6">
-            <div className="flex items-center">
-              <AlertCircle className="w-5 h-5 text-red-600 mr-2" />
-              <p className="text-red-600">{error}</p>
-            </div>
-          </div>
-        )}
-
-        <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
-          {/* Current Subscription */}
-          <div className="lg:col-span-2">
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-bold text-slate-900">Current Subscription</h2>
+        {/* Current Status */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <h2 className="text-xl font-bold text-slate-900 mb-6">Current Status</h2>
+          
+          {subscriptionStatus.status === 'trial' && subscriptionStatus.trialEndsAt && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
+              <div className="flex items-center mb-4">
+                <Calendar className="w-6 h-6 text-blue-600 mr-3" />
+                <h3 className="text-lg font-semibold text-slate-900">Free Trial Active</h3>
+              </div>
+              <div className="space-y-2 text-slate-700">
+                <p><strong>Trial ends:</strong> {new Date(subscriptionStatus.trialEndsAt).toLocaleDateString()}</p>
+                <p><strong>Days remaining:</strong> {getTrialDaysRemaining(subscriptionStatus.trialEndsAt)} days</p>
+                <p><strong>After trial:</strong> 20,000 UGX/month</p>
+              </div>
+              <div className="mt-4">
                 <button
-                  onClick={loadSubscriptionData}
-                  className="flex items-center text-blue-600 hover:text-blue-700"
+                  onClick={handleSubscribe}
+                  disabled={loading || paymentState.loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
                 >
-                  <RefreshCw className="w-4 h-4 mr-1" />
-                  Refresh
+                  {loading || paymentState.loading ? 'Processing...' : 'Subscribe Now'}
                 </button>
               </div>
-
-              {subscription ? (
-                <div className="space-y-6">
-                  {/* Plan Details */}
-                  <div className="bg-slate-50 rounded-lg p-4">
-                    <div className="flex items-center justify-between">
-                      <div>
-                        <h3 className="text-lg font-semibold text-slate-900">
-                          {subscription.subscription_plans.name} Plan
-                        </h3>
-                        <p className="text-slate-600">
-                          {formatCurrency(subscription.subscription_plans.price, subscription.subscription_plans.currency)} / {subscription.subscription_plans.billing_interval}
-                        </p>
-                      </div>
-                      <div className={`flex items-center px-3 py-1 rounded-full text-sm font-medium ${getStatusColor(subscription.status)}`}>
-                        {getStatusIcon(subscription.status)}
-                        <span className="ml-1 capitalize">{subscription.status}</span>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Next Billing */}
-                  <div className="flex items-center justify-between p-4 border border-slate-200 rounded-lg">
-                    <div className="flex items-center">
-                      <Calendar className="w-5 h-5 text-slate-400 mr-3" />
-                      <div>
-                        <p className="text-sm text-slate-600">Next billing date</p>
-                        <p className="font-semibold text-slate-900">
-                          {formatDate(subscription.current_period_end)}
-                        </p>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Actions */}
-                  <div className="flex space-x-4">
-                    <button className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors">
-                      Manage Subscription
-                    </button>
-                    <button className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-4 rounded-lg font-medium transition-colors">
-                      Download Invoice
-                    </button>
-                  </div>
-                </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CreditCard className="w-12 h-12 text-slate-400 mx-auto mb-4" />
-                  <h3 className="text-lg font-semibold text-slate-900 mb-2">No Active Subscription</h3>
-                  <p className="text-slate-600 mb-4">
-                    You don't have an active subscription. Subscribe to access all features.
-                  </p>
-                  <button
-                    onClick={() => window.location.href = '/onboarding/subscription'}
-                    className="bg-blue-600 hover:bg-blue-700 text-white py-2 px-6 rounded-lg font-medium transition-colors"
-                  >
-                    Subscribe Now
-                  </button>
-                </div>
-              )}
             </div>
-          </div>
+          )}
 
-          {/* Billing History */}
-          <div className="lg:col-span-1">
-            <div className="bg-white rounded-2xl shadow-xl p-6">
-              <h2 className="text-xl font-bold text-slate-900 mb-6">Billing History</h2>
-              
-              {payments.length > 0 ? (
-                <div className="space-y-4">
-                  {payments.slice(0, 5).map((payment) => (
-                    <div key={payment.id} className="border border-slate-200 rounded-lg p-4">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="font-semibold text-slate-900">
-                          {formatCurrency(payment.amount, payment.currency)}
-                        </span>
-                        <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(payment.status)}`}>
-                          {payment.status}
-                        </span>
-                      </div>
-                      <p className="text-sm text-slate-600">
-                        {formatDate(payment.created_at)}
-                      </p>
-                      <p className="text-xs text-slate-500 mt-1">
-                        Ref: {payment.flutterwave_reference}
-                      </p>
-                    </div>
-                  ))}
-                  
-                  {payments.length > 5 && (
-                    <button className="w-full text-blue-600 hover:text-blue-700 text-sm font-medium">
-                      View all payments ({payments.length})
-                    </button>
-                  )}
+          {subscriptionStatus.status === 'active' && (
+            <div className="bg-green-50 border border-green-200 rounded-lg p-6">
+              <div className="flex items-center mb-4">
+                <CheckCircle className="w-6 h-6 text-green-600 mr-3" />
+                <h3 className="text-lg font-semibold text-slate-900">Active Subscription</h3>
+              </div>
+              <div className="space-y-2 text-slate-700">
+                <p><strong>Plan:</strong> {subscriptionStatus.planName}</p>
+                <p><strong>Status:</strong> Active</p>
+                {subscriptionStatus.subscriptionEndsAt && (
+                  <p><strong>Next billing:</strong> {new Date(subscriptionStatus.subscriptionEndsAt).toLocaleDateString()}</p>
+                )}
+              </div>
+            </div>
+          )}
+
+          {subscriptionStatus.status === 'none' && (
+            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
+              <div className="flex items-center mb-4">
+                <AlertCircle className="w-6 h-6 text-yellow-600 mr-3" />
+                <h3 className="text-lg font-semibold text-slate-900">No Active Subscription</h3>
+              </div>
+              <p className="text-slate-700 mb-4">You don't have an active subscription. Start a free trial to access all features.</p>
+              <button
+                onClick={handleSubscribe}
+                disabled={loading || paymentState.loading}
+                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+              >
+                {loading || paymentState.loading ? 'Processing...' : 'Start Free Trial'}
+              </button>
+            </div>
+          )}
+        </div>
+
+        {/* Plan Details */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+          <h2 className="text-xl font-bold text-slate-900 mb-6">Professional Plan</h2>
+          <div className="grid md:grid-cols-2 gap-8">
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Features</h3>
+              <ul className="space-y-3">
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                  <span>Unlimited tender alerts</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                  <span>Advanced search & filtering</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                  <span>Unlimited saved tenders</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                  <span>1GB document storage</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                  <span>Email support</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                  <span>Real-time notifications</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                  <span>Bid tracking & analytics</span>
+                </li>
+                <li className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
+                  <span>AI-powered recommendations</span>
+                </li>
+              </ul>
+            </div>
+            <div>
+              <h3 className="text-lg font-semibold text-slate-900 mb-4">Pricing</h3>
+              <div className="bg-slate-50 rounded-lg p-6">
+                <div className="text-center">
+                  <div className="text-3xl font-bold text-slate-900 mb-2">20,000 UGX</div>
+                  <div className="text-slate-600 mb-4">per month</div>
+                  <div className="text-sm text-slate-500">
+                    <p>• 7-day free trial</p>
+                    <p>• Cancel anytime</p>
+                    <p>• No setup fees</p>
+                  </div>
                 </div>
-              ) : (
-                <div className="text-center py-8">
-                  <CreditCard className="w-8 h-8 text-slate-400 mx-auto mb-2" />
-                  <p className="text-slate-600 text-sm">No payment history yet</p>
-                </div>
-              )}
+              </div>
             </div>
           </div>
         </div>
 
-        {/* Additional Features */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <div className="flex items-center mb-4">
-              <Settings className="w-6 h-6 text-blue-600 mr-3" />
-              <h3 className="text-lg font-semibold text-slate-900">Account Settings</h3>
-            </div>
-            <p className="text-slate-600 text-sm mb-4">
-              Update your billing information and account preferences.
-            </p>
-            <button className="text-blue-600 hover:text-blue-700 text-sm font-medium">
-              Manage Settings →
-            </button>
+        {/* Error Message */}
+        {paymentState.error && (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
+            <p className="text-red-600 text-sm">{paymentState.error}</p>
           </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <div className="flex items-center mb-4">
-              <Download className="w-6 h-6 text-green-600 mr-3" />
-              <h3 className="text-lg font-semibold text-slate-900">Download Invoices</h3>
-            </div>
-            <p className="text-slate-600 text-sm mb-4">
-              Access and download your billing invoices and receipts.
-            </p>
-            <button className="text-green-600 hover:text-green-700 text-sm font-medium">
-              View Invoices →
-            </button>
-          </div>
-
-          <div className="bg-white rounded-2xl shadow-xl p-6">
-            <div className="flex items-center mb-4">
-              <AlertCircle className="w-6 h-6 text-orange-600 mr-3" />
-              <h3 className="text-lg font-semibold text-slate-900">Support</h3>
-            </div>
-            <p className="text-slate-600 text-sm mb-4">
-              Need help with your subscription? Contact our support team.
-            </p>
-            <button className="text-orange-600 hover:text-orange-700 text-sm font-medium">
-              Contact Support →
-            </button>
-          </div>
-        </div>
+        )}
       </div>
     </div>
   );
