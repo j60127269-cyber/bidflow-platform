@@ -1,19 +1,14 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
+  // Ignore ESLint errors during builds
   eslint: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has ESLint errors.
     ignoreDuringBuilds: true,
   },
+  // Ignore TypeScript errors during builds
   typescript: {
-    // Warning: This allows production builds to successfully complete even if
-    // your project has TypeScript errors.
     ignoreBuildErrors: true,
   },
-  experimental: {
-    // This ensures the build continues even with linting errors
-    forceSwcTransforms: true,
-  },
+  // Remove experimental.forceSwcTransforms as it's not supported by Turbopack
 }
 
 module.exports = nextConfig

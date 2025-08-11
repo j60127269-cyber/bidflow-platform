@@ -1,30 +1,23 @@
 'use client'
 
-import Link from "next/link";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useRouter, usePathname } from "next/navigation";
-import ProtectedRoute from "@/components/ProtectedRoute";
 import { 
-  Search, 
-  TrendingUp, 
   Bell, 
-  BarChart3, 
-  Users, 
-  Award, 
-  Settings, 
-  LogOut,
-  Menu,
+  Search, 
+  User, 
+  LogOut, 
+  Menu, 
   X,
-  Home,
+  BarChart3,
   FileText,
-  Target,
-  Calendar,
-  Bookmark,
-  ChevronDown,
-  User,
-  Star
+  Star,
+  CreditCard,
+  AlertCircle
 } from "lucide-react";
-import { useState } from "react";
+import { supabase } from "@/lib/supabase";
+import { subscriptionService } from "@/lib/subscriptionService";
 
 export default function DashboardLayout({
   children,
@@ -34,200 +27,256 @@ export default function DashboardLayout({
   const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const [userMenuOpen, setUserMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [subscriptionStatus, setSubscriptionStatus] = useState<string>('none');
+  const [showUpgradePrompt, setShowUpgradePrompt] = useState(false);
+
+  useEffect(() => {
+    const checkSubscriptionStatus = async () => {
+      if (user) {
+        try {
+          const status = await subscriptionService.getUserSubscriptionStatus(user.id);
+          setSubscriptionStatus(status?.status || 'none');
+          
+          // Show upgrade prompt if user is not subscribed and not on subscription page
+          const isSubscriptionPage = pathname === '/dashboard/subscription';
+          const isOnboardingSubscription = pathname === '/onboarding/subscription';
+          
+          if ((status?.status === 'none' || status?.status === 'trial') && 
+              !isSubscriptionPage && !isOnboardingSubscription) {
+            setShowUpgradePrompt(true);
+          } else {
+            setShowUpgradePrompt(false);
+          }
+        } catch (error) {
+          console.error('Error checking subscription status:', error);
+        }
+      }
+    };
+
+    checkSubscriptionStatus();
+  }, [user, pathname]);
 
   const handleSignOut = async () => {
     await signOut();
-    router.push("/");
+    router.push('/');
   };
 
-  // Get user initials for avatar
-  const getUserInitials = () => {
-    if (!user) return "U";
-    const fullName = user.user_metadata?.full_name || user.email || "";
-    return fullName
-      .split(" ")
-      .map((name: string) => name.charAt(0))
-      .join("")
-      .toUpperCase()
-      .slice(0, 2);
-  };
-
-  const getUserName = () => {
-    if (!user) return "User";
-    return user.user_metadata?.full_name || user.email?.split("@")[0] || "User";
-  };
-
-  const getUserEmail = () => {
-    if (!user) return "";
-    return user.email || "";
-  };
-
-  // Navigation items with active state
   const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home, current: pathname === '/dashboard' },
-    { name: 'Recommended', href: '/dashboard/recommended', icon: Star, current: pathname === '/dashboard/recommended' },
-    { name: 'My Bids', href: '/dashboard/tracking', icon: Target, current: pathname.startsWith('/dashboard/tracking') },
-    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, current: pathname.startsWith('/dashboard/analytics') },
+    { name: 'Dashboard', href: '/dashboard', icon: BarChart3 },
+    { name: 'Recommended', href: '/dashboard/recommended', icon: Star },
+    { name: 'Tracking', href: '/dashboard/tracking', icon: FileText },
+    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3 },
+    { name: 'Subscription', href: '/dashboard/subscription', icon: CreditCard },
   ];
 
   return (
-    <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              {/* Logo and primary navigation */}
-              <div className="flex items-center">
-            <Link href="/dashboard" className="flex items-center">
-              <h1 className="text-xl font-bold text-blue-600">BidFlow</h1>
-            </Link>
-
-                {/* Desktop navigation */}
-                <nav className="hidden md:flex ml-10 space-x-8">
-                  {navigation.map((item) => (
-              <Link
-                      key={item.name}
-                      href={item.href}
-                      className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        item.current
-                          ? 'text-blue-600 bg-blue-50'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {item.name}
-              </Link>
-                  ))}
+    <div className="min-h-screen bg-slate-50">
+      {/* Header */}
+      <header className="bg-white shadow-sm border-b border-slate-200">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+          <div className="flex items-center justify-between h-16">
+            {/* Logo and Navigation */}
+            <div className="flex items-center">
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 rounded-md text-slate-400 hover:text-slate-500 hover:bg-slate-100"
+              >
+                <Menu className="w-6 h-6" />
+              </button>
+              
+              <div className="flex items-center space-x-8 ml-4 lg:ml-0">
+                <h1 className="text-xl font-bold text-blue-600">BidFlow</h1>
+                
+                {/* Desktop Navigation */}
+                <nav className="hidden lg:flex space-x-8">
+                  {navigation.map((item) => {
+                    const Icon = item.icon;
+                    const isActive = pathname === item.href;
+                    return (
+                      <a
+                        key={item.name}
+                        href={item.href}
+                        className={`flex items-center space-x-2 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                          isActive
+                            ? 'text-blue-600 bg-blue-50'
+                            : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                        }`}
+                      >
+                        <Icon className="w-4 h-4" />
+                        <span>{item.name}</span>
+                      </a>
+                    );
+                  })}
                 </nav>
               </div>
+            </div>
 
-              {/* Right side - Search, notifications, user menu */}
-              <div className="flex items-center space-x-4">
-                {/* Search */}
-                <div className="hidden lg:block relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search contracts, clients..."
-                    className="block w-64 pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
-                </div>
+            {/* Right side */}
+            <div className="flex items-center space-x-4">
+              {/* Search */}
+              <div className="hidden md:flex items-center space-x-2 bg-slate-100 rounded-lg px-3 py-2">
+                <Search className="w-4 h-4 text-slate-400" />
+                <input
+                  type="text"
+                  placeholder="Search tenders..."
+                  className="bg-transparent border-none outline-none text-sm text-slate-600 placeholder-slate-400 w-48"
+                />
+              </div>
 
-                {/* Notifications */}
-                <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400 ring-2 ring-white"></span>
-                </button>
+              {/* Notifications */}
+              <button className="p-2 rounded-md text-slate-400 hover:text-slate-500 hover:bg-slate-100 relative">
+                <Bell className="w-5 h-5" />
+                <span className="absolute -top-1 -right-1 w-3 h-3 bg-red-500 rounded-full"></span>
+              </button>
 
-                {/* User menu */}
-                <div className="relative">
-                  <button
-                    onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-100 transition-colors"
-                  >
-                    <div className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center">
-                      <span className="text-white text-sm font-medium">{getUserInitials()}</span>
-                    </div>
-                    <div className="hidden md:block text-left">
-                      <div className="text-sm font-medium text-slate-900">{getUserName()}</div>
-                      <div className="text-xs text-slate-500">{getUserEmail()}</div>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-slate-400" />
-                  </button>
-
-                  {/* User dropdown menu */}
-                  {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
-                      <div className="px-4 py-2 border-b border-slate-100">
-                        <div className="text-sm font-medium text-slate-900">{getUserName()}</div>
-                        <div className="text-xs text-slate-500">{getUserEmail()}</div>
-                      </div>
-              <Link
-                        href="/dashboard/profile"
-                        className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        <User className="mr-3 h-4 w-4" />
-                        Profile
-              </Link>
-                <Link
-                  href="/dashboard/settings"
-                        className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                        onClick={() => setUserMenuOpen(false)}
-                >
-                        <Settings className="mr-3 h-4 w-4" />
-                  Settings
-                </Link>
-                <button 
-                  onClick={handleSignOut}
-                        className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                >
-                        <LogOut className="mr-3 h-4 w-4" />
-                  Sign out
+              {/* User Menu */}
+              <div className="relative">
+                <button className="flex items-center space-x-2 p-2 rounded-md text-slate-600 hover:text-slate-900 hover:bg-slate-100">
+                  <User className="w-5 h-5" />
+                  <span className="hidden md:block text-sm font-medium">
+                    {user?.email?.split('@')[0]}
+                  </span>
                 </button>
               </div>
-                  )}
-        </div>
 
-                {/* Mobile menu button */}
+              {/* Sign Out */}
+              <button
+                onClick={handleSignOut}
+                className="p-2 rounded-md text-slate-400 hover:text-slate-500 hover:bg-slate-100"
+              >
+                <LogOut className="w-5 h-5" />
+              </button>
+            </div>
+          </div>
+        </div>
+      </header>
+
+      {/* Upgrade Prompt for Non-Subscribers */}
+      {showUpgradePrompt && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border-b border-blue-200">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <AlertCircle className="w-5 h-5 text-blue-600" />
+                <div>
+                  <p className="text-sm font-medium text-blue-900">
+                    You're currently on a free plan
+                  </p>
+                  <p className="text-xs text-blue-700">
+                    Upgrade to access unlimited tenders, advanced features, and priority support
+                  </p>
+                </div>
+              </div>
+              <div className="flex items-center space-x-3">
                 <button
-                  className="md:hidden"
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                  onClick={() => setShowUpgradePrompt(false)}
+                  className="text-blue-600 hover:text-blue-700 text-sm font-medium"
                 >
-                  <Menu className="h-6 w-6 text-slate-400" />
+                  Dismiss
+                </button>
+                <button
+                  onClick={() => router.push('/onboarding/subscription')}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Upgrade Now
                 </button>
               </div>
             </div>
           </div>
+        </div>
+      )}
 
-          {/* Mobile search */}
-          <div className="lg:hidden border-t border-slate-200 px-4 py-3">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                placeholder="Search contracts, clients..."
-                    className="block w-full pl-10 pr-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                  />
+      {/* Mobile Sidebar */}
+      {sidebarOpen && (
+        <div className="fixed inset-0 z-50 lg:hidden">
+          <div className="fixed inset-0 bg-black bg-opacity-50" onClick={() => setSidebarOpen(false)} />
+          <div className="fixed inset-y-0 left-0 w-64 bg-white shadow-xl">
+            <div className="flex items-center justify-between p-4 border-b border-slate-200">
+              <h2 className="text-lg font-semibold text-slate-900">Menu</h2>
+              <button
+                onClick={() => setSidebarOpen(false)}
+                className="p-2 rounded-md text-slate-400 hover:text-slate-500 hover:bg-slate-100"
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            <nav className="p-4 space-y-2">
+              {navigation.map((item) => {
+                const Icon = item.icon;
+                const isActive = pathname === item.href;
+                return (
+                  <a
+                    key={item.name}
+                    href={item.href}
+                    className={`flex items-center space-x-3 px-3 py-2 rounded-md text-sm font-medium transition-colors ${
+                      isActive
+                        ? 'text-blue-600 bg-blue-50'
+                        : 'text-slate-600 hover:text-slate-900 hover:bg-slate-100'
+                    }`}
+                    onClick={() => setSidebarOpen(false)}
+                  >
+                    <Icon className="w-4 h-4" />
+                    <span>{item.name}</span>
+                  </a>
+                );
+              })}
+            </nav>
+          </div>
+        </div>
+      )}
+
+      {/* Main Content */}
+      <main className="flex-1">
+        {/* Subscription Limitations Overlay */}
+        {subscriptionStatus === 'none' && pathname !== '/dashboard/subscription' && pathname !== '/onboarding/subscription' && (
+          <div className="fixed inset-0 bg-black bg-opacity-50 z-40 flex items-center justify-center p-4">
+            <div className="bg-white rounded-2xl shadow-xl p-8 max-w-md w-full text-center">
+              <div className="w-16 h-16 bg-orange-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-8 h-8 text-orange-600" />
+              </div>
+              <h3 className="text-xl font-bold text-slate-900 mb-2">Subscription Required</h3>
+              <p className="text-slate-600 mb-6">
+                You need an active subscription to access BidFlow features. Subscribe now to unlock:
+              </p>
+              <div className="text-left space-y-2 mb-6">
+                <div className="flex items-center text-sm text-slate-600">
+                  <span className="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
+                  Unlimited tender access
+                </div>
+                <div className="flex items-center text-sm text-slate-600">
+                  <span className="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
+                  Advanced search & filtering
+                </div>
+                <div className="flex items-center text-sm text-slate-600">
+                  <span className="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
+                  Bid tracking & analytics
+                </div>
+                <div className="flex items-center text-sm text-slate-600">
+                  <span className="w-2 h-2 bg-blue-600 rounded-full mr-3"></span>
+                  AI-powered recommendations
                 </div>
               </div>
-        </header>
-
-        {/* Mobile menu */}
-        {mobileMenuOpen && (
-          <div className="md:hidden">
-            <div className="px-2 pt-2 pb-3 space-y-1 bg-white border-b border-slate-200">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center px-3 py-2 text-base font-medium rounded-md transition-colors ${
-                    item.current
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
+              <div className="flex space-x-3">
+                <button
+                  onClick={() => router.push('/onboarding/subscription')}
+                  className="flex-1 bg-blue-600 hover:bg-blue-700 text-white py-2 px-4 rounded-lg font-medium transition-colors"
                 >
-                  <item.icon className="mr-3 h-5 w-5" />
-                  {item.name}
-                </Link>
-              ))}
-                  </div>
-                </div>
+                  Subscribe Now
+                </button>
+                <button
+                  onClick={() => router.push('/')}
+                  className="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 py-2 px-4 rounded-lg font-medium transition-colors"
+                >
+                  Go Home
+                </button>
+              </div>
+            </div>
+          </div>
         )}
-
-        {/* Main content */}
-        <main className="max-w-7xl mx-auto py-6 px-4 sm:px-6 lg:px-8">
-              {children}
-          </main>
-      </div>
-    </ProtectedRoute>
+        
+        {children}
+      </main>
+    </div>
   );
 } 

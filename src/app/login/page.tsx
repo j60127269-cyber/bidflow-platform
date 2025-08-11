@@ -2,9 +2,11 @@
 
 import Link from "next/link";
 import { Mail, Lock, Eye, EyeOff } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
+import { subscriptionService } from "@/lib/subscriptionService";
+import { supabase } from "@/lib/supabase";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -13,9 +15,57 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
+  const [message, setMessage] = useState("");
   
   const { signIn, signInWithGoogle } = useAuth();
   const router = useRouter();
+  const searchParams = useSearchParams();
+
+  // Check for email verification message
+  useEffect(() => {
+    const messageParam = searchParams.get('message');
+    if (messageParam === 'verify_email') {
+      setMessage("Please verify your email address before signing in. Check your email for a verification link.");
+    }
+  }, [searchParams]);
+
+  const checkUserStatus = async (userId: string) => {
+    try {
+      // First check if user's email is verified
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user?.email_confirmed_at) {
+        // User's email is not verified
+        return 'email_not_verified';
+      }
+
+      // Check if user has a profile (completed onboarding)
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', userId)
+        .single();
+
+      if (profileError && profileError.code === 'PGRST116') {
+        // No profile found - user hasn't completed onboarding
+        return 'onboarding';
+      }
+
+      // Check subscription status
+      const subscriptionStatus = await subscriptionService.getUserSubscriptionStatus(userId);
+      
+      if (subscriptionStatus?.status === 'active' || subscriptionStatus?.status === 'trial') {
+        return 'dashboard';
+      } else {
+        // User has profile but no active subscription
+        return 'subscription';
+      }
+    } catch (error) {
+      console.error('Error checking user status:', error);
+      // Default to onboarding if there's an error
+      return 'onboarding';
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -28,9 +78,32 @@ export default function LoginPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      // Check if user has completed onboarding (we'll implement this later)
-      // For now, redirect to onboarding for all users
-      router.push('/onboarding/welcome');
+      // Get the current user to check their status
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (user) {
+        const userStatus = await checkUserStatus(user.id);
+        
+        switch (userStatus) {
+          case 'email_not_verified':
+            setError("Please verify your email address before signing in. Check your email for a verification link.");
+            setLoading(false);
+            break;
+          case 'dashboard':
+            router.push('/dashboard');
+            break;
+          case 'subscription':
+            router.push('/onboarding/subscription');
+            break;
+          case 'onboarding':
+          default:
+            router.push('/onboarding/welcome');
+            break;
+        }
+      } else {
+        // Fallback to onboarding
+        router.push('/onboarding/welcome');
+      }
     }
   };
 
@@ -69,6 +142,11 @@ export default function LoginPage() {
           {error && (
             <div className="bg-red-50 border border-red-200 rounded-lg p-4">
               <p className="text-sm text-red-600">{error}</p>
+            </div>
+          )}
+          {message && (
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <p className="text-sm text-blue-600">{message}</p>
             </div>
           )}
 
