@@ -4,6 +4,7 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, Plus, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 const industries = [
   "Construction & Engineering",
@@ -83,9 +84,58 @@ export default function OnboardingPreferences() {
 
     setLoading(true);
     
-    // Save preferences to Supabase (we'll implement this later)
-    // For now, just navigate to next step
-    router.push('/onboarding/notifications');
+    try {
+      // Save preferences to Supabase
+      console.log('Saving preferences for user:', user?.id);
+      console.log('Selected industries:', selectedIndustries);
+      console.log('Selected products:', selectedProducts);
+      console.log('Contract range:', contractRange);
+      
+      const { error } = await supabase
+        .from('profiles')
+        .upsert({
+          id: user?.id,
+          email: user?.email,
+          preferred_categories: selectedIndustries,
+          business_type: selectedProducts.join(', '),
+          min_contract_value: getContractValueRange(contractRange).min,
+          max_contract_value: getContractValueRange(contractRange).max,
+          updated_at: new Date().toISOString()
+        }, {
+          onConflict: 'id'
+        });
+
+      if (error) {
+        console.error('Error saving preferences:', error);
+        alert('Failed to save preferences. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      console.log('Preferences saved successfully!');
+      // Navigate to next step
+      router.push('/onboarding/notifications');
+    } catch (error) {
+      console.error('Error saving preferences:', error);
+      alert('Failed to save preferences. Please try again.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const getContractValueRange = (range: string) => {
+    switch (range) {
+      case 'small':
+        return { min: 0, max: 1000000 };
+      case 'medium':
+        return { min: 1000000, max: 10000000 };
+      case 'large':
+        return { min: 10000000, max: 100000000 };
+      case 'enterprise':
+        return { min: 100000000, max: 999999999999 };
+      default:
+        return { min: 0, max: 1000000 };
+    }
   };
 
   const handleBack = () => {

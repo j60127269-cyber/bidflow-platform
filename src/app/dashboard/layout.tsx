@@ -50,6 +50,13 @@ export default function DashboardLayout({
         try {
           const status = await subscriptionService.getUserSubscriptionStatus(user.id);
           setSubscriptionStatus(status);
+
+          // Check if trial is expiring soon
+          if (status?.status === 'trial') {
+            const expirationCheck = await subscriptionService.checkTrialExpiration(user.id);
+            setTrialExpiringSoon(expirationCheck.expiringSoon);
+            setTrialDaysLeft(expirationCheck.daysLeft);
+          }
         } catch (error) {
           console.error('Error checking subscription status:', error);
         } finally {
@@ -121,43 +128,49 @@ export default function DashboardLayout({
             <div className="flex items-center justify-between h-16">
               {/* Logo and primary navigation */}
               <div className="flex items-center">
-                <Link href="/dashboard" className="flex items-center">
-                  <h1 className="text-xl font-bold text-blue-600">BidFlow</h1>
-                </Link>
+            <Link href="/dashboard" className="flex items-center">
+              <h1 className="text-xl font-bold text-blue-600">BidFlow</h1>
+            </Link>
 
                 {/* Desktop navigation */}
-                <nav className="hidden md:flex ml-10 space-x-8">
-                  {navigation.map((item) => (
-                    <Link
-                      key={item.name}
-                      href={item.href}
-                      className={`flex items-center px-3 py-2 text-sm font-medium rounded-md transition-colors ${
-                        item.current
-                          ? 'text-blue-600 bg-blue-50'
-                          : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                      }`}
-                    >
-                      <item.icon className="mr-2 h-4 w-4" />
-                      {item.name}
-                    </Link>
-                  ))}
+                <nav className="hidden md:flex space-x-8 ml-8">
+              <Link
+                href="/dashboard"
+                    className={`text-sm font-medium transition-colors ${
+                      pathname === '/dashboard' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+              >
+                Dashboard
+              </Link>
+              <Link
+                    href="/dashboard/recommended"
+                    className={`text-sm font-medium transition-colors ${
+                      pathname === '/dashboard/recommended' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Recommended
+              </Link>
+              <Link
+                href="/dashboard/tracking"
+                    className={`text-sm font-medium transition-colors ${
+                      pathname === '/dashboard/tracking' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+              >
+                    Tracking
+              </Link>
+              <Link
+                    href="/dashboard/profile"
+                    className={`text-sm font-medium transition-colors ${
+                      pathname === '/dashboard/profile' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                    }`}
+                  >
+                    Profile
+              </Link>
                 </nav>
               </div>
 
               {/* Right side - Search, notifications, user menu */}
               <div className="flex items-center space-x-4">
-                {/* Search */}
-                <div className="hidden lg:block relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                    <Search className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search contracts..."
-                    className="pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
-                </div>
-
                 {/* Notifications */}
                 <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
                   <Bell className="h-5 w-5" />
@@ -186,24 +199,38 @@ export default function DashboardLayout({
 
                   {/* User dropdown */}
                   {userMenuOpen && (
-                    <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg border border-slate-200 py-1 z-50">
-                      <Link
+                    <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                      <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
+                        <div className="font-medium">{user?.email}</div>
+                        <div className="text-xs text-gray-500">
+                          {subscriptionStatus?.status === 'active' ? 'Active Subscription' :
+                           subscriptionStatus?.status === 'trial' ? 'Free Trial' :
+                           'No Subscription'}
+                        </div>
+                      </div>
+              <Link
+                        href="/dashboard/profile"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setUserMenuOpen(false)}
+              >
+                        Profile Settings
+              </Link>
+              <Link
                         href="/dashboard/subscription"
-                        className="flex items-center px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
+                        className="block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                        onClick={() => setUserMenuOpen(false)}
                       >
-                        <CreditCard className="mr-3 h-4 w-4" />
                         Subscription
-                      </Link>
-                      <button 
-                        onClick={handleSignOut}
-                        className="flex items-center w-full px-4 py-2 text-sm text-slate-700 hover:bg-slate-50"
-                      >
-                        <LogOut className="mr-3 h-4 w-4" />
-                        Sign out
-                      </button>
-                    </div>
+                </Link>
+                <button 
+                  onClick={handleSignOut}
+                        className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
+                >
+                  Sign out
+                </button>
+              </div>
                   )}
-                </div>
+        </div>
 
                 {/* Mobile menu button */}
                 <button
@@ -218,17 +245,17 @@ export default function DashboardLayout({
 
           {/* Mobile search */}
           <div className="lg:hidden border-t border-slate-200 px-4 py-3">
-            <div className="relative">
-              <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                <div className="relative">
+                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
                 <Search className="h-4 w-4 text-slate-400" />
-              </div>
-              <input
-                type="text"
-                placeholder="Search contracts..."
+                  </div>
+                  <input
+                    type="text"
+                    placeholder="Search contracts..."
                 className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-          </div>
+                  />
+                </div>
+              </div>
         </header>
 
                      {/* Upgrade Prompt */}
@@ -287,7 +314,27 @@ export default function DashboardLayout({
                   >
                     Subscribe Now
                   </Link>
+                  </div>
                 </div>
+            )}
+
+            {/* Trial Expiring Soon Banner */}
+            {trialExpiringSoon && subscriptionStatus?.status === 'trial' && (
+              <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3">
+                <div className="max-w-7xl mx-auto flex items-center justify-between">
+                  <div className="flex items-center">
+                    <div className="h-5 w-5 text-yellow-600 mr-2">⚠️</div>
+                    <p className="text-sm text-yellow-800">
+                      Your free trial expires in {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''}. Subscribe now to continue.
+                    </p>
+                  </div>
+                  <Link
+                    href="/dashboard/subscription"
+                    className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                  >
+                    Subscribe Now
+                  </Link>
+              </div>
               </div>
             )}
 
@@ -295,29 +342,50 @@ export default function DashboardLayout({
         {mobileMenuOpen && (
           <div className="md:hidden bg-white border-b border-slate-200">
             <div className="px-2 pt-2 pb-3 space-y-1">
-              {navigation.map((item) => (
-                <Link
-                  key={item.name}
-                  href={item.href}
-                  className={`flex items-center px-3 py-2 text-base font-medium rounded-md ${
-                    item.current
-                      ? 'text-blue-600 bg-blue-50'
-                      : 'text-slate-600 hover:text-slate-900 hover:bg-slate-50'
-                  }`}
-                  onClick={() => setMobileMenuOpen(false)}
-                >
-                  <item.icon className="mr-3 h-5 w-5" />
-                  {item.name}
-                </Link>
-              ))}
+              <Link
+                href="/dashboard"
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  pathname === '/dashboard' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Dashboard
+              </Link>
+              <Link
+                href="/dashboard/recommended"
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  pathname === '/dashboard/recommended' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Recommended
+              </Link>
+              <Link
+                href="/dashboard/tracking"
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  pathname === '/dashboard/tracking' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Tracking
+              </Link>
+              <Link
+                href="/dashboard/profile"
+                className={`block px-3 py-2 rounded-md text-base font-medium ${
+                  pathname === '/dashboard/profile' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                }`}
+                onClick={() => setMobileMenuOpen(false)}
+              >
+                Profile
+              </Link>
             </div>
           </div>
         )}
 
         {/* Main content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          {children}
-        </main>
+              {children}
+          </main>
       </div>
     </ProtectedRoute>
   );

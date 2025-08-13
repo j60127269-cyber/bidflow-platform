@@ -56,7 +56,7 @@ export default function OnboardingSubscription() {
         
         if (trialStarted) {
           // Redirect to dashboard with trial active
-          router.push('/dashboard');
+        router.push('/dashboard');
         } else {
           throw new Error('Failed to start trial');
         }

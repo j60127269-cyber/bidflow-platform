@@ -73,14 +73,32 @@ export default function ContractDetailsPage() {
   };
 
   const formatValue = (value: number) => {
-    if (value >= 1000000000) {
-      return `${(value / 1000000000).toFixed(1)}B UGX`;
-    } else if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M UGX`;
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(1)}K UGX`;
-    }
-    return `${value.toLocaleString()} UGX`;
+    // Generate estimated range based on the contract value
+    const generateEstimatedRange = (val: number) => {
+      if (val >= 1000000000) { // 1B+
+        const base = Math.floor(val / 1000000000);
+        const range = Math.max(1, Math.floor(base * 0.3)); // 30% range
+        return `Estimated ${base-range}B-${base+range}B UGX`;
+      } else if (val >= 1000000) { // 1M+
+        const base = Math.floor(val / 1000000);
+        const range = Math.max(1, Math.floor(base * 0.4)); // 40% range
+        return `Estimated ${base-range}M-${base+range}M UGX`;
+      } else if (val >= 100000) { // 100K+
+        const base = Math.floor(val / 100000);
+        const range = Math.max(1, Math.floor(base * 0.5)); // 50% range
+        return `Estimated ${base-range}00K-${base+range}00K UGX`;
+      } else if (val >= 10000) { // 10K+
+        const base = Math.floor(val / 10000);
+        const range = Math.max(1, Math.floor(base * 0.6)); // 60% range
+        return `Estimated ${base-range}0K-${base+range}0K UGX`;
+      } else {
+        const base = Math.floor(val / 1000);
+        const range = Math.max(1, Math.floor(base * 0.7)); // 70% range
+        return `Estimated ${base-range}K-${base+range}K UGX`;
+      }
+    };
+
+    return generateEstimatedRange(value);
   };
 
   const formatDate = (dateString: string) => {

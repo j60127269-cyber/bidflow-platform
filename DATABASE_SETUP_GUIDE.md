@@ -86,3 +86,4 @@ If you encounter any issues:
 ---
 
 **Run the `flutterwave_setup.sql` script and your subscription integration will work perfectly!** 🎉
+

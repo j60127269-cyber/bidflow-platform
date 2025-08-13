@@ -2,16 +2,57 @@
 
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { useEffect, useState } from "react";
 import { ArrowRight, TrendingUp, Users, Award, Star, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 export default function OnboardingWelcome() {
   const router = useRouter();
   const { user } = useAuth();
+  const [checking, setChecking] = useState(true);
+
+  // Check if user has already completed onboarding
+  useEffect(() => {
+    const checkOnboardingStatus = async () => {
+      if (!user) return;
+      
+      try {
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('preferred_categories, business_type, min_contract_value')
+          .eq('id', user.id)
+          .single();
+
+        if (profile && profile.preferred_categories && profile.business_type && profile.min_contract_value) {
+          // User has completed onboarding, redirect to dashboard
+          router.push('/dashboard');
+          return;
+        }
+      } catch (error) {
+        console.error('Error checking onboarding status:', error);
+      } finally {
+        setChecking(false);
+      }
+    };
+
+    checkOnboardingStatus();
+  }, [user, router]);
 
   const handleContinue = () => {
     router.push('/onboarding/preferences');
   };
+
+  if (checking) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50 flex items-center justify-center">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+          <p className="mt-4 text-slate-600">Checking your account...</p>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">

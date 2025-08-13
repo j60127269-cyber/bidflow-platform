@@ -14,3 +14,4 @@ SELECT
   updated_at
 FROM subscription_plans 
 WHERE name = 'Professional';
+

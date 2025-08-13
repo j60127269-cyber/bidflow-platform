@@ -11,7 +11,7 @@ export interface Profile {
   min_contract_value?: number;
   max_contract_value?: number;
   certifications?: string[];
-  team_size?: number;
+
   subscription_status?: 'none' | 'trial' | 'active' | 'cancelled' | 'expired';
   trial_ends_at?: string;
   subscription_id?: string;

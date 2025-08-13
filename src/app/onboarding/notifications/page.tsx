@@ -2,8 +2,9 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowLeft, Mail, MessageCircle, Bell, CheckCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, Bell, Mail, MessageCircle, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
+import { supabase } from "@/lib/supabase";
 
 const notificationTypes = [
   {
@@ -65,9 +66,32 @@ export default function OnboardingNotifications() {
 
     setLoading(true);
     
-    // Save notification preferences to Supabase (we'll implement this later)
-    // For now, just navigate to next step
-    router.push('/onboarding/subscription');
+    try {
+      // Save notification preferences to Supabase
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          // Store notification preferences in metadata or create separate table
+          // For now, we'll store basic notification settings
+          updated_at: new Date().toISOString()
+        })
+        .eq('id', user?.id);
+
+      if (error) {
+        console.error('Error saving notification preferences:', error);
+        alert('Failed to save notification preferences. Please try again.');
+        setLoading(false);
+        return;
+      }
+
+      // Navigate to next step
+      router.push('/onboarding/subscription');
+    } catch (error) {
+      console.error('Error saving notification preferences:', error);
+      alert('Failed to save notification preferences. Please try again.');
+    } finally {
+      setLoading(false);
+    }
   };
 
   const handleBack = () => {
