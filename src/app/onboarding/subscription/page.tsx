@@ -87,7 +87,7 @@ export default function OnboardingSubscription() {
         } else {
           // Redirect to dashboard with restricted access
           console.log('Skip - redirecting to dashboard'); // Debug log
-          router.push('/dashboard');
+    router.push('/dashboard');
         }
       }
     } catch (error) {
@@ -330,8 +330,8 @@ export default function OnboardingSubscription() {
                     <p>If you skip subscription, you'll have limited access to contracts and features. You can upgrade anytime from your dashboard.</p>
                   </div>
                 </div>
-              </div>
             </div>
+          </div>
           </div>
 
           {/* Success Message */}

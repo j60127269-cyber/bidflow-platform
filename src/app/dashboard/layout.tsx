@@ -203,6 +203,13 @@ export default function DashboardLayout({
                       >
                         Subscription
                 </Link>
+              <Link
+                        href="/admin"
+                        className="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
+                        onClick={() => setUserMenuOpen(false)}
+                      >
+                        Admin Panel
+                </Link>
                 <button 
                   onClick={handleSignOut}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
