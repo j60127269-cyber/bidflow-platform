@@ -46,6 +46,19 @@ export default function SubscriptionPage() {
     return Math.max(0, diffDays);
   };
 
+  const getTrialProgress = (trialEndsAt: string) => {
+    const endDate = new Date(trialEndsAt);
+    const startDate = new Date(trialEndsAt);
+    startDate.setDate(startDate.getDate() - 7); // 7-day trial
+    const now = new Date();
+    
+    const totalDuration = endDate.getTime() - startDate.getTime();
+    const elapsed = now.getTime() - startDate.getTime();
+    const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
+    
+    return progress;
+  };
+
   if (!subscriptionStatus) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -75,18 +88,41 @@ export default function SubscriptionPage() {
                 <Calendar className="w-6 h-6 text-blue-600 mr-3" />
                 <h3 className="text-lg font-semibold text-slate-900">Free Trial Active</h3>
               </div>
-              <div className="space-y-2 text-slate-700">
-                <p><strong>Trial ends:</strong> {new Date(subscriptionStatus.trialEndsAt).toLocaleDateString()}</p>
-                <p><strong>Days remaining:</strong> {getTrialDaysRemaining(subscriptionStatus.trialEndsAt)} days</p>
-                <p><strong>After trial:</strong> 20,000 UGX/month</p>
+              <div className="space-y-4 text-slate-700">
+                <div>
+                  <p><strong>Trial ends:</strong> {new Date(subscriptionStatus.trialEndsAt).toLocaleDateString()}</p>
+                  <p><strong>Days remaining:</strong> <span className="font-bold text-blue-600 text-lg">{getTrialDaysRemaining(subscriptionStatus.trialEndsAt)} days</span></p>
+                  <p><strong>After trial:</strong> 20,000 UGX/month</p>
+                </div>
+                
+                {/* Trial Progress Bar */}
+                <div>
+                  <div className="flex justify-between text-sm text-slate-600 mb-2">
+                    <span>Trial Progress</span>
+                    <span>{Math.round(getTrialProgress(subscriptionStatus.trialEndsAt))}%</span>
+                  </div>
+                  <div className="w-full bg-gray-200 rounded-full h-2">
+                    <div 
+                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                      style={{ width: `${getTrialProgress(subscriptionStatus.trialEndsAt)}%` }}
+                    ></div>
+                  </div>
+                </div>
               </div>
-              <div className="mt-4">
+              <div className="mt-6 flex flex-col sm:flex-row gap-3">
                 <button
                   onClick={handleSubscribe}
                   disabled={loading || paymentState.loading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center"
                 >
+                  <CreditCard className="w-4 h-4 mr-2" />
                   {loading || paymentState.loading ? 'Processing...' : 'Subscribe Now'}
+                </button>
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="bg-white hover:bg-gray-50 text-blue-600 border border-blue-600 px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                  Continue with Trial
                 </button>
               </div>
             </div>
@@ -98,12 +134,28 @@ export default function SubscriptionPage() {
                 <CheckCircle className="w-6 h-6 text-green-600 mr-3" />
                 <h3 className="text-lg font-semibold text-slate-900">Active Subscription</h3>
               </div>
-              <div className="space-y-2 text-slate-700">
+              <div className="space-y-2 text-slate-700 mb-6">
                 <p><strong>Plan:</strong> {subscriptionStatus.planName}</p>
-                <p><strong>Status:</strong> Active</p>
+                <p><strong>Status:</strong> <span className="text-green-600 font-semibold">Active</span></p>
                 {subscriptionStatus.subscriptionEndsAt && (
                   <p><strong>Next billing:</strong> {new Date(subscriptionStatus.subscriptionEndsAt).toLocaleDateString()}</p>
                 )}
+                <p><strong>Amount:</strong> 20,000 UGX/month</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={() => window.open('mailto:support@bidflow.ug?subject=Subscription Management', '_blank')}
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-lg font-medium transition-colors flex items-center justify-center"
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  Manage Subscription
+                </button>
+                <button
+                  onClick={() => window.open('mailto:support@bidflow.ug?subject=Cancel Subscription', '_blank')}
+                  className="bg-white hover:bg-gray-50 text-red-600 border border-red-600 px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                  Cancel Subscription
+                </button>
               </div>
             </div>
           )}
@@ -114,17 +166,57 @@ export default function SubscriptionPage() {
                 <AlertCircle className="w-6 h-6 text-yellow-600 mr-3" />
                 <h3 className="text-lg font-semibold text-slate-900">No Active Subscription</h3>
               </div>
-              <p className="text-slate-700 mb-4">You don't have an active subscription. Start a free trial to access all features.</p>
-              <button
-                onClick={handleSubscribe}
-                disabled={loading || paymentState.loading}
-                className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg font-medium transition-colors disabled:opacity-50"
-              >
-                {loading || paymentState.loading ? 'Processing...' : 'Start Free Trial'}
-              </button>
+              <div className="space-y-2 text-slate-700 mb-6">
+                <p>You don't have an active subscription. Start a free trial to access all features.</p>
+                <p><strong>Free Trial:</strong> 7 days, no credit card required</p>
+                <p><strong>After trial:</strong> 20,000 UGX/month</p>
+              </div>
+              <div className="flex flex-col sm:flex-row gap-3">
+                <button
+                  onClick={handleSubscribe}
+                  disabled={loading || paymentState.loading}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center"
+                >
+                  <CreditCard className="w-4 h-4 mr-2" />
+                  {loading || paymentState.loading ? 'Processing...' : 'Start Free Trial'}
+                </button>
+                <button
+                  onClick={() => router.push('/dashboard')}
+                  className="bg-white hover:bg-gray-50 text-blue-600 border border-blue-600 px-6 py-3 rounded-lg font-medium transition-colors"
+                >
+                  Continue with Limited Access
+                </button>
+              </div>
             </div>
           )}
         </div>
+
+        {/* Billing Information */}
+        {(subscriptionStatus.status === 'active' || subscriptionStatus.status === 'trial') && (
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-6">Billing Information</h2>
+            <div className="grid md:grid-cols-2 gap-6">
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Payment Method</h3>
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <div className="flex items-center">
+                    <CreditCard className="w-5 h-5 text-slate-600 mr-3" />
+                    <span className="text-slate-700">Mobile Money / Card Payment</span>
+                  </div>
+                  <p className="text-sm text-slate-500 mt-2">Via Flutterwave</p>
+                </div>
+              </div>
+              <div>
+                <h3 className="text-lg font-semibold text-slate-900 mb-4">Billing Cycle</h3>
+                <div className="bg-slate-50 rounded-lg p-4">
+                  <p className="text-slate-700"><strong>Frequency:</strong> Monthly</p>
+                  <p className="text-slate-700"><strong>Amount:</strong> 20,000 UGX</p>
+                  <p className="text-slate-700"><strong>Currency:</strong> UGX</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
 
         {/* Plan Details */}
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">

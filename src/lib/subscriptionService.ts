@@ -343,7 +343,38 @@ class SubscriptionService {
     planName?: string;
   }> {
     try {
-      // Check for active subscription
+      // First, check trial status in profiles table
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('subscription_status, trial_ends_at')
+        .eq('id', userId)
+        .single();
+
+      if (profileError) {
+        console.error('Error fetching profile subscription status:', profileError);
+        return { status: 'none' };
+      }
+
+      if (profileData) {
+        // Check if user has trial status and trial hasn't expired
+        if (profileData.subscription_status === 'trial' && profileData.trial_ends_at) {
+          const trialEndDate = new Date(profileData.trial_ends_at);
+          if (trialEndDate > new Date()) {
+            return {
+              status: 'trial',
+              trialEndsAt: profileData.trial_ends_at,
+            };
+          } else {
+            // Trial has expired, update status to none
+            await this.endTrial(userId);
+            return { 
+              status: 'none'
+            };
+          }
+        }
+      }
+
+      // Then check for active subscription (paid subscription)
       const activeSubscription = await this.getUserActiveSubscription(userId);
       if (activeSubscription) {
         return {
@@ -351,39 +382,6 @@ class SubscriptionService {
           subscriptionEndsAt: activeSubscription.current_period_end,
           planName: activeSubscription.plan_name,
         };
-      }
-
-      // Check trial status
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('subscription_status, trial_ends_at')
-        .eq('id', userId)
-        .single();
-
-      if (error) {
-        console.error('Error fetching subscription status:', error);
-        return { status: 'none' };
-      }
-
-      if (!data) return { status: 'none' };
-
-      // Check if user has trial status and trial hasn't expired
-      if (data.subscription_status === 'trial' && data.trial_ends_at) {
-        const trialEndDate = new Date(data.trial_ends_at);
-        if (trialEndDate > new Date()) {
-          return {
-            status: 'trial',
-            trialEndsAt: data.trial_ends_at,
-          };
-        } else {
-          // Trial has expired, update status to none
-          await this.endTrial(userId);
-          return { 
-            status: 'none',
-            trialEnded: true,
-            trialEndedAt: data.trial_ends_at
-          };
-        }
       }
 
       return { status: 'none' };
