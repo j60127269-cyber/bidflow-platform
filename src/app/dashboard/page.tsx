@@ -59,9 +59,7 @@ export default function DashboardPage() {
     const checkSubscription = async () => {
       if (user) {
         try {
-          console.log('Dashboard - checking subscription for user:', user.id);
           const hasSubscription = await subscriptionService.hasActiveSubscription(user.id);
-          console.log('Dashboard - hasActiveSubscription result:', hasSubscription);
           setHasActiveSubscription(hasSubscription);
         } catch (error) {
           console.error('Error checking subscription:', error);
@@ -79,15 +77,11 @@ export default function DashboardPage() {
   const fetchContracts = async () => {
     try {
       setLoading(true);
-      console.log('Fetching contracts...'); // Debug log
       
       const { data, error } = await supabase
         .from('contracts')
         .select('*')
-        .order('posted_date', { ascending: false })
-        .limit(10); // Limit to 10 contracts for testing
-
-      console.log('Contracts fetch result:', { data: data?.length, error }); // Debug log
+        .order('posted_date', { ascending: false });
 
       if (error) {
         console.error('Error fetching contracts:', error);
@@ -214,42 +208,14 @@ export default function DashboardPage() {
     router.push('/dashboard/subscription');
   };
 
-  const debugSubscription = async () => {
-    if (!user) return;
-    
-    try {
-      const response = await fetch('/api/debug-subscription', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({ userId: user.id }),
-      });
-      
-      const result = await response.json();
-      console.log('🔍 DEBUG SUBSCRIPTION STATE:', result);
-      console.log('🔍 PROFILE DATA:', result.profile);
-      console.log('🔍 PROFILE ERROR:', result.profile.error);
-      console.log('🔍 SUBSCRIPTIONS DATA:', result.subscriptions);
-      console.log('🔍 PAYMENTS DATA:', result.payments);
-      
-      // Also check what our service functions return
-      const hasSub = await subscriptionService.hasActiveSubscription(user.id);
-      const status = await subscriptionService.getUserSubscriptionStatus(user.id);
-      const activeSub = await subscriptionService.getUserActiveSubscription(user.id);
-      console.log('🔍 SERVICE FUNCTIONS:', { hasSub, status, activeSub });
-      
-    } catch (error) {
-      console.error('Debug error:', error);
-    }
-  };
+
 
   // Get contracts to display based on subscription status
   const getDisplayContracts = () => {
     if (hasActiveSubscription) {
       return filteredContracts; // Show all contracts for paid users
     } else {
-      return filteredContracts.slice(0, 1); // Show only first contract for unpaid users
+      return filteredContracts.slice(0, 3); // Show first 3 contracts for free users
     }
   };
 
@@ -275,12 +241,7 @@ export default function DashboardPage() {
 
   return (
     <div className="space-y-6">
-      {/* Simple loading indicator */}
-      <div className="text-sm text-slate-600">
-        Loading state: {loading ? 'Loading contracts' : 'Contracts loaded'} | 
-        Subscription loading: {subscriptionLoading ? 'Loading subscription' : 'Subscription loaded'} |
-        User: {user ? 'Logged in' : 'Not logged in'}
-      </div>
+
       
       {/* Page Header */}
       <div className="flex items-center justify-between">
@@ -291,16 +252,6 @@ export default function DashboardPage() {
         </p>
       </div>
           <div className="flex items-center space-x-2">
-            <div className="text-sm text-slate-600">
-              Status: {hasActiveSubscription ? '🟢 Active' : '🔴 None'} | 
-              Contracts: {getDisplayContracts().length}/{getTotalContractsCount()}
-            </div>
-            <button 
-              onClick={debugSubscription}
-              className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 transition-colors"
-            >
-              🔍 Debug
-            </button>
             <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
               <Bookmark className="w-4 h-4 mr-2" />
               Saved Contracts
@@ -503,7 +454,7 @@ export default function DashboardPage() {
         ))}
 
             {/* Blurred Contract Cards for Unpaid Users */}
-            {!hasActiveSubscription && filteredContracts.length > 1 && (
+            {!hasActiveSubscription && filteredContracts.length > 3 && (
               <>
                 {/* First Blurred Card */}
                 <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden">
@@ -512,40 +463,40 @@ export default function DashboardPage() {
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
                         <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                          {filteredContracts[1]?.title || "Contract Title"}
+                          {filteredContracts[3]?.title || "Contract Title"}
                         </h3>
                         <div className="flex items-center text-sm text-slate-600 mb-2">
                           <Building className="h-4 w-4 mr-1" />
-                          {filteredContracts[1]?.client || "Client Name"}
+                          {filteredContracts[3]?.client || "Client Name"}
                         </div>
                       </div>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {filteredContracts[1]?.category || "Category"}
+                        {filteredContracts[3]?.category || "Category"}
                       </span>
       </div>
 
                     {/* Description */}
                     <p className="text-sm text-slate-600 mb-4">
-                      {filteredContracts[1]?.description || "Contract description..."}
+                      {filteredContracts[3]?.description || "Contract description..."}
                     </p>
 
                     {/* Details */}
                     <div className="grid grid-cols-2 gap-4 mb-4">
                       <div className="flex items-center text-sm text-slate-600">
                         <MapPin className="h-4 w-4 mr-2" />
-                        {filteredContracts[1]?.location || "Location"}
+                        {filteredContracts[3]?.location || "Location"}
             </div>
                       <div className="flex items-center text-sm text-slate-600">
                         <Calendar className="h-4 w-4 mr-2" />
-                        Deadline: {filteredContracts[1]?.deadline ? formatDate(filteredContracts[1].deadline) : "Date"}
+                        Deadline: {filteredContracts[3]?.deadline ? formatDate(filteredContracts[3].deadline) : "Date"}
                       </div>
                       <div className="flex items-center text-sm text-slate-600">
                         <Calendar className="h-4 w-4 mr-2" />
-                        Posted: {filteredContracts[1]?.posted_date ? formatDate(filteredContracts[1].posted_date) : "Date"}
+                        Posted: {filteredContracts[3]?.posted_date ? formatDate(filteredContracts[3].posted_date) : "Date"}
                     </div>
                       <div className="flex items-center justify-end">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          {filteredContracts[1]?.value ? formatValue(filteredContracts[1].value) : "Value"}
+                          {filteredContracts[3]?.value ? formatValue(filteredContracts[3].value) : "Value"}
                       </span>
                     </div>
                   </div>
@@ -558,7 +509,7 @@ export default function DashboardPage() {
                         <Lock className="w-8 h-8 text-blue-600" />
             </div>
                       <h3 className="text-lg font-semibold text-slate-900 mb-2">Premium Contract</h3>
-                      <p className="text-slate-600 mb-4">Upgrade to access this and {filteredContracts.length - 2} more contracts</p>
+                      <p className="text-slate-600 mb-4">Upgrade to access this and {filteredContracts.length - 4} more contracts</p>
                       <button
                         onClick={handleUpgrade}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
@@ -570,47 +521,47 @@ export default function DashboardPage() {
         </div>
 
                 {/* Second Blurred Card */}
-                {filteredContracts.length > 2 && (
+                {filteredContracts.length > 4 && (
                   <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden">
                     <div className="p-6 blur-sm">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
                           <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                            {filteredContracts[2]?.title || "Contract Title"}
+                            {filteredContracts[4]?.title || "Contract Title"}
                           </h3>
                           <div className="flex items-center text-sm text-slate-600 mb-2">
                             <Building className="h-4 w-4 mr-1" />
-                            {filteredContracts[2]?.client || "Client Name"}
+                            {filteredContracts[4]?.client || "Client Name"}
                           </div>
                         </div>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                          {filteredContracts[2]?.category || "Category"}
+                          {filteredContracts[4]?.category || "Category"}
                         </span>
                       </div>
 
                       {/* Description */}
                       <p className="text-sm text-slate-600 mb-4">
-                        {filteredContracts[2]?.description || "Contract description..."}
+                        {filteredContracts[4]?.description || "Contract description..."}
                       </p>
 
                       {/* Details */}
                       <div className="grid grid-cols-2 gap-4 mb-4">
                         <div className="flex items-center text-sm text-slate-600">
                           <MapPin className="h-4 w-4 mr-2" />
-                          {filteredContracts[2]?.location || "Location"}
+                          {filteredContracts[4]?.location || "Location"}
                         </div>
                         <div className="flex items-center text-sm text-slate-600">
                           <Calendar className="h-4 w-4 mr-2" />
-                          Deadline: {filteredContracts[2]?.deadline ? formatDate(filteredContracts[2].deadline) : "Date"}
+                          Deadline: {filteredContracts[4]?.deadline ? formatDate(filteredContracts[4].deadline) : "Date"}
           </div>
                         <div className="flex items-center text-sm text-slate-600">
                           <Calendar className="h-4 w-4 mr-2" />
-                          Posted: {filteredContracts[2]?.posted_date ? formatDate(filteredContracts[2].posted_date) : "Date"}
+                          Posted: {filteredContracts[4]?.posted_date ? formatDate(filteredContracts[4].posted_date) : "Date"}
                   </div>
                         <div className="flex items-center justify-end">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            {filteredContracts[2]?.value ? formatValue(filteredContracts[2].value) : "Value"}
+                            {filteredContracts[4]?.value ? formatValue(filteredContracts[4].value) : "Value"}
                           </span>
                   </div>
                 </div>
@@ -636,13 +587,13 @@ export default function DashboardPage() {
                 )}
 
                 {/* More Contracts Message */}
-                {filteredContracts.length > 3 && (
+                {filteredContracts.length > 5 && (
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200 p-8 text-center">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Star className="w-8 h-8 text-blue-600" />
         </div>
                     <h3 className="text-xl font-semibold text-slate-900 mb-2">
-                      {filteredContracts.length - 3} More Contracts Available
+                      {filteredContracts.length - 5} More Contracts Available
                     </h3>
                     <p className="text-slate-600 mb-4">
                       Upgrade to Professional Plan to access all {filteredContracts.length} contracts and unlock premium features

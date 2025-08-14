@@ -37,7 +37,6 @@ export default function ProfilePage() {
     business_type: '',
     experience_years: '',
     preferred_categories: [] as string[],
-    preferred_locations: [] as string[],
     min_contract_value: '',
     max_contract_value: ''
   });
@@ -132,7 +131,6 @@ export default function ProfilePage() {
             business_type: newProfile.business_type || '',
             experience_years: newProfile.experience_years?.toString() || '',
             preferred_categories: newProfile.preferred_categories || [],
-            preferred_locations: newProfile.preferred_locations || [],
             min_contract_value: newProfile.min_contract_value?.toString() || '',
             max_contract_value: newProfile.max_contract_value?.toString() || ''
           });
@@ -150,7 +148,6 @@ export default function ProfilePage() {
           business_type: data.business_type || '',
           experience_years: data.experience_years?.toString() || '',
           preferred_categories: data.preferred_categories || [],
-          preferred_locations: data.preferred_locations || [],
           min_contract_value: data.min_contract_value?.toString() || '',
           max_contract_value: data.max_contract_value?.toString() || ''
         });
@@ -186,7 +183,6 @@ export default function ProfilePage() {
           business_type: formData.business_type,
           experience_years: parseInt(formData.experience_years) || 0,
           preferred_categories: formData.preferred_categories,
-          preferred_locations: formData.preferred_locations,
           min_contract_value: parseInt(formData.min_contract_value) || 0,
           max_contract_value: parseInt(formData.max_contract_value) || 0,
           updated_at: new Date().toISOString()
@@ -203,7 +199,6 @@ export default function ProfilePage() {
         business_type: formData.business_type,
         experience_years: parseInt(formData.experience_years) || 0,
         preferred_categories: formData.preferred_categories,
-        preferred_locations: formData.preferred_locations,
         min_contract_value: parseInt(formData.min_contract_value) || 0,
         max_contract_value: parseInt(formData.max_contract_value) || 0,
 
@@ -229,7 +224,6 @@ export default function ProfilePage() {
         business_type: profile.business_type || '',
         experience_years: profile.experience_years?.toString() || '',
         preferred_categories: profile.preferred_categories || [],
-        preferred_locations: profile.preferred_locations || [],
         min_contract_value: profile.min_contract_value?.toString() || '',
         max_contract_value: profile.max_contract_value?.toString() || ''
       });
@@ -247,25 +241,13 @@ export default function ProfilePage() {
     }));
   };
 
-  const handleLocationToggle = (location: string) => {
-    setFormData(prev => ({
-      ...prev,
-      preferred_locations: prev.preferred_locations.includes(location)
-        ? prev.preferred_locations.filter(l => l !== location)
-        : [...prev.preferred_locations, location]
-    }));
-  };
-
   const categories = [
     'Construction', 'IT & Technology', 'Healthcare', 'Education', 
     'Transportation', 'Energy', 'Agriculture', 'Manufacturing',
     'Consulting', 'Legal Services', 'Marketing', 'Security'
   ];
 
-  const locations = [
-    'Kampala', 'Entebbe', 'Jinja', 'Mbarara', 'Gulu', 'Mbale',
-    'Arua', 'Soroti', 'Lira', 'Kabale', 'Fort Portal', 'Masaka'
-  ];
+
 
   if (loading) {
     return (
@@ -504,26 +486,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                {/* Preferred Locations */}
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-3">
-                    Preferred Locations
-                  </label>
-                  <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
-                    {locations.map((location) => (
-                      <label key={location} className="flex items-center">
-                        <input
-                          type="checkbox"
-                          checked={formData.preferred_locations.includes(location)}
-                          onChange={() => handleLocationToggle(location)}
-                          disabled={!editing}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded"
-                        />
-                        <span className="ml-2 text-sm text-gray-700">{location}</span>
-                      </label>
-                    ))}
-                  </div>
-                </div>
+
               </div>
             </div>
           </div>

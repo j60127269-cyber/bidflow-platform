@@ -20,11 +20,11 @@ export default function OnboardingWelcome() {
       try {
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('preferred_categories, preferred_locations, business_type, min_contract_value')
+          .select('preferred_categories, business_type, min_contract_value')
           .eq('id', user.id)
           .single();
 
-        if (profile && profile.preferred_categories && profile.preferred_locations && profile.business_type && profile.min_contract_value) {
+        if (profile && profile.preferred_categories && profile.business_type && profile.min_contract_value) {
           // User has completed onboarding, redirect to dashboard
           router.push('/dashboard');
           return;

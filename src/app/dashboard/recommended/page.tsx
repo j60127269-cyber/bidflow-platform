@@ -42,7 +42,7 @@ interface UserProfile {
   business_type: string;
   experience_years: number;
   preferred_categories: string[];
-  preferred_locations: string[];
+
   max_contract_value: number;
   min_contract_value: number;
   certifications: string[];
@@ -91,7 +91,7 @@ export default function RecommendedPage() {
           business_type: "Technology",
           experience_years: 5,
           preferred_categories: ["Information Technology", "Construction"],
-          preferred_locations: ["Kampala", "Jinja"],
+
           max_contract_value: 1000000000,
           min_contract_value: 50000000,
           certifications: ["ISO 9001", "CMMI Level 3"],
@@ -137,16 +137,7 @@ export default function RecommendedPage() {
         reasons.push(`Matches your preferred category: ${contract.category}`);
       }
 
-      // Location match (25% weight)
-      const locationMatch = userProfile.preferred_locations && userProfile.preferred_locations.some(location =>
-        contract.location.toLowerCase().includes(location.toLowerCase())
-      );
-      if (locationMatch) {
-        score += 25;
-        reasons.push(`Located in your preferred area: ${contract.location}`);
-      }
-
-      // Value range match (20% weight)
+      // Value range match (45% weight - increased since we removed location)
       if (contract.value >= userProfile.min_contract_value && 
           contract.value <= userProfile.max_contract_value) {
         score += 20;
@@ -332,10 +323,7 @@ export default function RecommendedPage() {
                   <User className="w-4 h-4 mr-1" />
                   {userProfile.business_type}
                 </span>
-                <span className="flex items-center">
-                  <MapPin className="w-4 h-4 mr-1" />
-                  {userProfile.preferred_locations ? userProfile.preferred_locations.join(", ") : "Not specified"}
-                </span>
+
                 <span className="flex items-center">
                   <DollarSign className="w-4 h-4 mr-1" />
                   {formatValue(userProfile.min_contract_value)} - {formatValue(userProfile.max_contract_value)}

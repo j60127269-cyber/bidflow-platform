@@ -5,7 +5,6 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, Plus, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { locationService } from "@/lib/locationService";
 
 const industries = [
   "Construction & Engineering",
@@ -30,27 +29,7 @@ const contractRanges = [
   { label: "Enterprise (Over 100M UGX)", value: "enterprise" }
 ];
 
-const locations = [
-  "Kampala",
-  "Jinja",
-  "Gulu",
-  "Mbarara",
-  "Entebbe",
-  "Arua",
-  "Lira",
-  "Mbale",
-  "Soroti",
-  "Tororo",
-  "Kasese",
-  "Kabale",
-  "Fort Portal",
-  "Hoima",
-  "Masaka",
-  "Mukono",
-  "Wakiso",
-  "Multiple Locations",
-  "Any Location"
-];
+
 
 export default function OnboardingPreferences() {
   const router = useRouter();
@@ -58,32 +37,10 @@ export default function OnboardingPreferences() {
   
   const [selectedIndustries, setSelectedIndustries] = useState<string[]>([]);
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
-  const [selectedLocations, setSelectedLocations] = useState<string[]>([]);
-  const [availableLocations, setAvailableLocations] = useState<string[]>([]);
   const [customProduct, setCustomProduct] = useState("");
   const [showCustomProduct, setShowCustomProduct] = useState(false);
   const [contractRange, setContractRange] = useState("");
   const [loading, setLoading] = useState(false);
-
-  // Fetch available locations on component mount
-  useEffect(() => {
-    const fetchLocations = async () => {
-      try {
-        const locations = await locationService.getLocationNames();
-        setAvailableLocations(locations);
-      } catch (error) {
-        console.error('Error fetching locations:', error);
-        // Fallback to hardcoded locations
-        setAvailableLocations([
-          "Kampala", "Jinja", "Gulu", "Mbarara", "Entebbe", "Arua", "Lira", 
-          "Mbale", "Soroti", "Tororo", "Kasese", "Kabale", "Fort Portal", 
-          "Hoima", "Masaka", "Mukono", "Wakiso", "Multiple Locations", "Any Location"
-        ]);
-      }
-    };
-
-    fetchLocations();
-  }, []);
 
   const handleIndustryToggle = (industry: string) => {
     setSelectedIndustries(prev => 
@@ -98,14 +55,6 @@ export default function OnboardingPreferences() {
       prev.includes(product) 
         ? prev.filter(p => p !== product)
         : [...prev, product]
-    );
-  };
-
-  const handleLocationToggle = (location: string) => {
-    setSelectedLocations(prev => 
-      prev.includes(location) 
-        ? prev.filter(l => l !== location)
-        : [...prev, location]
     );
   };
 
@@ -130,10 +79,6 @@ export default function OnboardingPreferences() {
       alert("Please select at least one product/service");
       return;
     }
-    if (selectedLocations.length === 0) {
-      alert("Please select at least one preferred location");
-      return;
-    }
     if (!contractRange) {
       alert("Please select a contract value range");
       return;
@@ -146,7 +91,6 @@ export default function OnboardingPreferences() {
       console.log('Saving preferences for user:', user?.id);
       console.log('Selected industries:', selectedIndustries);
       console.log('Selected products:', selectedProducts);
-      console.log('Selected locations:', selectedLocations);
       console.log('Contract range:', contractRange);
       
       const { error } = await supabase
@@ -155,7 +99,6 @@ export default function OnboardingPreferences() {
           id: user?.id,
           email: user?.email,
           preferred_categories: selectedIndustries,
-          preferred_locations: selectedLocations,
           business_type: selectedProducts.join(', '),
           min_contract_value: getContractValueRange(contractRange).min,
           max_contract_value: getContractValueRange(contractRange).max,
@@ -451,28 +394,6 @@ export default function OnboardingPreferences() {
                   </div>
                 </div>
               )}
-            </div>
-
-            {/* Preferred Locations */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-slate-900 mb-4">
-                Where are you interested in bidding for contracts?
-              </h2>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
-                {availableLocations.map((location) => (
-                  <button
-                    key={location}
-                    onClick={() => handleLocationToggle(location)}
-                    className={`p-3 rounded-lg border text-left transition-colors ${
-                      selectedLocations.includes(location)
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    {location}
-                  </button>
-                ))}
-              </div>
             </div>
 
             {/* Contract Value Range */}
