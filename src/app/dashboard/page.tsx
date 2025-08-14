@@ -259,26 +259,6 @@ export default function DashboardPage() {
         </div>
 
       {/* Search and Filters */}
-      {/* More Contracts Message */}
-      {!hasActiveSubscription && filteredContracts.length > 5 && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200 p-8 text-center mb-6">
-          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-            <Crown className="w-8 h-8 text-blue-600" />
-          </div>
-          <h3 className="text-xl font-semibold text-slate-900 mb-2">
-            {filteredContracts.length - 5} More Contracts Available
-          </h3>
-          <p className="text-slate-600 mb-4">
-            Upgrade to Professional Plan to access all {filteredContracts.length} contracts and unlock premium features
-          </p>
-          <button
-            onClick={handleUpgrade}
-            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-          >
-            Upgrade Now
-          </button>
-        </div>
-      )}
 
       <div className="bg-white rounded-lg shadow p-6">
         {/* Search */}
@@ -575,6 +555,26 @@ export default function DashboardPage() {
       </div>
                 )}
 
+                {/* More Contracts Message */}
+                {filteredContracts.length > 5 && (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200 p-8 text-center">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Crown className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                      {filteredContracts.length - 5} More Contracts Available
+                    </h3>
+                    <p className="text-slate-600 mb-4">
+                      Upgrade to Professional Plan to access all {filteredContracts.length} contracts and unlock premium features
+                    </p>
+                    <button
+                      onClick={handleUpgrade}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+                    >
+                      Upgrade Now
+                    </button>
+                  </div>
+                )}
 
               </>
             )}
