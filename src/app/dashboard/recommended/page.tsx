@@ -330,12 +330,12 @@ export default function RecommendedPage() {
               <div className="flex items-center space-x-6 text-sm text-slate-600">
                 <span className="flex items-center">
                   <User className="w-4 h-4 mr-1" />
-                  {userProfile.business_type} • {userProfile.experience_years} years experience
+                  {userProfile.business_type}
                 </span>
-                                 <span className="flex items-center">
-                   <MapPin className="w-4 h-4 mr-1" />
-                   {userProfile.preferred_locations ? userProfile.preferred_locations.join(", ") : "Not specified"}
-                 </span>
+                <span className="flex items-center">
+                  <MapPin className="w-4 h-4 mr-1" />
+                  {userProfile.preferred_locations ? userProfile.preferred_locations.join(", ") : "Not specified"}
+                </span>
                 <span className="flex items-center">
                   <DollarSign className="w-4 h-4 mr-1" />
                   {formatValue(userProfile.min_contract_value)} - {formatValue(userProfile.max_contract_value)}

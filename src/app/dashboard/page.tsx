@@ -273,7 +273,7 @@ export default function DashboardPage() {
     );
   }
 
-    return (
+  return (
     <div className="space-y-6">
       {/* Simple loading indicator */}
       <div className="text-sm text-slate-600">
@@ -284,12 +284,12 @@ export default function DashboardPage() {
       
       {/* Page Header */}
       <div className="flex items-center justify-between">
-          <div>
-            <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-            <p className="mt-1 text-sm text-slate-600">
+      <div>
+        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+        <p className="mt-1 text-sm text-slate-600">
               Discover and track government and private sector contracts
-            </p>
-          </div>
+        </p>
+      </div>
           <div className="flex items-center space-x-2">
             <div className="text-sm text-slate-600">
               Status: {hasActiveSubscription ? '🟢 Active' : '🔴 None'} | 
@@ -387,7 +387,7 @@ export default function DashboardPage() {
             <option>Over 500M UGX</option>
           </select>
               </div>
-            </div>
+              </div>
 
       {/* Results */}
       <div className="flex items-center justify-between">
@@ -406,8 +406,8 @@ export default function DashboardPage() {
             <option>Deadline</option>
             <option>Value</option>
           </select>
-        </div>
-      </div>
+              </div>
+            </div>
 
       {/* Contract Cards */}
       {filteredContracts.length === 0 ? (
@@ -497,10 +497,10 @@ export default function DashboardPage() {
                     <Target className="h-4 w-4 mr-1" />
                     Track Bid
                   </Link>
-                  </div>
-                </div>
               </div>
-            ))}
+            </div>
+          </div>
+        ))}
 
             {/* Blurred Contract Cards for Unpaid Users */}
             {!hasActiveSubscription && filteredContracts.length > 1 && (
@@ -522,7 +522,7 @@ export default function DashboardPage() {
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {filteredContracts[1]?.category || "Category"}
                       </span>
-                    </div>
+      </div>
 
                     {/* Description */}
                     <p className="text-sm text-slate-600 mb-4">
@@ -534,7 +534,7 @@ export default function DashboardPage() {
                       <div className="flex items-center text-sm text-slate-600">
                         <MapPin className="h-4 w-4 mr-2" />
                         {filteredContracts[1]?.location || "Location"}
-                      </div>
+            </div>
                       <div className="flex items-center text-sm text-slate-600">
                         <Calendar className="h-4 w-4 mr-2" />
                         Deadline: {filteredContracts[1]?.deadline ? formatDate(filteredContracts[1].deadline) : "Date"}
@@ -542,21 +542,21 @@ export default function DashboardPage() {
                       <div className="flex items-center text-sm text-slate-600">
                         <Calendar className="h-4 w-4 mr-2" />
                         Posted: {filteredContracts[1]?.posted_date ? formatDate(filteredContracts[1].posted_date) : "Date"}
-                      </div>
+                    </div>
                       <div className="flex items-center justify-end">
                         <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                           {filteredContracts[1]?.value ? formatValue(filteredContracts[1].value) : "Value"}
-                        </span>
-                      </div>
+                      </span>
                     </div>
                   </div>
+                </div>
                   
                   {/* Upgrade Overlay */}
                   <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white flex items-center justify-center">
                     <div className="text-center p-6">
                       <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                         <Lock className="w-8 h-8 text-blue-600" />
-                      </div>
+            </div>
                       <h3 className="text-lg font-semibold text-slate-900 mb-2">Premium Contract</h3>
                       <p className="text-slate-600 mb-4">Upgrade to access this and {filteredContracts.length - 2} more contracts</p>
                       <button
@@ -564,10 +564,10 @@ export default function DashboardPage() {
                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                       >
                         Upgrade Plan
-                      </button>
-                    </div>
-                  </div>
-                </div>
+              </button>
+            </div>
+          </div>
+        </div>
 
                 {/* Second Blurred Card */}
                 {filteredContracts.length > 2 && (
@@ -603,25 +603,25 @@ export default function DashboardPage() {
                         <div className="flex items-center text-sm text-slate-600">
                           <Calendar className="h-4 w-4 mr-2" />
                           Deadline: {filteredContracts[2]?.deadline ? formatDate(filteredContracts[2].deadline) : "Date"}
-                        </div>
+          </div>
                         <div className="flex items-center text-sm text-slate-600">
                           <Calendar className="h-4 w-4 mr-2" />
                           Posted: {filteredContracts[2]?.posted_date ? formatDate(filteredContracts[2].posted_date) : "Date"}
-                        </div>
+                  </div>
                         <div className="flex items-center justify-end">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             {filteredContracts[2]?.value ? formatValue(filteredContracts[2].value) : "Value"}
                           </span>
-                        </div>
-                      </div>
-                    </div>
+                  </div>
+                </div>
+              </div>
                     
                     {/* Upgrade Overlay */}
                     <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white flex items-center justify-center">
                       <div className="text-center p-6">
                         <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                           <Crown className="w-8 h-8 text-blue-600" />
-                        </div>
+          </div>
                         <h3 className="text-lg font-semibold text-slate-900 mb-2">Premium Contract</h3>
                         <p className="text-slate-600 mb-4">Unlock unlimited access to all contracts</p>
                         <button
@@ -629,10 +629,10 @@ export default function DashboardPage() {
                           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
                         >
                           Upgrade Plan
-                        </button>
-                      </div>
-                    </div>
-                  </div>
+            </button>
+          </div>
+        </div>
+      </div>
                 )}
 
                 {/* More Contracts Message */}
@@ -640,7 +640,7 @@ export default function DashboardPage() {
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200 p-8 text-center">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Star className="w-8 h-8 text-blue-600" />
-                    </div>
+        </div>
                     <h3 className="text-xl font-semibold text-slate-900 mb-2">
                       {filteredContracts.length - 3} More Contracts Available
                     </h3>
@@ -652,7 +652,7 @@ export default function DashboardPage() {
                       className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
                     >
                       Upgrade Now
-                    </button>
+            </button>
                   </div>
                 )}
               </>
@@ -680,11 +680,11 @@ export default function DashboardPage() {
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   Upgrade Now
-                </button>
-              </div>
-            </div>
-          )}
+            </button>
+          </div>
         </div>
+          )}
+      </div>
       )}
     </div>
   );
