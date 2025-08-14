@@ -11,7 +11,6 @@ import {
   Bookmark,
   Target, 
   ArrowRight,
-  Star,
   Lock,
   Crown
 } from "lucide-react";
@@ -260,26 +259,24 @@ export default function DashboardPage() {
         </div>
 
       {/* Search and Filters */}
-      {/* Premium Features Banner for Unpaid Users */}
-      {!hasActiveSubscription && (
-        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-3">
-              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
-                <Crown className="w-5 h-5 text-blue-600" />
-              </div>
-              <div>
-                <h3 className="text-sm font-semibold text-slate-900">Unlock Premium Features</h3>
-                <p className="text-xs text-slate-600">Access unlimited contracts, advanced analytics, and more</p>
-              </div>
-            </div>
-            <button
-              onClick={handleUpgrade}
-              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-            >
-              Upgrade Now
-            </button>
+      {/* More Contracts Message */}
+      {!hasActiveSubscription && filteredContracts.length > 5 && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200 p-8 text-center mb-6">
+          <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+            <Crown className="w-8 h-8 text-blue-600" />
           </div>
+          <h3 className="text-xl font-semibold text-slate-900 mb-2">
+            {filteredContracts.length - 5} More Contracts Available
+          </h3>
+          <p className="text-slate-600 mb-4">
+            Upgrade to Professional Plan to access all {filteredContracts.length} contracts and unlock premium features
+          </p>
+          <button
+            onClick={handleUpgrade}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+          >
+            Upgrade Now
+          </button>
         </div>
       )}
 
@@ -373,15 +370,7 @@ export default function DashboardPage() {
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                       {getDisplayContracts().map((contract, index) => (
               <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200 relative">
-                {/* Sample Badge for Unpaid Users */}
-                {!hasActiveSubscription && (
-                  <div className="absolute top-4 left-4 z-10">
-                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      <Star className="w-3 h-3 mr-1" />
-                      Sample
-                    </span>
-                  </div>
-                )}
+
                 
                 <div className="p-6">
                   {/* Header */}
@@ -586,26 +575,7 @@ export default function DashboardPage() {
       </div>
                 )}
 
-                {/* More Contracts Message */}
-                {filteredContracts.length > 5 && (
-                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200 p-8 text-center">
-                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                      <Star className="w-8 h-8 text-blue-600" />
-        </div>
-                    <h3 className="text-xl font-semibold text-slate-900 mb-2">
-                      {filteredContracts.length - 5} More Contracts Available
-                    </h3>
-                    <p className="text-slate-600 mb-4">
-                      Upgrade to Professional Plan to access all {filteredContracts.length} contracts and unlock premium features
-                    </p>
-                    <button
-                      onClick={handleUpgrade}
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-                    >
-                      Upgrade Now
-            </button>
-                  </div>
-                )}
+
               </>
             )}
           </div>
