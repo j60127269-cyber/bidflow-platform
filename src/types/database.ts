@@ -12,8 +12,7 @@ export interface Profile {
   max_contract_value?: number;
   certifications?: string[];
 
-  subscription_status?: 'none' | 'trial' | 'active' | 'cancelled' | 'expired';
-  trial_ends_at?: string;
+  subscription_status?: 'none' | 'active' | 'cancelled' | 'expired';
   subscription_id?: string;
   created_at: string;
   updated_at: string;

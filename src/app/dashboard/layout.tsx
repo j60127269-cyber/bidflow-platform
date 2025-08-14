@@ -40,8 +40,6 @@ export default function DashboardLayout({
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
-  const [trialExpiringSoon, setTrialExpiringSoon] = useState(false);
-  const [trialDaysLeft, setTrialDaysLeft] = useState(0);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -50,13 +48,6 @@ export default function DashboardLayout({
         try {
           const status = await subscriptionService.getUserSubscriptionStatus(user.id);
           setSubscriptionStatus(status);
-
-          // Check if trial is expiring soon
-          if (status?.status === 'trial') {
-            const expirationCheck = await subscriptionService.checkTrialExpiration(user.id);
-            setTrialExpiringSoon(expirationCheck.expiringSoon);
-            setTrialDaysLeft(expirationCheck.daysLeft);
-          }
         } catch (error) {
           console.error('Error checking subscription status:', error);
         } finally {
@@ -96,16 +87,6 @@ export default function DashboardLayout({
   // Show upgrade prompt if user doesn't have active subscription
   const showUpgradePrompt = subscriptionStatus &&
     subscriptionStatus.status !== 'active' &&
-    subscriptionStatus.status !== 'trial' &&
-    pathname !== '/dashboard/subscription';
-
-  const showTrialInfo = subscriptionStatus &&
-    subscriptionStatus.status === 'trial' &&
-    pathname !== '/dashboard/subscription';
-
-  const showTrialExpired = subscriptionStatus &&
-    subscriptionStatus.status === 'none' &&
-    subscriptionStatus.trialEnded &&
     pathname !== '/dashboard/subscription';
 
   if (loading) {
@@ -278,65 +259,7 @@ export default function DashboardLayout({
                </div>
              )}
 
-                           {/* Trial Info */}
-              {showTrialInfo && subscriptionStatus?.trialEndsAt && (
-                <div className="bg-blue-50 border-b border-blue-200 px-4 py-3">
-                  <div className="max-w-7xl mx-auto flex items-center justify-between">
-                    <div className="flex items-center">
-                      <div className="h-5 w-5 text-blue-600 mr-2">🎉</div>
-                      <p className="text-sm text-blue-800">
-                        You're on a free trial! Trial ends on {new Date(subscriptionStatus.trialEndsAt).toLocaleDateString()}.
-                      </p>
-                    </div>
-                    <Link
-                      href="/dashboard/subscription"
-                      className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                    >
-                      Manage Subscription
-                    </Link>
-                  </div>
-                </div>
-              )}
-
-            {/* Trial Expired Banner */}
-            {showTrialExpired && (
-              <div className="bg-orange-50 border-b border-orange-200 px-4 py-3">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="h-5 w-5 text-orange-600 mr-2">⏰</div>
-                    <p className="text-sm text-orange-800">
-                      Your free trial has ended. Subscribe now to continue accessing all features.
-                    </p>
-                  </div>
-                  <Link
-                    href="/dashboard/subscription"
-                    className="bg-orange-600 hover:bg-orange-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Subscribe Now
-                  </Link>
-                  </div>
-                </div>
-            )}
-
-            {/* Trial Expiring Soon Banner */}
-            {trialExpiringSoon && subscriptionStatus?.status === 'trial' && (
-              <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3">
-                <div className="max-w-7xl mx-auto flex items-center justify-between">
-                  <div className="flex items-center">
-                    <div className="h-5 w-5 text-yellow-600 mr-2">⚠️</div>
-                    <p className="text-sm text-yellow-800">
-                      Your free trial expires in {trialDaysLeft} day{trialDaysLeft !== 1 ? 's' : ''}. Subscribe now to continue.
-                    </p>
-                  </div>
-                  <Link
-                    href="/dashboard/subscription"
-                    className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
-                  >
-                    Subscribe Now
-                  </Link>
-              </div>
-              </div>
-            )}
+                           
 
         {/* Mobile navigation */}
         {mobileMenuOpen && (

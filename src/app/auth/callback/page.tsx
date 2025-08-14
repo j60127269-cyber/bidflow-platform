@@ -36,10 +36,13 @@ export default function AuthCallbackPage() {
       // Check subscription status
       const subscriptionStatus = await subscriptionService.getUserSubscriptionStatus(userId);
       
-      if (subscriptionStatus?.status === 'active' || subscriptionStatus?.status === 'trial') {
+      if (subscriptionStatus?.status === 'active') {
+        return 'dashboard';
+      } else if (subscriptionStatus?.status === 'none') {
+        // User has completed onboarding but skipped subscription - allow access with restrictions
         return 'dashboard';
       } else {
-        // User has profile but no active subscription
+        // User has profile but subscription status is unclear - redirect to subscription
         return 'subscription';
       }
     } catch (error) {

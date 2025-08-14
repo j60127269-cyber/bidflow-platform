@@ -30,8 +30,53 @@ class SubscriptionService {
    * Check if user has active subscription
    */
   async hasActiveSubscription(userId: string): Promise<boolean> {
-    const subscription = await this.getUserActiveSubscription(userId);
-    return subscription !== null;
+    try {
+      console.log('🔍 hasActiveSubscription called for user:', userId);
+      
+      // First, check and handle any expired subscriptions
+      await this.checkAndHandleExpiredSubscriptions(userId);
+      
+      // Check for active subscription in subscriptions table
+      const subscription = await this.getUserActiveSubscription(userId);
+      console.log('🔍 getUserActiveSubscription result:', subscription);
+      
+      if (subscription && Array.isArray(subscription) && subscription.length > 0) {
+        console.log('🔍 Found active subscription, returning true');
+        return true;
+      }
+
+      console.log('🔍 No active subscription found, checking profile...');
+
+      // If no subscription found, check profile status
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('subscription_status')
+        .eq('id', userId)
+        .single();
+
+      console.log('🔍 Profile query result:', { profile, profileError });
+
+      if (profileError) {
+        console.error('Error checking profile subscription status:', profileError);
+        // If profile doesn't exist, user definitely doesn't have active subscription
+        console.log('🔍 Profile error, returning false');
+        return false;
+      }
+
+      // If profile exists, only return true if it shows active subscription (not expired)
+      if (profile) {
+        const result = profile.subscription_status === 'active';
+        console.log('🔍 Profile exists, subscription_status:', profile.subscription_status, 'returning:', result);
+        return result;
+      }
+
+      // If no profile found, user doesn't have active subscription
+      console.log('🔍 No profile found, returning false');
+      return false;
+    } catch (error) {
+      console.error('Error in hasActiveSubscription:', error);
+      return false;
+    }
   }
 
   /**
@@ -228,88 +273,39 @@ class SubscriptionService {
   }
 
   /**
-   * Check if user is in trial period
+   * Check and handle expired subscriptions
    */
-  async isUserInTrial(userId: string): Promise<boolean> {
+  async checkAndHandleExpiredSubscriptions(userId: string): Promise<void> {
     try {
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('trial_ends_at, subscription_status')
-        .eq('id', userId)
-        .single();
+      // Find expired subscriptions
+      const { data: expiredSubscriptions, error } = await supabase
+        .from('subscriptions')
+        .select('*')
+        .eq('user_id', userId)
+        .eq('status', 'active')
+        .lt('current_period_end', new Date().toISOString());
 
       if (error) {
-        console.error('Error checking trial status:', error);
-        return false;
+        console.error('Error checking expired subscriptions:', error);
+        return;
       }
 
-      if (!data) return false;
+      // Update expired subscriptions to 'expired' status
+      if (expiredSubscriptions && expiredSubscriptions.length > 0) {
+        for (const subscription of expiredSubscriptions) {
+          await this.updateSubscriptionStatus(subscription.id, 'expired');
+        }
 
-      // Check if user has trial status and trial hasn't expired
-      if (data.subscription_status === 'trial' && data.trial_ends_at) {
-        const trialEndDate = new Date(data.trial_ends_at);
-        return trialEndDate > new Date();
+        // Update user's profile subscription status
+        await supabase
+          .from('profiles')
+          .update({ subscription_status: 'expired' })
+          .eq('id', userId);
+
+        console.log(`Updated ${expiredSubscriptions.length} expired subscription(s) for user ${userId}`);
       }
-
-      return false;
     } catch (error) {
-      console.error('Error in isUserInTrial:', error);
-      return false;
-    }
-  }
-
-  /**
-   * Start trial period for user
-   */
-  async startTrial(userId: string, trialDays: number = 7): Promise<boolean> {
-    try {
-      const trialEndDate = new Date();
-      trialEndDate.setDate(trialEndDate.getDate() + trialDays);
-
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          subscription_status: 'trial',
-          trial_ends_at: trialEndDate.toISOString(),
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', userId);
-
-      if (error) {
-        console.error('Error starting trial:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in startTrial:', error);
-      return false;
-    }
-  }
-
-  /**
-   * End trial period for user
-   */
-  async endTrial(userId: string): Promise<boolean> {
-    try {
-      const { error } = await supabase
-        .from('profiles')
-        .update({
-          subscription_status: 'none',
-          trial_ends_at: null,
-          updated_at: new Date().toISOString(),
-        })
-        .eq('id', userId);
-
-      if (error) {
-        console.error('Error ending trial:', error);
-        return false;
-      }
-
-      return true;
-    } catch (error) {
-      console.error('Error in endTrial:', error);
-      return false;
+      console.error('Error in checkAndHandleExpiredSubscriptions:', error);
     }
   }
 
@@ -320,13 +316,7 @@ class SubscriptionService {
     try {
       // Check if user has active subscription
       const hasActiveSub = await this.hasActiveSubscription(userId);
-      if (hasActiveSub) return true;
-
-      // Check if user is in trial
-      const isInTrial = await this.isUserInTrial(userId);
-      if (isInTrial) return true;
-
-      return false;
+      return hasActiveSub;
     } catch (error) {
       console.error('Error in canAccessPremiumFeatures:', error);
       return false;
@@ -337,16 +327,28 @@ class SubscriptionService {
    * Get subscription status for user
    */
   async getUserSubscriptionStatus(userId: string): Promise<{
-    status: 'none' | 'trial' | 'active' | 'cancelled' | 'expired';
-    trialEndsAt?: string;
+    status: 'none' | 'active' | 'cancelled' | 'expired';
     subscriptionEndsAt?: string;
     planName?: string;
   }> {
     try {
-      // First, check trial status in profiles table
-      const { data: profileData, error: profileError } = await supabase
+      // First, check and handle any expired subscriptions
+      await this.checkAndHandleExpiredSubscriptions(userId);
+      
+      // Check for active subscription (paid subscription)
+      const activeSubscription = await this.getUserActiveSubscription(userId);
+      if (activeSubscription && Array.isArray(activeSubscription) && activeSubscription.length > 0) {
+        return {
+          status: 'active',
+          subscriptionEndsAt: activeSubscription.current_period_end,
+          planName: activeSubscription.plan_name,
+        };
+      }
+
+      // If no active subscription found, check the profile status
+      const { data: profile, error: profileError } = await supabase
         .from('profiles')
-        .select('subscription_status, trial_ends_at')
+        .select('subscription_status')
         .eq('id', userId)
         .single();
 
@@ -355,33 +357,8 @@ class SubscriptionService {
         return { status: 'none' };
       }
 
-      if (profileData) {
-        // Check if user has trial status and trial hasn't expired
-        if (profileData.subscription_status === 'trial' && profileData.trial_ends_at) {
-          const trialEndDate = new Date(profileData.trial_ends_at);
-          if (trialEndDate > new Date()) {
-            return {
-              status: 'trial',
-              trialEndsAt: profileData.trial_ends_at,
-            };
-          } else {
-            // Trial has expired, update status to none
-            await this.endTrial(userId);
-            return { 
-              status: 'none'
-            };
-          }
-        }
-      }
-
-      // Then check for active subscription (paid subscription)
-      const activeSubscription = await this.getUserActiveSubscription(userId);
-      if (activeSubscription) {
-        return {
-          status: 'active',
-          subscriptionEndsAt: activeSubscription.current_period_end,
-          planName: activeSubscription.plan_name,
-        };
+      if (profile && profile.subscription_status) {
+        return { status: profile.subscription_status };
       }
 
       return { status: 'none' };
@@ -391,33 +368,7 @@ class SubscriptionService {
     }
   }
 
-  async checkTrialExpiration(userId: string): Promise<{ expiringSoon: boolean; daysLeft: number }> {
-    try {
-      const { data, error } = await supabase
-        .rpc('get_user_active_subscription', { user_id: userId });
 
-      if (error) {
-        console.error('Error checking trial expiration:', error);
-        return { expiringSoon: false, daysLeft: 0 };
-      }
-
-      if (data?.subscription_status === 'trial' && data?.trial_ends_at) {
-        const trialEndDate = new Date(data.trial_ends_at);
-        const now = new Date();
-        const daysLeft = Math.ceil((trialEndDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-        
-        return {
-          expiringSoon: daysLeft <= 3 && daysLeft > 0,
-          daysLeft: Math.max(0, daysLeft)
-        };
-      }
-
-      return { expiringSoon: false, daysLeft: 0 };
-    } catch (error) {
-      console.error('Error checking trial expiration:', error);
-      return { expiringSoon: false, daysLeft: 0 };
-    }
-  }
 }
 
 export const subscriptionService = new SubscriptionService();

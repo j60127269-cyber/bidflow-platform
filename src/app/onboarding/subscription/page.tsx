@@ -6,6 +6,7 @@ import { ArrowRight, ArrowLeft, CheckCircle, CreditCard, Shield, Zap } from "luc
 import { useAuth } from "@/contexts/AuthContext";
 import { usePayment } from "@/hooks/usePayment";
 import { subscriptionService } from "@/lib/subscriptionService";
+import { supabase } from "@/lib/supabase";
 
 const features = [
   "Unlimited tender alerts",
@@ -50,25 +51,50 @@ export default function OnboardingSubscription() {
     resetPaymentState();
     
     try {
-      // Start free trial immediately without payment
+      // Initialize payment directly without trial
       if (user) {
-        const trialStarted = await subscriptionService.startTrial(user.id, 7);
-        
-        if (trialStarted) {
-          // Redirect to dashboard with trial active
-        router.push('/dashboard');
-        } else {
-          throw new Error('Failed to start trial');
-        }
+        await initializePayment('Professional');
       }
     } catch (error) {
-      console.error('Trial start error:', error);
+      console.error('Payment initialization error:', error);
       setLoading(false);
     }
   };
 
   const handleBack = () => {
     router.push('/onboarding/notifications');
+  };
+
+  const handleSkip = async () => {
+    setLoading(true);
+    try {
+      // Mark user as having completed onboarding but without subscription
+      if (user) {
+        console.log('Skip - updating profile for user:', user.id); // Debug log
+        
+        const { error } = await supabase
+          .from('profiles')
+          .update({
+            subscription_status: 'none',
+            updated_at: new Date().toISOString(),
+          })
+          .eq('id', user.id);
+
+        console.log('Skip - update result:', { error }); // Debug log
+
+        if (error) {
+          console.error('Error updating profile:', error);
+        } else {
+          // Redirect to dashboard with restricted access
+          console.log('Skip - redirecting to dashboard'); // Debug log
+          router.push('/dashboard');
+        }
+      }
+    } catch (error) {
+      console.error('Error skipping subscription:', error);
+    } finally {
+      setLoading(false);
+    }
   };
 
   // If user already has active subscription, show success state
@@ -205,29 +231,11 @@ export default function OnboardingSubscription() {
         <div className="max-w-2xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-8">
             <h1 className="text-3xl font-bold text-slate-900 mb-4">
-              Start Your Free Trial
+              Choose Your Plan
             </h1>
             <p className="text-lg text-slate-600">
-              Get 7 days free access to all BidFlow features - no payment required
+              Get started with BidFlow and access all premium features
             </p>
-          </div>
-
-          {/* Free Trial Banner */}
-          <div className="bg-gradient-to-r from-green-50 to-blue-50 border border-green-200 rounded-2xl p-6 mb-8">
-            <div className="text-center">
-              <div className="w-12 h-12 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-3">
-                <Zap className="w-6 h-6 text-green-600" />
-              </div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                7-Day Free Trial
-              </h3>
-              <p className="text-slate-600 mb-3">
-                Try all features risk-free. No payment required during trial.
-              </p>
-              <div className="text-sm text-slate-500">
-                After trial: <strong>20,000 UGX/month</strong>
-              </div>
-            </div>
           </div>
 
           {/* Single Pricing Card */}
@@ -243,7 +251,6 @@ export default function OnboardingSubscription() {
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-slate-900 mb-2">Professional</h2>
               <div className="mb-6">
-                <div className="text-sm text-slate-500 mb-2">Free for 7 days, then</div>
                 <span className="text-4xl font-bold text-slate-900">20,000</span>
                 <span className="text-slate-600"> UGX</span>
                 <span className="text-slate-500 text-sm">/month</span>
@@ -291,7 +298,7 @@ export default function OnboardingSubscription() {
                   Processing...
                 </>
               ) : (
-                'Start Free Trial'
+                'Subscribe Now'
               )}
             </button>
 
@@ -305,8 +312,25 @@ export default function OnboardingSubscription() {
             {/* Subscription Info */}
             <div className="mt-6 text-center">
               <p className="text-sm text-slate-600">
-                No payment during trial • Cancel anytime • Secure payment via Flutterwave after trial
+                Cancel anytime • Secure payment via Flutterwave • Immediate access to all features
               </p>
+            </div>
+
+            {/* Skip Warning */}
+            <div className="mt-4 p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
+              <div className="flex items-start">
+                <div className="flex-shrink-0">
+                  <svg className="h-5 w-5 text-yellow-400" viewBox="0 0 20 20" fill="currentColor">
+                    <path fillRule="evenodd" d="M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z" clipRule="evenodd" />
+                  </svg>
+                </div>
+                <div className="ml-3">
+                  <h3 className="text-sm font-medium text-yellow-800">Limited Access</h3>
+                  <div className="mt-2 text-sm text-yellow-700">
+                    <p>If you skip subscription, you'll have limited access to contracts and features. You can upgrade anytime from your dashboard.</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -334,6 +358,13 @@ export default function OnboardingSubscription() {
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
               Back
+            </button>
+            <button
+              onClick={handleSkip}
+              disabled={loading}
+              className="flex items-center px-6 py-3 border border-slate-300 rounded-lg hover:bg-slate-50 transition-colors disabled:opacity-50"
+            >
+              Skip for Now
             </button>
           </div>
         </div>

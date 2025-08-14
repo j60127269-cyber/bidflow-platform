@@ -153,6 +153,29 @@ export default function TestNotificationsPage() {
     }
   };
 
+  const testExpiredSubscriptions = async () => {
+    setLoading(true);
+    setResult('Checking for expired subscriptions...');
+    
+    try {
+      const response = await fetch('/api/subscriptions/check-expired', {
+        method: 'POST',
+      });
+
+      const data = await response.json();
+      
+      if (response.ok) {
+        setResult(`✅ Expired subscriptions check completed! ${data.message}`);
+      } else {
+        setResult(`❌ Expired subscriptions check failed: ${data.error}`);
+      }
+    } catch (error) {
+      setResult(`❌ Error: ${error}`);
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const testTwilioCredentials = async () => {
     setLoading(true);
     setResult('Testing Twilio credentials...');
@@ -272,6 +295,14 @@ export default function TestNotificationsPage() {
                 className="bg-blue-600 hover:bg-blue-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg transition-colors"
               >
                 {loading ? 'Testing...' : '⏰ Test Deadline Reminders'}
+              </button>
+
+              <button
+                onClick={testExpiredSubscriptions}
+                disabled={loading}
+                className="bg-red-600 hover:bg-red-700 disabled:bg-gray-400 text-white font-medium py-3 px-4 rounded-lg transition-colors"
+              >
+                {loading ? 'Checking...' : '⏰ Check Expired Subscriptions'}
               </button>
             </div>
 

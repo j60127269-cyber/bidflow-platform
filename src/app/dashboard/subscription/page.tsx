@@ -38,26 +38,7 @@ export default function SubscriptionPage() {
     }
   };
 
-  const getTrialDaysRemaining = (trialEndsAt: string) => {
-    const endDate = new Date(trialEndsAt);
-    const now = new Date();
-    const diffTime = endDate.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return Math.max(0, diffDays);
-  };
 
-  const getTrialProgress = (trialEndsAt: string) => {
-    const endDate = new Date(trialEndsAt);
-    const startDate = new Date(trialEndsAt);
-    startDate.setDate(startDate.getDate() - 7); // 7-day trial
-    const now = new Date();
-    
-    const totalDuration = endDate.getTime() - startDate.getTime();
-    const elapsed = now.getTime() - startDate.getTime();
-    const progress = Math.min(100, Math.max(0, (elapsed / totalDuration) * 100));
-    
-    return progress;
-  };
 
   if (!subscriptionStatus) {
     return (
@@ -82,51 +63,7 @@ export default function SubscriptionPage() {
         <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
           <h2 className="text-xl font-bold text-slate-900 mb-6">Current Status</h2>
           
-          {subscriptionStatus.status === 'trial' && subscriptionStatus.trialEndsAt && (
-            <div className="bg-blue-50 border border-blue-200 rounded-lg p-6">
-              <div className="flex items-center mb-4">
-                <Calendar className="w-6 h-6 text-blue-600 mr-3" />
-                <h3 className="text-lg font-semibold text-slate-900">Free Trial Active</h3>
-              </div>
-              <div className="space-y-4 text-slate-700">
-                <div>
-                  <p><strong>Trial ends:</strong> {new Date(subscriptionStatus.trialEndsAt).toLocaleDateString()}</p>
-                  <p><strong>Days remaining:</strong> <span className="font-bold text-blue-600 text-lg">{getTrialDaysRemaining(subscriptionStatus.trialEndsAt)} days</span></p>
-                  <p><strong>After trial:</strong> 20,000 UGX/month</p>
-                </div>
-                
-                {/* Trial Progress Bar */}
-                <div>
-                  <div className="flex justify-between text-sm text-slate-600 mb-2">
-                    <span>Trial Progress</span>
-                    <span>{Math.round(getTrialProgress(subscriptionStatus.trialEndsAt))}%</span>
-                  </div>
-                  <div className="w-full bg-gray-200 rounded-full h-2">
-                    <div 
-                      className="bg-blue-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${getTrialProgress(subscriptionStatus.trialEndsAt)}%` }}
-                    ></div>
-                  </div>
-                </div>
-              </div>
-              <div className="mt-6 flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={handleSubscribe}
-                  disabled={loading || paymentState.loading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center"
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  {loading || paymentState.loading ? 'Processing...' : 'Subscribe Now'}
-                </button>
-                <button
-                  onClick={() => router.push('/dashboard')}
-                  className="bg-white hover:bg-gray-50 text-blue-600 border border-blue-600 px-6 py-3 rounded-lg font-medium transition-colors"
-                >
-                  Continue with Trial
-                </button>
-              </div>
-            </div>
-          )}
+
 
           {subscriptionStatus.status === 'active' && (
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
@@ -160,16 +97,22 @@ export default function SubscriptionPage() {
             </div>
           )}
 
-          {subscriptionStatus.status === 'none' && (
+          {(subscriptionStatus.status === 'none' || subscriptionStatus.status === 'expired') && (
             <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
               <div className="flex items-center mb-4">
                 <AlertCircle className="w-6 h-6 text-yellow-600 mr-3" />
-                <h3 className="text-lg font-semibold text-slate-900">No Active Subscription</h3>
+                <h3 className="text-lg font-semibold text-slate-900">
+                  {subscriptionStatus.status === 'expired' ? 'Subscription Expired' : 'No Active Subscription'}
+                </h3>
               </div>
               <div className="space-y-2 text-slate-700 mb-6">
-                <p>You don't have an active subscription. Start a free trial to access all features.</p>
-                <p><strong>Free Trial:</strong> 7 days, no credit card required</p>
-                <p><strong>After trial:</strong> 20,000 UGX/month</p>
+                {subscriptionStatus.status === 'expired' ? (
+                  <p>Your subscription has expired. Renew to continue accessing all premium features.</p>
+                ) : (
+                  <p>You don't have an active subscription. Subscribe to access all premium features.</p>
+                )}
+                <p><strong>Professional Plan:</strong> 20,000 UGX/month</p>
+                <p><strong>Features:</strong> Unlimited access to all BidFlow features</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
@@ -178,7 +121,7 @@ export default function SubscriptionPage() {
                   className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center"
                 >
                   <CreditCard className="w-4 h-4 mr-2" />
-                  {loading || paymentState.loading ? 'Processing...' : 'Start Free Trial'}
+                  {loading || paymentState.loading ? 'Processing...' : (subscriptionStatus.status === 'expired' ? 'Renew Subscription' : 'Subscribe Now')}
                 </button>
                 <button
                   onClick={() => router.push('/dashboard')}
@@ -192,7 +135,7 @@ export default function SubscriptionPage() {
         </div>
 
         {/* Billing Information */}
-        {(subscriptionStatus.status === 'active' || subscriptionStatus.status === 'trial') && (
+        {subscriptionStatus.status === 'active' && (
           <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
             <h2 className="text-xl font-bold text-slate-900 mb-6">Billing Information</h2>
             <div className="grid md:grid-cols-2 gap-6">
@@ -266,7 +209,7 @@ export default function SubscriptionPage() {
                   <div className="text-3xl font-bold text-slate-900 mb-2">20,000 UGX</div>
                   <div className="text-slate-600 mb-4">per month</div>
                   <div className="text-sm text-slate-500">
-                    <p>• 7-day free trial</p>
+                    <p>• Immediate access</p>
                     <p>• Cancel anytime</p>
                     <p>• No setup fees</p>
                   </div>

@@ -10,11 +10,17 @@ import {
   Eye,
   Bookmark,
   Target, 
-  ArrowRight
+  ArrowRight,
+  Star,
+  Lock,
+  Crown
 } from "lucide-react";
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { subscriptionService } from "@/lib/subscriptionService";
+import { useRouter } from "next/navigation";
 
 interface Contract {
   id: string;
@@ -31,6 +37,8 @@ interface Contract {
 }
 
 export default function DashboardPage() {
+  const { user } = useAuth();
+  const router = useRouter();
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [filteredContracts, setFilteredContracts] = useState<Contract[]>([]);
   const [loading, setLoading] = useState(true);
@@ -38,22 +46,53 @@ export default function DashboardPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [selectedValue, setSelectedValue] = useState("Any Value");
+  const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
+  const [subscriptionLoading, setSubscriptionLoading] = useState(true);
 
   // Fetch contracts from Supabase
   useEffect(() => {
     fetchContracts();
   }, []);
 
+  // Check subscription status
+  useEffect(() => {
+    const checkSubscription = async () => {
+      if (user) {
+        try {
+          console.log('Dashboard - checking subscription for user:', user.id);
+          const hasSubscription = await subscriptionService.hasActiveSubscription(user.id);
+          console.log('Dashboard - hasActiveSubscription result:', hasSubscription);
+          setHasActiveSubscription(hasSubscription);
+        } catch (error) {
+          console.error('Error checking subscription:', error);
+        } finally {
+          setSubscriptionLoading(false);
+        }
+      } else {
+        setSubscriptionLoading(false);
+      }
+    };
+
+    checkSubscription();
+  }, [user]);
+
   const fetchContracts = async () => {
     try {
       setLoading(true);
+      console.log('Fetching contracts...'); // Debug log
+      
       const { data, error } = await supabase
         .from('contracts')
         .select('*')
-        .order('posted_date', { ascending: false });
+        .order('posted_date', { ascending: false })
+        .limit(10); // Limit to 10 contracts for testing
+
+      console.log('Contracts fetch result:', { data: data?.length, error }); // Debug log
 
       if (error) {
         console.error('Error fetching contracts:', error);
+        setContracts([]);
+        setFilteredContracts([]);
         return;
       }
 
@@ -61,6 +100,8 @@ export default function DashboardPage() {
       setFilteredContracts(data || []);
     } catch (error) {
       console.error('Error:', error);
+      setContracts([]);
+      setFilteredContracts([]);
     } finally {
       setLoading(false);
     }
@@ -169,7 +210,59 @@ export default function DashboardPage() {
     "Multiple Locations"
   ];
 
-  if (loading) {
+  const handleUpgrade = () => {
+    router.push('/dashboard/subscription');
+  };
+
+  const debugSubscription = async () => {
+    if (!user) return;
+    
+    try {
+      const response = await fetch('/api/debug-subscription', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ userId: user.id }),
+      });
+      
+      const result = await response.json();
+      console.log('🔍 DEBUG SUBSCRIPTION STATE:', result);
+      console.log('🔍 PROFILE DATA:', result.profile);
+      console.log('🔍 PROFILE ERROR:', result.profile.error);
+      console.log('🔍 SUBSCRIPTIONS DATA:', result.subscriptions);
+      console.log('🔍 PAYMENTS DATA:', result.payments);
+      
+      // Also check what our service functions return
+      const hasSub = await subscriptionService.hasActiveSubscription(user.id);
+      const status = await subscriptionService.getUserSubscriptionStatus(user.id);
+      const activeSub = await subscriptionService.getUserActiveSubscription(user.id);
+      console.log('🔍 SERVICE FUNCTIONS:', { hasSub, status, activeSub });
+      
+    } catch (error) {
+      console.error('Debug error:', error);
+    }
+  };
+
+  // Get contracts to display based on subscription status
+  const getDisplayContracts = () => {
+    if (hasActiveSubscription) {
+      return filteredContracts; // Show all contracts for paid users
+    } else {
+      return filteredContracts.slice(0, 1); // Show only first contract for unpaid users
+    }
+  };
+
+  // Get total contracts count for display
+  const getTotalContractsCount = () => {
+    if (hasActiveSubscription) {
+      return filteredContracts.length;
+    } else {
+      return filteredContracts.length; // Show total count to create FOMO
+    }
+  };
+
+  if (loading || subscriptionLoading) {
     return (
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
@@ -180,23 +273,65 @@ export default function DashboardPage() {
     );
   }
 
-  return (
+    return (
     <div className="space-y-6">
+      {/* Simple loading indicator */}
+      <div className="text-sm text-slate-600">
+        Loading state: {loading ? 'Loading contracts' : 'Contracts loaded'} | 
+        Subscription loading: {subscriptionLoading ? 'Loading subscription' : 'Subscription loaded'} |
+        User: {user ? 'Logged in' : 'Not logged in'}
+      </div>
+      
       {/* Page Header */}
       <div className="flex items-center justify-between">
-      <div>
-        <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-600">
-            Discover and track government and private sector contracts
-        </p>
+          <div>
+            <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
+            <p className="mt-1 text-sm text-slate-600">
+              Discover and track government and private sector contracts
+            </p>
+          </div>
+          <div className="flex items-center space-x-2">
+            <div className="text-sm text-slate-600">
+              Status: {hasActiveSubscription ? '🟢 Active' : '🔴 None'} | 
+              Contracts: {getDisplayContracts().length}/{getTotalContractsCount()}
+            </div>
+            <button 
+              onClick={debugSubscription}
+              className="flex items-center px-4 py-2 bg-yellow-600 text-white rounded-lg text-sm font-medium hover:bg-yellow-700 transition-colors"
+            >
+              🔍 Debug
+            </button>
+            <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+              <Bookmark className="w-4 h-4 mr-2" />
+              Saved Contracts
+            </button>
+          </div>
         </div>
-        <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-          <Bookmark className="w-4 h-4 mr-2" />
-          Saved Contracts
-        </button>
-      </div>
 
       {/* Search and Filters */}
+      {/* Premium Features Banner for Unpaid Users */}
+      {!hasActiveSubscription && (
+        <div className="bg-gradient-to-r from-blue-50 to-indigo-50 border border-blue-200 rounded-lg p-4 mb-6">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center">
+                <Crown className="w-5 h-5 text-blue-600" />
+              </div>
+              <div>
+                <h3 className="text-sm font-semibold text-slate-900">Unlock Premium Features</h3>
+                <p className="text-xs text-slate-600">Access unlimited contracts, advanced analytics, and more</p>
+              </div>
+            </div>
+            <button
+              onClick={handleUpgrade}
+              className="bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+            >
+              Upgrade Now
+            </button>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white rounded-lg shadow p-6">
         {/* Search */}
         <div className="mb-6">
@@ -257,7 +392,12 @@ export default function DashboardPage() {
       {/* Results */}
       <div className="flex items-center justify-between">
         <p className="text-sm text-slate-600">
-          Showing {filteredContracts.length} of {contracts.length} contracts
+          Showing {getDisplayContracts().length} of {getTotalContractsCount()} contracts
+          {!hasActiveSubscription && filteredContracts.length > 1 && (
+            <span className="text-blue-600 font-medium ml-2">
+              • Upgrade to see all {filteredContracts.length} contracts
+            </span>
+          )}
         </p>
         <div className="flex items-center space-x-2">
           <span className="text-sm text-slate-600">Sort by:</span>
@@ -266,7 +406,7 @@ export default function DashboardPage() {
             <option>Deadline</option>
             <option>Value</option>
           </select>
-          </div>
+        </div>
       </div>
 
       {/* Contract Cards */}
@@ -277,27 +417,37 @@ export default function DashboardPage() {
           </div>
           <h3 className="text-lg font-medium text-slate-900 mb-2">No contracts found</h3>
           <p className="text-slate-600">Try adjusting your search or filters</p>
-            </div>
+        </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
-          {filteredContracts.map((contract) => (
-            <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200">
-              <div className="p-6">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
+                      {getDisplayContracts().map((contract, index) => (
+              <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200 relative">
+                {/* Sample Badge for Unpaid Users */}
+                {!hasActiveSubscription && (
+                  <div className="absolute top-4 left-4 z-10">
+                    <span className="inline-flex items-center px-2 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                      <Star className="w-3 h-3 mr-1" />
+                      Sample
+                    </span>
+                  </div>
+                )}
+                
+                <div className="p-6">
+                  {/* Header */}
+                  <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-slate-900 mb-2">
-                      {contract.title}
-                    </h3>
-                    <div className="flex items-center text-sm text-slate-600 mb-2">
-                      <Building className="h-4 w-4 mr-1" />
-                      {contract.client}
+                      <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                        {contract.title}
+                      </h3>
+                      <div className="flex items-center text-sm text-slate-600 mb-2">
+                        <Building className="h-4 w-4 mr-1" />
+                        {contract.client}
                       </div>
                     </div>
-                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                        {contract.category}
-                      </span>
-                    </div>
+                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                      {contract.category}
+                    </span>
+                  </div>
 
                 {/* Description */}
                 <p className="text-sm text-slate-600 mb-4">
@@ -351,17 +501,190 @@ export default function DashboardPage() {
                 </div>
               </div>
             ))}
+
+            {/* Blurred Contract Cards for Unpaid Users */}
+            {!hasActiveSubscription && filteredContracts.length > 1 && (
+              <>
+                {/* First Blurred Card */}
+                <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden">
+                  <div className="p-6 blur-sm">
+                    {/* Header */}
+                    <div className="flex items-start justify-between mb-4">
+                      <div className="flex-1">
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                          {filteredContracts[1]?.title || "Contract Title"}
+                        </h3>
+                        <div className="flex items-center text-sm text-slate-600 mb-2">
+                          <Building className="h-4 w-4 mr-1" />
+                          {filteredContracts[1]?.client || "Client Name"}
+                        </div>
+                      </div>
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {filteredContracts[1]?.category || "Category"}
+                      </span>
+                    </div>
+
+                    {/* Description */}
+                    <p className="text-sm text-slate-600 mb-4">
+                      {filteredContracts[1]?.description || "Contract description..."}
+                    </p>
+
+                    {/* Details */}
+                    <div className="grid grid-cols-2 gap-4 mb-4">
+                      <div className="flex items-center text-sm text-slate-600">
+                        <MapPin className="h-4 w-4 mr-2" />
+                        {filteredContracts[1]?.location || "Location"}
+                      </div>
+                      <div className="flex items-center text-sm text-slate-600">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Deadline: {filteredContracts[1]?.deadline ? formatDate(filteredContracts[1].deadline) : "Date"}
+                      </div>
+                      <div className="flex items-center text-sm text-slate-600">
+                        <Calendar className="h-4 w-4 mr-2" />
+                        Posted: {filteredContracts[1]?.posted_date ? formatDate(filteredContracts[1].posted_date) : "Date"}
+                      </div>
+                      <div className="flex items-center justify-end">
+                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          {filteredContracts[1]?.value ? formatValue(filteredContracts[1].value) : "Value"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+                  
+                  {/* Upgrade Overlay */}
+                  <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white flex items-center justify-center">
+                    <div className="text-center p-6">
+                      <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <Lock className="w-8 h-8 text-blue-600" />
+                      </div>
+                      <h3 className="text-lg font-semibold text-slate-900 mb-2">Premium Contract</h3>
+                      <p className="text-slate-600 mb-4">Upgrade to access this and {filteredContracts.length - 2} more contracts</p>
+                      <button
+                        onClick={handleUpgrade}
+                        className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                      >
+                        Upgrade Plan
+                      </button>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Second Blurred Card */}
+                {filteredContracts.length > 2 && (
+                  <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden">
+                    <div className="p-6 blur-sm">
+                      {/* Header */}
+                      <div className="flex items-start justify-between mb-4">
+                        <div className="flex-1">
+                          <h3 className="text-lg font-semibold text-slate-900 mb-2">
+                            {filteredContracts[2]?.title || "Contract Title"}
+                          </h3>
+                          <div className="flex items-center text-sm text-slate-600 mb-2">
+                            <Building className="h-4 w-4 mr-1" />
+                            {filteredContracts[2]?.client || "Client Name"}
+                          </div>
+                        </div>
+                        <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                          {filteredContracts[2]?.category || "Category"}
+                        </span>
+                      </div>
+
+                      {/* Description */}
+                      <p className="text-sm text-slate-600 mb-4">
+                        {filteredContracts[2]?.description || "Contract description..."}
+                      </p>
+
+                      {/* Details */}
+                      <div className="grid grid-cols-2 gap-4 mb-4">
+                        <div className="flex items-center text-sm text-slate-600">
+                          <MapPin className="h-4 w-4 mr-2" />
+                          {filteredContracts[2]?.location || "Location"}
+                        </div>
+                        <div className="flex items-center text-sm text-slate-600">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Deadline: {filteredContracts[2]?.deadline ? formatDate(filteredContracts[2].deadline) : "Date"}
+                        </div>
+                        <div className="flex items-center text-sm text-slate-600">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Posted: {filteredContracts[2]?.posted_date ? formatDate(filteredContracts[2].posted_date) : "Date"}
+                        </div>
+                        <div className="flex items-center justify-end">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {filteredContracts[2]?.value ? formatValue(filteredContracts[2].value) : "Value"}
+                          </span>
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Upgrade Overlay */}
+                    <div className="absolute inset-0 bg-gradient-to-b from-transparent via-white/80 to-white flex items-center justify-center">
+                      <div className="text-center p-6">
+                        <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                          <Crown className="w-8 h-8 text-blue-600" />
+                        </div>
+                        <h3 className="text-lg font-semibold text-slate-900 mb-2">Premium Contract</h3>
+                        <p className="text-slate-600 mb-4">Unlock unlimited access to all contracts</p>
+                        <button
+                          onClick={handleUpgrade}
+                          className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
+                        >
+                          Upgrade Plan
+                        </button>
+                      </div>
+                    </div>
+                  </div>
+                )}
+
+                {/* More Contracts Message */}
+                {filteredContracts.length > 3 && (
+                  <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200 p-8 text-center">
+                    <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                      <Star className="w-8 h-8 text-blue-600" />
+                    </div>
+                    <h3 className="text-xl font-semibold text-slate-900 mb-2">
+                      {filteredContracts.length - 3} More Contracts Available
+                    </h3>
+                    <p className="text-slate-600 mb-4">
+                      Upgrade to Professional Plan to access all {filteredContracts.length} contracts and unlock premium features
+                    </p>
+                    <button
+                      onClick={handleUpgrade}
+                      className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
+                    >
+                      Upgrade Now
+                    </button>
+                  </div>
+                )}
+              </>
+            )}
           </div>
       )}
 
-      {/* Load More */}
+      {/* Load More / Upgrade Prompt */}
       {filteredContracts.length > 0 && (
         <div className="text-center">
-          <button className="inline-flex items-center px-6 py-3 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors">
-            Load More Contracts
-            <ArrowRight className="w-4 h-4 ml-2" />
+          {hasActiveSubscription ? (
+            <button className="inline-flex items-center px-6 py-3 border border-slate-300 rounded-lg text-sm font-medium text-slate-700 bg-white hover:bg-slate-50 transition-colors">
+              Load More Contracts
+              <ArrowRight className="w-4 h-4 ml-2" />
             </button>
-          </div>
+          ) : (
+            <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border border-blue-200 p-6">
+              <div className="flex items-center justify-center space-x-4">
+                <div className="flex items-center text-blue-600">
+                  <Lock className="w-5 h-5 mr-2" />
+                  <span className="font-medium">Unlock All Contracts</span>
+                </div>
+                <button
+                  onClick={handleUpgrade}
+                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors"
+                >
+                  Upgrade Now
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
       )}
     </div>
   );
