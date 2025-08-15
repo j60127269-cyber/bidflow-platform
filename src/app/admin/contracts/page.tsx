@@ -20,16 +20,43 @@ import {
 
 interface Contract {
   id: string;
+  reference_number: string;
   title: string;
-  client: string;
-  location: string;
-  value: number;
-  deadline: string;
+  short_description?: string;
   category: string;
-  description: string;
+  procurement_method: string;
+  estimated_value_min?: number;
+  estimated_value_max?: number;
+  currency: string;
+  bid_fee?: number;
+  bid_security_amount?: number;
+  bid_security_type?: string;
+  margin_of_preference: boolean;
+  competition_level: 'low' | 'medium' | 'high' | 'very_high';
+  publish_date?: string;
+  pre_bid_meeting_date?: string;
+  site_visit_date?: string;
+  submission_deadline: string;
+  bid_opening_date?: string;
+  procuring_entity: string;
+  contact_person?: string;
+  contact_position?: string;
+  evaluation_methodology?: string;
+  requires_registration: boolean;
+  requires_trading_license: boolean;
+  requires_tax_clearance: boolean;
+  requires_nssf_clearance: boolean;
+  requires_manufacturer_auth: boolean;
+  submission_method?: string;
+  submission_format?: string;
+  required_documents?: string[];
+  required_forms?: string[];
+  bid_attachments?: string[];
   status: string;
-  posted_date: string;
-  requirements: string[];
+  current_stage: string;
+  award_information?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function AdminContracts() {
@@ -80,7 +107,7 @@ export default function AdminContracts() {
       const { data, error } = await supabase
         .from('contracts')
         .select('*')
-        .order('posted_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching contracts:', error);
@@ -102,8 +129,8 @@ export default function AdminContracts() {
     if (searchTerm) {
       filtered = filtered.filter(contract =>
         contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.description.toLowerCase().includes(searchTerm.toLowerCase())
+        contract.procuring_entity.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (contract.short_description && contract.short_description.toLowerCase().includes(searchTerm.toLowerCase()))
       );
     }
 
@@ -148,15 +175,16 @@ export default function AdminContracts() {
     }
   };
 
-  const formatValue = (value: number) => {
+  const formatCurrency = (value: number, currency: string) => {
     if (value >= 1000000000) {
-      return `${(value / 1000000000).toFixed(1)}B UGX`;
+      return `${(value / 1000000000).toFixed(1)}B ${currency}`;
     } else if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M UGX`;
+      return `${(value / 1000000).toFixed(1)}M ${currency}`;
     } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(1)}K UGX`;
+      return `${(value / 1000).toFixed(1)}K ${currency}`;
+    } else {
+      return `${value.toLocaleString()} ${currency}`;
     }
-    return `${value} UGX`;
   };
 
   const formatDate = (dateString: string) => {
@@ -314,17 +342,18 @@ export default function AdminContracts() {
                         <div className="sm:flex">
                           <p className="flex items-center text-sm text-gray-500">
                             <Building className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                            {contract.client}
+                            {contract.procuring_entity}
                           </p>
                           <p className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0 sm:ml-6">
-                            <MapPin className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
-                            {contract.location}
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                              {contract.competition_level.replace('_', ' ')}
+                            </span>
                           </p>
                         </div>
                         <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                           <Calendar className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
                           <p>
-                            Deadline: {formatDate(contract.deadline)}
+                            Deadline: {formatDate(contract.submission_deadline)}
                           </p>
                         </div>
                       </div>
@@ -339,7 +368,10 @@ export default function AdminContracts() {
                         <div className="mt-2 flex items-center text-sm text-gray-500 sm:mt-0">
                           <DollarSign className="flex-shrink-0 mr-1.5 h-4 w-4 text-gray-400" />
                           <p className="font-medium text-gray-900">
-                            {formatValue(contract.value)}
+                            {contract.estimated_value_min && contract.estimated_value_max 
+                              ? `${formatCurrency(contract.estimated_value_min, contract.currency)} - ${formatCurrency(contract.estimated_value_max, contract.currency)}`
+                              : 'Value not specified'
+                            }
                           </p>
                         </div>
                       </div>

@@ -90,6 +90,7 @@ export default function ContractDetailsPage() {
         return;
       }
 
+      console.log('Fetched contract data:', data); // Debug log
       setContract(data);
     } catch (error) {
       console.error('Error:', error);
@@ -377,27 +378,31 @@ export default function ContractDetailsPage() {
                   </div>
                 </div>
 
-                {contract.required_documents && contract.required_documents.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-2">Required Documents</label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-2">Required Documents</label>
+                  {contract.required_documents && contract.required_documents.length > 0 ? (
                     <ul className="list-disc list-inside space-y-1">
                       {contract.required_documents.map((doc, index) => (
                         <li key={index} className="text-sm text-gray-900">{doc}</li>
                       ))}
                     </ul>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-sm text-gray-500">No specific documents required</p>
+                  )}
+                </div>
 
-                {contract.required_forms && contract.required_forms.length > 0 && (
-                  <div>
-                    <label className="block text-sm font-medium text-gray-500 mb-2">Required Forms</label>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-2">Required Forms</label>
+                  {contract.required_forms && contract.required_forms.length > 0 ? (
                     <ul className="list-disc list-inside space-y-1">
                       {contract.required_forms.map((form, index) => (
                         <li key={index} className="text-sm text-gray-900">{form}</li>
                       ))}
                     </ul>
-                  </div>
-                )}
+                  ) : (
+                    <p className="text-sm text-gray-500">No specific forms required</p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -444,8 +449,13 @@ export default function ContractDetailsPage() {
                     <label className="block text-sm font-medium text-gray-500">Bid Security</label>
                     <p className="mt-1 text-sm text-gray-900">
                       {formatCurrency(contract.bid_security_amount, contract.currency)}
-                      {contract.bid_security_type && ` (${contract.bid_security_type})`}
                     </p>
+                  </div>
+                )}
+                {contract.bid_security_type && (
+                  <div>
+                    <label className="block text-sm font-medium text-gray-500">Bid Security Type</label>
+                    <p className="mt-1 text-sm text-gray-900 capitalize">{contract.bid_security_type}</p>
                   </div>
                 )}
                 <div>
@@ -477,9 +487,9 @@ export default function ContractDetailsPage() {
             </div>
 
             {/* Bid Attachments */}
-            {contract.bid_attachments && contract.bid_attachments.length > 0 && (
-              <div className="bg-white shadow rounded-lg p-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Bid Attachments</h3>
+            <div className="bg-white shadow rounded-lg p-6">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Bid Attachments</h3>
+              {contract.bid_attachments && contract.bid_attachments.length > 0 ? (
                 <div className="space-y-2">
                   {contract.bid_attachments.map((attachment, index) => (
                     <div key={index} className="flex items-center justify-between p-2 border border-gray-200 rounded">
@@ -493,8 +503,10 @@ export default function ContractDetailsPage() {
                     </div>
                   ))}
                 </div>
-              </div>
-            )}
+              ) : (
+                <p className="text-sm text-gray-500">No bid attachments available</p>
+              )}
+            </div>
 
             {/* Action Buttons */}
             <div className="bg-white shadow rounded-lg p-6">
