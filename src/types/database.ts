@@ -21,17 +21,20 @@ export interface Profile {
 export interface Contract {
   id: string;
   
-  // 1. BASIC TENDER INFORMATION (15 variables)
+  // 1. BASIC TENDER INFORMATION (19 variables)
   reference_number: string; // e.g., URSB/SUPLS/2025-2026/00011
   title: string; // Tender Title / Subject of Procurement
+  short_description?: string; // Brief description/summary of the contract
   category: string; // supplies, services, works
   procurement_method: string; // open domestic bidding, restricted bidding, etc.
   estimated_value_min?: number; // Minimum estimated contract value
   estimated_value_max?: number; // Maximum estimated contract value
   currency: string; // Currency for all financial values
+  bid_fee?: number; // Bid fee amount
   bid_security_amount?: number; // Bid Security Amount
   bid_security_type?: string; // e.g., bank guarantee, insurance bond
   margin_of_preference: boolean; // Margin of Preference Applicable?
+  competition_level: 'low' | 'medium' | 'high' | 'very_high'; // Expected competition level
   
   // Timeline dates
   publish_date?: string; // a. Publish bid notice date
@@ -60,6 +63,7 @@ export interface Contract {
   submission_format?: string; // e.g., sealed envelopes, electronic
   required_documents?: string[]; // Array of required documents & forms
   required_forms?: string[]; // Array of mandatory forms to submit
+  bid_attachments?: string[]; // Array of bid document URLs or file names
   
   // 4. STATUS & TRACKING (3 variables)
   status: 'open' | 'closed' | 'awarded' | 'cancelled';

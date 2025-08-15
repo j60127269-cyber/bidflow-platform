@@ -11,17 +11,20 @@ import {
 } from 'lucide-react';
 
 interface ContractForm {
-  // 1. BASIC TENDER INFORMATION (15 variables)
+  // 1. BASIC TENDER INFORMATION (19 variables)
   reference_number: string;
   title: string;
+  short_description: string;
   category: string;
   procurement_method: string;
   estimated_value_min: string;
   estimated_value_max: string;
   currency: string;
+  bid_fee: string;
   bid_security_amount: string;
   bid_security_type: string;
   margin_of_preference: boolean;
+  competition_level: string;
   publish_date: string;
   pre_bid_meeting_date: string;
   site_visit_date: string;
@@ -44,6 +47,7 @@ interface ContractForm {
   submission_format: string;
   required_documents: string[];
   required_forms: string[];
+  bid_attachments: string[];
   
   // 4. STATUS & TRACKING (3 variables)
   status: string;
@@ -57,14 +61,17 @@ export default function AddContract() {
     // Basic Tender Information
     reference_number: '',
     title: '',
+    short_description: '',
     category: 'supplies',
     procurement_method: 'open domestic bidding',
     estimated_value_min: '',
     estimated_value_max: '',
     currency: 'UGX',
+    bid_fee: '',
     bid_security_amount: '',
     bid_security_type: '',
     margin_of_preference: false,
+    competition_level: 'medium',
     publish_date: '',
     pre_bid_meeting_date: '',
     site_visit_date: '',
@@ -87,6 +94,7 @@ export default function AddContract() {
     submission_format: '',
     required_documents: [],
     required_forms: [],
+    bid_attachments: [],
     
     // Status & Tracking
     status: 'open',
@@ -98,11 +106,13 @@ export default function AddContract() {
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [newDocument, setNewDocument] = useState('');
   const [newForm, setNewForm] = useState('');
+  const [newAttachment, setNewAttachment] = useState('');
 
   const categories = ['supplies', 'services', 'works'];
   const procurementMethods = ['open domestic bidding', 'restricted bidding', 'direct procurement', 'framework agreement'];
   const currencies = ['UGX', 'USD', 'EUR'];
   const bidSecurityTypes = ['bank guarantee', 'insurance bond', 'cash deposit', 'none'];
+  const competitionLevels = ['low', 'medium', 'high', 'very_high'];
   const submissionMethods = ['physical', 'online', 'both'];
   const submissionFormats = ['sealed envelopes', 'electronic submission', 'both'];
   const statuses = ['open', 'closed', 'awarded', 'cancelled'];
@@ -156,6 +166,23 @@ export default function AddContract() {
     setFormData(prev => ({
       ...prev,
       required_forms: prev.required_forms.filter((_, i) => i !== index)
+    }));
+  };
+
+  const addAttachment = () => {
+    if (newAttachment.trim()) {
+      setFormData(prev => ({
+        ...prev,
+        bid_attachments: [...prev.bid_attachments, newAttachment.trim()]
+      }));
+      setNewAttachment('');
+    }
+  };
+
+  const removeAttachment = (index: number) => {
+    setFormData(prev => ({
+      ...prev,
+      bid_attachments: prev.bid_attachments.filter((_, i) => i !== index)
     }));
   };
 
@@ -310,6 +337,22 @@ export default function AddContract() {
                 )}
               </div>
 
+              {/* Short Description */}
+              <div className="md:col-span-2">
+                <label htmlFor="short_description" className="block text-sm font-medium text-gray-700 mb-2">
+                  Short Description
+                </label>
+                <textarea
+                  id="short_description"
+                  name="short_description"
+                  value={formData.short_description}
+                  onChange={handleInputChange}
+                  rows={3}
+                  placeholder="Brief description of the contract"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                />
+              </div>
+
               {/* Category & Procurement Method */}
               <div>
                 <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
@@ -398,6 +441,40 @@ export default function AddContract() {
                 >
                   {currencies.map(currency => (
                     <option key={currency} value={currency}>{currency}</option>
+                  ))}
+                </select>
+              </div>
+
+              <div>
+                <label htmlFor="bid_fee" className="block text-sm font-medium text-gray-700 mb-2">
+                  Bid Fee
+                </label>
+                <input
+                  type="number"
+                  id="bid_fee"
+                  name="bid_fee"
+                  value={formData.bid_fee}
+                  onChange={handleInputChange}
+                  placeholder="100000"
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                />
+              </div>
+
+              <div>
+                <label htmlFor="competition_level" className="block text-sm font-medium text-gray-700 mb-2">
+                  Competition Level
+                </label>
+                <select
+                  id="competition_level"
+                  name="competition_level"
+                  value={formData.competition_level}
+                  onChange={handleInputChange}
+                  className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                >
+                  {competitionLevels.map(level => (
+                    <option key={level} value={level}>
+                      {level.charAt(0).toUpperCase() + level.slice(1).replace('_', ' ')}
+                    </option>
                   ))}
                 </select>
               </div>
@@ -787,6 +864,45 @@ export default function AddContract() {
                     <button
                       type="button"
                       onClick={addForm}
+                      className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
+                    >
+                      <Plus className="w-4 h-4" />
+                    </button>
+                  </div>
+                </div>
+              </div>
+
+              {/* Bid Attachments */}
+              <div className="md:col-span-2">
+                <label className="block text-sm font-medium text-gray-700 mb-2">
+                  Bid Attachments
+                </label>
+                <div className="space-y-2">
+                  {formData.bid_attachments.map((attachment, index) => (
+                    <div key={index} className="flex items-center space-x-2">
+                      <span className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm">
+                        {attachment}
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => removeAttachment(index)}
+                        className="p-1 text-red-600 hover:text-red-800"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
+                    </div>
+                  ))}
+                  <div className="flex space-x-2">
+                    <input
+                      type="text"
+                      value={newAttachment}
+                      onChange={(e) => setNewAttachment(e.target.value)}
+                      placeholder="Add bid attachment (e.g., tender_document.pdf)"
+                      className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    />
+                    <button
+                      type="button"
+                      onClick={addAttachment}
                       className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
                     >
                       <Plus className="w-4 h-4" />
