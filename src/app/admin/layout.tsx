@@ -31,6 +31,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Dashboard', href: '/admin', icon: BarChart3 },
     { name: 'Contracts', href: '/admin/contracts', icon: FileText },
     { name: 'Users', href: '/admin/users', icon: Users },
+    { name: 'Roles', href: '/admin/roles', icon: Shield },
     { name: 'Analytics', href: '/admin/analytics', icon: BarChart3 },
   ];
 
@@ -39,37 +40,23 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   }, [user]);
 
   const checkAdminStatus = async () => {
+    // Temporarily bypass authentication check for development
+    // This allows direct access to admin panel without login
+    setIsAdmin(true);
+    setLoading(false);
+    
+    // Uncomment the code below when you want to re-enable authentication
+    /*
     if (!user) {
       router.push('/login');
       return;
     }
 
-    try {
-      // Check if user has admin role in profiles table
-      const { data: profile, error } = await supabase
-        .from('profiles')
-        .select('role')
-        .eq('id', user.id)
-        .single();
-
-      if (error) {
-        console.error('Error checking admin status:', error);
-        router.push('/dashboard');
-        return;
-      }
-
-      if (profile?.role === 'admin') {
-        setIsAdmin(true);
-      } else {
-        // For now, let's allow any user to access admin (you can restrict this later)
-        setIsAdmin(true);
-      }
-    } catch (error) {
-      console.error('Error checking admin status:', error);
-      router.push('/dashboard');
-    } finally {
-      setLoading(false);
-    }
+    // For now, allow any authenticated user to access admin
+    // This can be restricted later once roles are properly set up
+    setIsAdmin(true);
+    setLoading(false);
+    */
   };
 
   const handleSignOut = async () => {

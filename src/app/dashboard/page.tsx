@@ -23,16 +23,39 @@ import { useRouter } from "next/navigation";
 
 interface Contract {
   id: string;
+  reference_number: string;
   title: string;
-  client: string;
-  location: string;
-  value: number;
-  deadline: string;
   category: string;
-  description: string;
+  procurement_method: string;
+  estimated_value_min?: number;
+  estimated_value_max?: number;
+  currency: string;
+  bid_security_amount?: number;
+  bid_security_type?: string;
+  margin_of_preference: boolean;
+  publish_date?: string;
+  pre_bid_meeting_date?: string;
+  site_visit_date?: string;
+  submission_deadline: string;
+  bid_opening_date?: string;
+  procuring_entity: string;
+  contact_person?: string;
+  contact_position?: string;
+  evaluation_methodology?: string;
+  requires_registration: boolean;
+  requires_trading_license: boolean;
+  requires_tax_clearance: boolean;
+  requires_nssf_clearance: boolean;
+  requires_manufacturer_auth: boolean;
+  submission_method?: string;
+  submission_format?: string;
+  required_documents?: string[];
+  required_forms?: string[];
   status: string;
-  posted_date: string;
-  requirements: string[];
+  current_stage: string;
+  award_information?: string;
+  created_at: string;
+  updated_at: string;
 }
 
 export default function DashboardPage() {
@@ -80,7 +103,7 @@ export default function DashboardPage() {
       const { data, error } = await supabase
         .from('contracts')
         .select('*')
-        .order('posted_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (error) {
         console.error('Error fetching contracts:', error);
@@ -108,8 +131,8 @@ export default function DashboardPage() {
     if (searchTerm) {
       filtered = filtered.filter(contract =>
         contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.description.toLowerCase().includes(searchTerm.toLowerCase())
+        contract.procuring_entity.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        contract.title.toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -121,14 +144,14 @@ export default function DashboardPage() {
     // Location filter
     if (selectedLocation !== "All Locations") {
       filtered = filtered.filter(contract => 
-        contract.location.toLowerCase().includes(selectedLocation.toLowerCase())
+        contract.procuring_entity.toLowerCase().includes(selectedLocation.toLowerCase())
       );
     }
 
     // Value filter
     if (selectedValue !== "Any Value") {
       filtered = filtered.filter(contract => {
-        const value = contract.value;
+        const value = contract.estimated_value_min || contract.estimated_value_max || 0;
         switch (selectedValue) {
           case "Under 50M UGX":
             return value < 50000000;
@@ -361,7 +384,7 @@ export default function DashboardPage() {
                       </h3>
                       <div className="flex items-center text-sm text-slate-600 mb-2">
                         <Building className="h-4 w-4 mr-1" />
-                        {contract.client}
+                        {contract.procuring_entity}
                       </div>
                     </div>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -371,26 +394,26 @@ export default function DashboardPage() {
 
                 {/* Description */}
                 <p className="text-sm text-slate-600 mb-4">
-                  {contract.description}
+                  {contract.evaluation_methodology || 'No description available'}
                 </p>
 
                 {/* Details */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
                   <div className="flex items-center text-sm text-slate-600">
                     <MapPin className="h-4 w-4 mr-2" />
-                    {contract.location}
+                    {contract.procuring_entity}
                   </div>
                   <div className="flex items-center text-sm text-slate-600">
                     <Calendar className="h-4 w-4 mr-2" />
-                    Deadline: {formatDate(contract.deadline)}
+                    Deadline: {formatDate(contract.submission_deadline)}
                 </div>
                   <div className="flex items-center text-sm text-slate-600">
                     <Calendar className="h-4 w-4 mr-2" />
-                    Posted: {formatDate(contract.posted_date)}
+                    Posted: {formatDate(contract.created_at)}
             </div>
                   <div className="flex items-center justify-end">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {formatValue(contract.value)}
+                      {formatValue(contract.estimated_value_min || contract.estimated_value_max || 0)}
                     </span>
           </div>
         </div>
@@ -560,7 +583,7 @@ export default function DashboardPage() {
                   <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg border-2 border-dashed border-blue-200 p-8 text-center">
                     <div className="w-16 h-16 bg-blue-100 rounded-full flex items-center justify-center mx-auto mb-4">
                       <Crown className="w-8 h-8 text-blue-600" />
-                    </div>
+        </div>
                     <h3 className="text-xl font-semibold text-slate-900 mb-2">
                       {filteredContracts.length - 5} More Contracts Available
                     </h3>
@@ -572,7 +595,7 @@ export default function DashboardPage() {
                       className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
                     >
                       Upgrade Now
-                    </button>
+            </button>
                   </div>
                 )}
 

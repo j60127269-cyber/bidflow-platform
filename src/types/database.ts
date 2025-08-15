@@ -20,18 +20,59 @@ export interface Profile {
 
 export interface Contract {
   id: string;
-  title: string;
-  client: string;
-  location: string;
-  value: number;
-  deadline: string;
-  category: string;
-  description?: string;
-  status: 'open' | 'closed' | 'awarded';
-  posted_date: string;
-  requirements?: string[];
+  
+  // 1. BASIC TENDER INFORMATION (15 variables)
+  reference_number: string; // e.g., URSB/SUPLS/2025-2026/00011
+  title: string; // Tender Title / Subject of Procurement
+  category: string; // supplies, services, works
+  procurement_method: string; // open domestic bidding, restricted bidding, etc.
+  estimated_value_min?: number; // Minimum estimated contract value
+  estimated_value_max?: number; // Maximum estimated contract value
+  currency: string; // Currency for all financial values
+  bid_security_amount?: number; // Bid Security Amount
+  bid_security_type?: string; // e.g., bank guarantee, insurance bond
+  margin_of_preference: boolean; // Margin of Preference Applicable?
+  
+  // Timeline dates
+  publish_date?: string; // a. Publish bid notice date
+  pre_bid_meeting_date?: string; // b. Pre-bid meeting date
+  site_visit_date?: string; // b. Site visit date (if applicable)
+  submission_deadline: string; // c. Bid closing date & time
+  bid_opening_date?: string; // Bid opening date & time
+  
+  // 2. PROCURING ENTITY INFORMATION (3 variables)
+  procuring_entity: string; // Procuring client name
+  contact_person?: string; // Client contact person
+  contact_position?: string; // Client contact person position
+  
+  // 3. ELIGIBILITY & REQUIRED DOCUMENTS (8 variables) - COMBINED!
+  evaluation_methodology?: string; // e.g., Technical Compliance Selection
+  
+  // Required certificates (5 boolean flags)
+  requires_registration: boolean; // Registration/Incorporation
+  requires_trading_license: boolean; // Trading License (FY-specific)
+  requires_tax_clearance: boolean; // Tax Clearance Certificate
+  requires_nssf_clearance: boolean; // NSSF Clearance
+  requires_manufacturer_auth: boolean; // Manufacturer's Authorization Needed?
+  
+  // Submission details
+  submission_method?: string; // e.g., physical, online, both
+  submission_format?: string; // e.g., sealed envelopes, electronic
+  required_documents?: string[]; // Array of required documents & forms
+  required_forms?: string[]; // Array of mandatory forms to submit
+  
+  // 4. STATUS & TRACKING (3 variables)
+  status: 'open' | 'closed' | 'awarded' | 'cancelled';
+  current_stage: string; // published, evaluation, awarded, completed
+  award_information?: string; // Information about award if status is 'awarded'
+  
+  // Metadata
   created_at: string;
   updated_at: string;
+  
+  // Recommendation fields (for display purposes)
+  recommendationScore?: number;
+  recommendationReasons?: string[];
 }
 
 export interface Bid {

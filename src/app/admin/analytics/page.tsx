@@ -51,7 +51,11 @@ export default function AdminAnalytics() {
       ]);
 
       if (usersResult.error || contractsResult.error || subscriptionsResult.error) {
-        console.error('Error fetching analytics:', { usersResult.error, contractsResult.error, subscriptionsResult.error });
+        console.error('Error fetching analytics:', { 
+          usersError: usersResult.error, 
+          contractsError: contractsResult.error, 
+          subscriptionsError: subscriptionsResult.error 
+        });
         return;
       }
 
