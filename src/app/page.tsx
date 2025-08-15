@@ -89,7 +89,7 @@ export default function Home() {
             </div>
             
             <div className="mt-8 text-sm text-slate-500">
-              <span className="font-semibold text-blue-600">30,000 UGX</span> per month • No setup fees • 7-day free trial
+              <span className="font-semibold text-blue-600">20,000 UGX</span> per month • No setup fees • 7-day free trial
             </div>
           </div>
         </div>

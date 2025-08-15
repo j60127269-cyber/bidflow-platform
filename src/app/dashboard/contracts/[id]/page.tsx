@@ -22,6 +22,7 @@ import Link from "next/link";
 import { useParams } from "next/navigation";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
+import { parseBidAttachments, getFileDownloadUrl } from "@/lib/fileDisplayHelper";
 
 interface Contract {
   id: string;
@@ -56,7 +57,7 @@ interface Contract {
   submission_format?: string;
   required_documents?: string[];
   required_forms?: string[];
-  bid_attachments?: string[];
+  bid_attachments?: any[];
   status: string;
   current_stage: string;
   award_information?: string;
@@ -489,23 +490,41 @@ export default function ContractDetailsPage() {
             {/* Bid Attachments */}
             <div className="bg-white shadow rounded-lg p-6">
               <h3 className="text-lg font-semibold text-gray-900 mb-4">Bid Attachments</h3>
-              {contract.bid_attachments && contract.bid_attachments.length > 0 ? (
-                <div className="space-y-2">
-                  {contract.bid_attachments.map((attachment, index) => (
-                    <div key={index} className="flex items-center justify-between p-2 border border-gray-200 rounded">
-                      <div className="flex items-center">
-                        <FileText className="h-4 w-4 text-gray-400 mr-2" />
-                        <span className="text-sm text-gray-900">{attachment}</span>
+              {(() => {
+                const parsedAttachments = parseBidAttachments(contract.bid_attachments || []);
+                return parsedAttachments.length > 0 ? (
+                  <div className="space-y-2">
+                    {parsedAttachments.map((file, index) => (
+                      <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
+                        <div className="flex items-center space-x-3">
+                          <FileText className="h-5 w-5 text-blue-500" />
+                          <div>
+                            <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                            {file.size > 0 && (
+                              <p className="text-xs text-gray-500">
+                                {Math.round(file.size / 1024)} KB
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                        {file.url && (
+                          <a
+                            href={file.url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-blue-600 hover:text-blue-800 p-1 rounded"
+                            title="Download file"
+                          >
+                            <Download className="h-4 w-4" />
+                          </a>
+                        )}
                       </div>
-                      <button className="text-blue-600 hover:text-blue-500">
-                        <Download className="h-4 w-4" />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              ) : (
-                <p className="text-sm text-gray-500">No bid attachments available</p>
-              )}
+                    ))}
+                  </div>
+                ) : (
+                  <p className="text-sm text-gray-500">No bid attachments available</p>
+                );
+              })()}
             </div>
 
             {/* Action Buttons */}

@@ -11,9 +11,15 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    // Process bid_attachments to store file objects as JSON strings
+    const processedBody = {
+      ...body,
+      bid_attachments: body.bid_attachments ? body.bid_attachments.map((file: any) => JSON.stringify(file)) : []
+    };
+    
     const { data, error } = await supabase
       .from('contracts')
-      .insert(body)
+      .insert(processedBody)
       .select()
       .single();
 
