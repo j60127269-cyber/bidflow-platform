@@ -1,449 +1,397 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
+import { ArrowLeft, Upload, FileText, CheckCircle, AlertCircle, Loader2, Download } from 'lucide-react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
-import { 
-  Upload, 
-  FileText, 
-  CheckCircle, 
-  AlertCircle, 
-  ArrowLeft,
-  Download,
-  X
-} from 'lucide-react';
+import Papa from 'papaparse';
 
-interface ContractData {
+interface ContractRow {
+  reference_number: string;
   title: string;
-  client: string;
-  location: string;
-  value: number;
-  deadline: string;
+  short_description?: string;
   category: string;
-  description: string;
+  procurement_method: string;
+  estimated_value_min?: number;
+  estimated_value_max?: number;
+  currency: string;
+  bid_fee?: number;
+  bid_security_amount?: number;
+  bid_security_type?: string;
+  margin_of_preference: boolean;
+  competition_level: 'low' | 'medium' | 'high' | 'very_high';
+  publish_date?: string;
+  pre_bid_meeting_date?: string;
+  site_visit_date?: string;
+  submission_deadline: string;
+  bid_opening_date?: string;
+  procuring_entity: string;
+  contact_person?: string;
+  contact_position?: string;
+  evaluation_methodology?: string;
+  requires_registration: boolean;
+  requires_trading_license: boolean;
+  requires_tax_clearance: boolean;
+  requires_nssf_clearance: boolean;
+  requires_manufacturer_auth: boolean;
+  submission_method?: string;
+  submission_format?: string;
+  required_documents?: string[];
+  required_forms?: string[];
   status: string;
-  posted_date: string;
-  requirements?: string;
+  current_stage: string;
+  award_information?: string;
+}
+
+interface ValidationError {
+  row: number;
+  field: string;
+  message: string;
 }
 
 export default function ImportContracts() {
   const router = useRouter();
   const [file, setFile] = useState<File | null>(null);
-  const [preview, setPreview] = useState<ContractData[]>([]);
-  const [loading, setLoading] = useState(false);
+  const [parsedData, setParsedData] = useState<ContractRow[]>([]);
+  const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
+  const [isValid, setIsValid] = useState(false);
   const [importing, setImporting] = useState(false);
   const [importResults, setImportResults] = useState<{
     success: number;
+    failed: number;
     errors: string[];
-  }>({ success: 0, errors: [] });
+  } | null>(null);
 
-  const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+  const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
-    if (!selectedFile) return;
-
-    if (selectedFile.type !== 'text/csv' && !selectedFile.name.endsWith('.csv')) {
+    if (selectedFile && selectedFile.type === 'text/csv') {
+      setFile(selectedFile);
+      parseCSV(selectedFile);
+    } else {
       alert('Please select a valid CSV file');
-      return;
     }
-
-    setFile(selectedFile);
-    parseCSV(selectedFile);
-  };
+  }, []);
 
   const parseCSV = (file: File) => {
-    const reader = new FileReader();
-    reader.onload = (e) => {
-      const text = e.target?.result as string;
-      const lines = text.split('\n');
-      const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
+    Papa.parse(file, {
+      header: true,
+      skipEmptyLines: true,
+      complete: (results: any) => {
+        const contracts = results.data as ContractRow[];
+        setParsedData(contracts);
+        validateData(contracts);
+      },
+      error: (error: any) => {
+        console.error('CSV parsing error:', error);
+        alert('Error parsing CSV file. Please check the file format.');
+      }
+    });
+  };
+
+  const validateData = (contracts: ContractRow[]) => {
+    const errors: ValidationError[] = [];
+    
+    contracts.forEach((contract, index) => {
+      const rowNumber = index + 2; // +2 because of 0-based index and header row
       
-      const data: ContractData[] = [];
-      for (let i = 1; i < lines.length; i++) {
-        if (lines[i].trim()) {
-          const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-          const row: any = {};
-          
-          headers.forEach((header, index) => {
-            row[header] = values[index] || '';
-          });
-          
-          // Convert value to number
-          if (row.value) {
-            row.value = parseFloat(row.value.replace(/[^\d.]/g, '')) || 0;
-          }
-          
-          data.push(row);
-        }
+      // Required fields validation
+      if (!contract.reference_number?.trim()) {
+        errors.push({ row: rowNumber, field: 'reference_number', message: 'Reference number is required' });
       }
       
-      setPreview(data.slice(0, 5)); // Show first 5 rows as preview
-    };
-    reader.readAsText(file);
+      if (!contract.title?.trim()) {
+        errors.push({ row: rowNumber, field: 'title', message: 'Title is required' });
+      }
+      
+      if (!contract.category?.trim()) {
+        errors.push({ row: rowNumber, field: 'category', message: 'Category is required' });
+      }
+      
+      if (!contract.procurement_method?.trim()) {
+        errors.push({ row: rowNumber, field: 'procurement_method', message: 'Procurement method is required' });
+      }
+      
+      if (!contract.submission_deadline?.trim()) {
+        errors.push({ row: rowNumber, field: 'submission_deadline', message: 'Submission deadline is required' });
+      }
+      
+      if (!contract.procuring_entity?.trim()) {
+        errors.push({ row: rowNumber, field: 'procuring_entity', message: 'Procuring entity is required' });
+      }
+    });
+    
+    setValidationErrors(errors);
+    setIsValid(errors.length === 0);
   };
 
   const handleImport = async () => {
-    if (!file) return;
+    if (!isValid || parsedData.length === 0) {
+      alert('Please fix validation errors before importing');
+      return;
+    }
 
     setImporting(true);
-    setImportResults({ success: 0, errors: [] });
-
+    
     try {
-      const reader = new FileReader();
-      reader.onload = async (e) => {
-        const text = e.target?.result as string;
-        const lines = text.split('\n');
-        const headers = lines[0].split(',').map(h => h.trim().replace(/"/g, ''));
-        
-        let successCount = 0;
-        const errors: string[] = [];
+      const response = await fetch('/api/contracts/bulk-import', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ contracts: parsedData }),
+      });
 
-        for (let i = 1; i < lines.length; i++) {
-          if (lines[i].trim()) {
-            try {
-              const values = lines[i].split(',').map(v => v.trim().replace(/"/g, ''));
-              const row: any = {};
-              
-              headers.forEach((header, index) => {
-                row[header] = values[index] || '';
-              });
-
-              // Validate required fields
-              if (!row.title || !row.client || !row.location) {
-                errors.push(`Row ${i + 1}: Missing required fields (title, client, location)`);
-                continue;
-              }
-
-              // Convert value to number
-              const value = parseFloat(row.value?.replace(/[^\d.]/g, '')) || 0;
-
-              // Parse requirements as array
-              const requirements = row.requirements ? 
-                row.requirements.split(';').map((req: string) => req.trim()).filter(Boolean) : 
-                [];
-
-              // Prepare contract data
-              const contractData = {
-                title: row.title,
-                client: row.client,
-                location: row.location,
-                value: value,
-                deadline: row.deadline || new Date().toISOString(),
-                category: row.category || 'Other',
-                description: row.description || '',
-                status: row.status || 'Open',
-                posted_date: row.posted_date || new Date().toISOString(),
-                requirements: requirements
-              };
-
-              // Insert into database
-              const { error } = await supabase
-                .from('contracts')
-                .insert(contractData);
-
-              if (error) {
-                errors.push(`Row ${i + 1}: ${error.message}`);
-              } else {
-                successCount++;
-              }
-            } catch (error) {
-              errors.push(`Row ${i + 1}: ${error}`);
-            }
-          }
+      const result = await response.json();
+      
+      if (response.ok) {
+        setImportResults(result);
+        if (result.success > 0) {
+          alert(`Successfully imported ${result.success} contracts!`);
+          router.push('/admin/contracts');
         }
-
-        setImportResults({ success: successCount, errors });
-        setImporting(false);
-      };
-      reader.readAsText(file);
+      } else {
+        alert(`Import failed: ${result.error}`);
+      }
     } catch (error) {
       console.error('Import error:', error);
-      setImportResults({ success: 0, errors: ['Failed to process file'] });
+      alert('Import failed. Please try again.');
+    } finally {
       setImporting(false);
     }
   };
 
   const downloadTemplate = () => {
-    const template = `title,client,location,value,deadline,category,description,status,posted_date,requirements
-"Road Construction Project","Ministry of Works","Kampala",50000000,"2024-12-31","Construction & Engineering","Construction of major highway","Open","2024-01-15","5 years experience;Valid license;Insurance"
-"IT System Upgrade","Bank of Uganda","Entebbe",25000000,"2024-11-30","Information Technology","Upgrade banking systems","Open","2024-01-10","Certified developers;Security clearance"
-"Medical Equipment Supply","Mulago Hospital","Kampala",75000000,"2024-10-15","Healthcare & Medical","Supply medical equipment","Open","2024-01-05","ISO certified;Medical license"`;
-    
-    const blob = new Blob([template], { type: 'text/csv' });
+    const template = [
+      {
+        reference_number: 'URSB/SUPLS/2025-2026/00011',
+        title: 'Laptops & Accessories',
+        short_description: 'Supply of laptops and accessories',
+        category: 'supplies',
+        procurement_method: 'open domestic bidding',
+        estimated_value_min: '668000000',
+        estimated_value_max: '1000000000',
+        currency: 'UGX',
+        bid_fee: '100000',
+        bid_security_amount: '13760000',
+        bid_security_type: 'bank guarantee',
+        margin_of_preference: 'false',
+        competition_level: 'medium',
+        publish_date: '2025-08-01',
+        submission_deadline: '2025-08-28',
+        procuring_entity: 'Uganda Registration Services Bureau',
+        contact_person: 'MUSTAPHER NTALE',
+        contact_position: 'ACCOUNTING OFFICER',
+        evaluation_methodology: 'Within 20 working days from bid closing date',
+        requires_registration: 'true',
+        requires_trading_license: 'true',
+        requires_tax_clearance: 'true',
+        requires_nssf_clearance: 'true',
+        requires_manufacturer_auth: 'false',
+        submission_method: 'online',
+        submission_format: 'electronic submission',
+        required_documents: 'Registration/Incorporation,Trading License,Tax Clearance Certificate,NSSF Clearance',
+        required_forms: 'Bid Submission Sheet,Price Schedule,Code of Ethical Conduct',
+        status: 'open',
+        current_stage: 'published'
+      }
+    ];
+
+    const csv = Papa.unparse(template);
+    const blob = new Blob([csv], { type: 'text/csv' });
     const url = window.URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = 'contracts_template.csv';
+    a.download = 'contract_import_template.csv';
     a.click();
     window.URL.revokeObjectURL(url);
   };
 
-  const formatValue = (value: number) => {
-    if (value >= 1000000000) {
-      return `${(value / 1000000000).toFixed(1)}B UGX`;
-    } else if (value >= 1000000) {
-      return `${(value / 1000000).toFixed(1)}M UGX`;
-    } else if (value >= 1000) {
-      return `${(value / 1000).toFixed(1)}K UGX`;
-    }
-    return `${value} UGX`;
-  };
-
   return (
-    <div className="space-y-6">
-      {/* Header */}
-      <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-4">
-          <Link
-            href="/admin/contracts"
-            className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
-          >
-            <ArrowLeft className="w-4 h-4 mr-1" />
-            Back to Contracts
-          </Link>
-          <div>
-            <h1 className="text-2xl font-bold text-gray-900">Import Contracts</h1>
-            <p className="mt-1 text-sm text-gray-600">
-              Bulk import contracts from CSV file
-            </p>
-          </div>
-        </div>
-      </div>
-
-      {/* Import Results */}
-      {importResults.success > 0 && (
-        <div className="bg-green-50 border border-green-200 rounded-lg p-4">
-          <div className="flex items-center">
-            <CheckCircle className="h-5 w-5 text-green-400 mr-2" />
-            <div>
-              <h3 className="text-sm font-medium text-green-800">
-                Import completed successfully!
-              </h3>
-              <p className="text-sm text-green-700 mt-1">
-                {importResults.success} contracts imported successfully.
-                {importResults.errors.length > 0 && (
-                  <span className="ml-2">
-                    {importResults.errors.length} errors occurred.
-                  </span>
-                )}
-              </p>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {importResults.errors.length > 0 && (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-          <div className="flex items-start">
-            <AlertCircle className="h-5 w-5 text-red-400 mr-2 mt-0.5" />
-            <div>
-              <h3 className="text-sm font-medium text-red-800">
-                Import completed with errors
-              </h3>
-              <div className="mt-2 text-sm text-red-700">
-                <ul className="list-disc list-inside space-y-1">
-                  {importResults.errors.slice(0, 5).map((error, index) => (
-                    <li key={index}>{error}</li>
-                  ))}
-                  {importResults.errors.length > 5 && (
-                    <li>... and {importResults.errors.length - 5} more errors</li>
-                  )}
-                </ul>
+    <div className="min-h-screen bg-gray-50 py-8">
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-3">
+                <Link
+                  href="/admin/contracts"
+                  className="text-gray-400 hover:text-gray-600"
+                >
+                  <ArrowLeft className="h-6 w-6" />
+                </Link>
+                <h1 className="text-2xl font-bold text-gray-900">Import Contracts</h1>
               </div>
             </div>
           </div>
-        </div>
-      )}
 
-      {/* Template Download */}
-      <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
-        <div className="flex items-center justify-between">
-          <div>
-            <h3 className="text-sm font-medium text-blue-800">
-              Need a template?
-            </h3>
-            <p className="text-sm text-blue-700 mt-1">
-              Download our CSV template to see the required format
-            </p>
-          </div>
-          <button
-            onClick={downloadTemplate}
-            className="inline-flex items-center px-3 py-2 border border-blue-300 text-sm font-medium rounded-md text-blue-700 bg-white hover:bg-blue-50"
-          >
-            <Download className="w-4 h-4 mr-2" />
-            Download Template
-          </button>
-        </div>
-      </div>
-
-      {/* File Upload */}
-      <div className="bg-white shadow rounded-lg p-6">
-        <div className="space-y-4">
-          <div>
-            <h3 className="text-lg font-medium text-gray-900">Upload CSV File</h3>
-            <p className="text-sm text-gray-600">
-              Select a CSV file containing contract data
-            </p>
-          </div>
-
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
-            <div className="text-center">
-              {!file ? (
-                <div>
-                  <Upload className="mx-auto h-12 w-12 text-gray-400" />
-                  <div className="mt-4">
-                    <label htmlFor="file-upload" className="cursor-pointer">
-                      <span className="mt-2 block text-sm font-medium text-gray-900">
-                        Choose a file
-                      </span>
-                      <span className="mt-1 block text-xs text-gray-500">
-                        CSV up to 10MB
-                      </span>
-                    </label>
-                    <input
-                      id="file-upload"
-                      name="file-upload"
-                      type="file"
-                      accept=".csv"
-                      className="sr-only"
-                      onChange={handleFileChange}
-                    />
-                  </div>
+          <div className="p-6 space-y-6">
+            {/* File Upload Section */}
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6">
+              <div className="text-center">
+                <Upload className="mx-auto h-12 w-12 text-gray-400" />
+                <div className="mt-4">
+                  <label htmlFor="csv-file" className="cursor-pointer">
+                    <span className="mt-2 block text-sm font-medium text-gray-900">
+                      Upload CSV file
+                    </span>
+                    <span className="mt-1 block text-xs text-gray-500">
+                      CSV files only
+                    </span>
+                  </label>
+                  <input
+                    id="csv-file"
+                    name="csv-file"
+                    type="file"
+                    accept=".csv"
+                    className="sr-only"
+                    onChange={handleFileSelect}
+                  />
                 </div>
-              ) : (
-                <div>
-                  <FileText className="mx-auto h-12 w-12 text-green-400" />
-                  <div className="mt-4">
-                    <p className="text-sm font-medium text-gray-900">
-                      {file.name}
-                    </p>
-                    <p className="text-xs text-gray-500">
-                      {(file.size / 1024 / 1024).toFixed(2)} MB
-                    </p>
-                  </div>
-                  <button
-                    onClick={() => {
-                      setFile(null);
-                      setPreview([]);
-                      setImportResults({ success: 0, errors: [] });
-                    }}
-                    className="mt-2 inline-flex items-center px-3 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50"
-                  >
-                    <X className="w-4 h-4 mr-2" />
-                    Remove
-                  </button>
-                </div>
-              )}
+              </div>
             </div>
-          </div>
 
-          {/* Preview */}
-          {preview.length > 0 && (
-            <div>
-              <h4 className="text-sm font-medium text-gray-900 mb-3">
-                Preview (first 5 rows)
-              </h4>
-              <div className="overflow-x-auto">
-                <table className="min-w-full divide-y divide-gray-200">
-                  <thead className="bg-gray-50">
-                    <tr>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Title
-                      </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Client
-                      </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Location
-                      </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Value
-                      </th>
-                      <th className="px-3 py-2 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        Category
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="bg-white divide-y divide-gray-200">
-                    {preview.map((row, index) => (
-                      <tr key={index}>
-                        <td className="px-3 py-2 text-sm text-gray-900">
-                          {row.title}
-                        </td>
-                        <td className="px-3 py-2 text-sm text-gray-500">
-                          {row.client}
-                        </td>
-                        <td className="px-3 py-2 text-sm text-gray-500">
-                          {row.location}
-                        </td>
-                        <td className="px-3 py-2 text-sm text-gray-500">
-                          {formatValue(row.value)}
-                        </td>
-                        <td className="px-3 py-2 text-sm text-gray-500">
-                          {row.category}
-                        </td>
+            {/* Template Download */}
+            <div className="bg-blue-50 border border-blue-200 rounded-lg p-4">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-sm font-medium text-blue-900">Need a template?</h3>
+                  <p className="text-sm text-blue-700 mt-1">
+                    Download our CSV template to see the required format and column names.
+                  </p>
+                </div>
+                <button
+                  onClick={downloadTemplate}
+                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
+                >
+                  <Download className="h-4 w-4 mr-2" />
+                  Download Template
+                </button>
+              </div>
+            </div>
+
+            {/* Validation Errors */}
+            {validationErrors.length > 0 && (
+              <div className="bg-red-50 border border-red-200 rounded-lg p-4">
+                <div className="flex">
+                  <AlertCircle className="h-5 w-5 text-red-400" />
+                  <div className="ml-3">
+                    <h3 className="text-sm font-medium text-red-800">
+                      Validation Errors ({validationErrors.length})
+                    </h3>
+                    <div className="mt-2 text-sm text-red-700">
+                      <ul className="list-disc pl-5 space-y-1">
+                        {validationErrors.slice(0, 10).map((error, index) => (
+                          <li key={index}>
+                            Row {error.row}, {error.field}: {error.message}
+                          </li>
+                        ))}
+                        {validationErrors.length > 10 && (
+                          <li>... and {validationErrors.length - 10} more errors</li>
+                        )}
+                      </ul>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Preview Section */}
+            {parsedData.length > 0 && (
+              <div>
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-semibold text-gray-900">
+                    Preview ({parsedData.length} contracts)
+                  </h2>
+                  <div className="flex items-center space-x-2">
+                    {isValid ? (
+                      <CheckCircle className="h-5 w-5 text-green-500" />
+                    ) : (
+                      <AlertCircle className="h-5 w-5 text-red-500" />
+                    )}
+                    <span className={`text-sm ${isValid ? 'text-green-600' : 'text-red-600'}`}>
+                      {isValid ? 'Ready to import' : 'Please fix errors'}
+                    </span>
+                  </div>
+                </div>
+
+                <div className="overflow-x-auto">
+                  <table className="min-w-full divide-y divide-gray-200">
+                    <thead className="bg-gray-50">
+                      <tr>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Reference
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Title
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Category
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Entity
+                        </th>
+                        <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                          Deadline
+                        </th>
                       </tr>
-                    ))}
-                  </tbody>
-                </table>
+                    </thead>
+                    <tbody className="bg-white divide-y divide-gray-200">
+                      {parsedData.slice(0, 10).map((contract, index) => (
+                        <tr key={index}>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {contract.reference_number}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {contract.title}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {contract.category}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {contract.procuring_entity}
+                          </td>
+                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                            {contract.submission_deadline}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  {parsedData.length > 10 && (
+                    <p className="text-sm text-gray-500 mt-2">
+                      Showing first 10 contracts. Total: {parsedData.length}
+                    </p>
+                  )}
+                </div>
               </div>
-            </div>
-          )}
+            )}
 
-          {/* Import Button */}
-          {file && (
-            <div className="flex justify-end">
+            {/* Action Buttons */}
+            <div className="flex justify-end space-x-4">
+              <Link
+                href="/admin/contracts"
+                className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+              >
+                Cancel
+              </Link>
               <button
                 onClick={handleImport}
-                disabled={importing}
+                disabled={!isValid || importing || parsedData.length === 0}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
               >
                 {importing ? (
                   <>
-                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                    <Loader2 className="h-4 w-4 mr-2 animate-spin" />
                     Importing...
                   </>
                 ) : (
                   <>
-                    <Upload className="w-4 h-4 mr-2" />
+                    <Upload className="h-4 w-4 mr-2" />
                     Import Contracts
                   </>
                 )}
               </button>
             </div>
-          )}
-        </div>
-      </div>
-
-      {/* Instructions */}
-      <div className="bg-gray-50 rounded-lg p-6">
-        <h3 className="text-lg font-medium text-gray-900 mb-4">CSV Format Requirements</h3>
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-          <div>
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Required Fields</h4>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>• <strong>title</strong> - Contract title</li>
-              <li>• <strong>client</strong> - Client/organization name</li>
-              <li>• <strong>location</strong> - Contract location</li>
-              <li>• <strong>value</strong> - Contract value (numbers only)</li>
-              <li>• <strong>deadline</strong> - Submission deadline (YYYY-MM-DD)</li>
-              <li>• <strong>category</strong> - Contract category</li>
-              <li>• <strong>description</strong> - Contract description</li>
-              <li>• <strong>status</strong> - Contract status (Open/Closed/Awarded/Cancelled)</li>
-              <li>• <strong>posted_date</strong> - Posted date (YYYY-MM-DD)</li>
-              <li>• <strong>requirements</strong> - Requirements (semicolon-separated)</li>
-            </ul>
-          </div>
-          <div>
-            <h4 className="text-sm font-medium text-gray-900 mb-2">Tips</h4>
-            <ul className="text-sm text-gray-600 space-y-1">
-              <li>• Use the template as a starting point</li>
-              <li>• Ensure all required fields are filled</li>
-              <li>• Use semicolons (;) to separate multiple requirements</li>
-              <li>• Values should be numbers only (no currency symbols)</li>
-              <li>• Dates should be in YYYY-MM-DD format</li>
-              <li>• Maximum file size: 10MB</li>
-            </ul>
           </div>
         </div>
       </div>
