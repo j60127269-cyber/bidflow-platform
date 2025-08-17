@@ -186,6 +186,9 @@ export async function POST(request: NextRequest) {
     }
 
     // Insert contracts
+    console.log('Attempting to insert contracts into database...');
+    console.log('Sample contract data:', processedContracts[0]);
+    
     const { data: insertedContracts, error: insertError } = await supabase
       .from('contracts')
       .insert(processedContracts)
@@ -193,6 +196,8 @@ export async function POST(request: NextRequest) {
 
     if (insertError) {
       console.error('Error inserting contracts:', insertError);
+      console.error('Error details:', insertError.details);
+      console.error('Error hint:', insertError.hint);
       return NextResponse.json(
         { 
           error: 'Failed to insert contracts',
@@ -203,6 +208,8 @@ export async function POST(request: NextRequest) {
         { status: 500 }
       );
     }
+
+    console.log('Successfully inserted contracts:', insertedContracts?.length || 0);
 
     return NextResponse.json({
       success: insertedContracts?.length || 0,

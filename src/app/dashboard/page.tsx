@@ -20,43 +20,7 @@ import { supabase } from "@/lib/supabase";
 import { useAuth } from "@/contexts/AuthContext";
 import { subscriptionService } from "@/lib/subscriptionService";
 import { useRouter } from "next/navigation";
-
-interface Contract {
-  id: string;
-  reference_number: string;
-  title: string;
-  category: string;
-  procurement_method: string;
-  estimated_value_min?: number;
-  estimated_value_max?: number;
-  currency: string;
-  bid_security_amount?: number;
-  bid_security_type?: string;
-  margin_of_preference: boolean;
-  publish_date?: string;
-  pre_bid_meeting_date?: string;
-  site_visit_date?: string;
-  submission_deadline: string;
-  bid_opening_date?: string;
-  procuring_entity: string;
-  contact_person?: string;
-  contact_position?: string;
-  evaluation_methodology?: string;
-  requires_registration: boolean;
-  requires_trading_license: boolean;
-  requires_tax_clearance: boolean;
-  requires_nssf_clearance: boolean;
-  requires_manufacturer_auth: boolean;
-  submission_method?: string;
-  submission_format?: string;
-  required_documents?: string[];
-  required_forms?: string[];
-  status: string;
-  current_stage: string;
-  award_information?: string;
-  created_at: string;
-  updated_at: string;
-}
+import { Contract } from "@/types/database";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -394,7 +358,7 @@ export default function DashboardPage() {
 
                 {/* Description */}
                 <p className="text-sm text-slate-600 mb-4">
-                  {contract.evaluation_methodology || 'No description available'}
+                  {contract.short_description || contract.evaluation_methodology || 'No description available'}
                 </p>
 
                 {/* Details */}
@@ -407,15 +371,22 @@ export default function DashboardPage() {
                     <Calendar className="h-4 w-4 mr-2" />
                     Deadline: {formatDate(contract.submission_deadline)}
                 </div>
-                  <div className="flex items-center text-sm text-slate-600">
+                                    <div className="flex items-center text-sm text-slate-600">
                     <Calendar className="h-4 w-4 mr-2" />
-                    Posted: {formatDate(contract.created_at)}
-            </div>
-                  <div className="flex items-center justify-end">
+                    Posted: {formatDate(contract.publish_date || contract.created_at)}
+                  </div>
+                                    <div className="flex items-center justify-end">
                     <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                      {formatValue(contract.estimated_value_min || contract.estimated_value_max || 0)}
+                      {contract.estimated_value_min && contract.estimated_value_max 
+                        ? `Estimated ${formatValue(contract.estimated_value_min)}-${formatValue(contract.estimated_value_max)}`
+                        : contract.estimated_value_min 
+                          ? `Estimated ${formatValue(contract.estimated_value_min)}`
+                          : contract.estimated_value_max 
+                            ? `Estimated ${formatValue(contract.estimated_value_max)}`
+                            : 'Value not specified'
+                      }
                     </span>
-          </div>
+                  </div>
         </div>
 
                 {/* Actions */}
@@ -457,40 +428,47 @@ export default function DashboardPage() {
                         <h3 className="text-lg font-semibold text-slate-900 mb-2">
                           {filteredContracts[3]?.title || "Contract Title"}
                         </h3>
-                        <div className="flex items-center text-sm text-slate-600 mb-2">
-                          <Building className="h-4 w-4 mr-1" />
-                          {filteredContracts[3]?.client || "Client Name"}
-                        </div>
+                                                  <div className="flex items-center text-sm text-slate-600 mb-2">
+                            <Building className="h-4 w-4 mr-1" />
+                            {filteredContracts[3]?.procuring_entity || "Procuring Entity"}
+                          </div>
                       </div>
                       <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
                         {filteredContracts[3]?.category || "Category"}
                       </span>
       </div>
 
-                    {/* Description */}
-                    <p className="text-sm text-slate-600 mb-4">
-                      {filteredContracts[3]?.description || "Contract description..."}
-                    </p>
+                                          {/* Description */}
+                      <p className="text-sm text-slate-600 mb-4">
+                        {filteredContracts[3]?.short_description || filteredContracts[3]?.evaluation_methodology || "Contract description..."}
+                      </p>
 
                     {/* Details */}
                     <div className="grid grid-cols-2 gap-4 mb-4">
-                      <div className="flex items-center text-sm text-slate-600">
-                        <MapPin className="h-4 w-4 mr-2" />
-                        {filteredContracts[3]?.location || "Location"}
-            </div>
-                      <div className="flex items-center text-sm text-slate-600">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Deadline: {filteredContracts[3]?.deadline ? formatDate(filteredContracts[3].deadline) : "Date"}
-                      </div>
-                      <div className="flex items-center text-sm text-slate-600">
-                        <Calendar className="h-4 w-4 mr-2" />
-                        Posted: {filteredContracts[3]?.posted_date ? formatDate(filteredContracts[3].posted_date) : "Date"}
-                    </div>
-                      <div className="flex items-center justify-end">
-                        <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                          {filteredContracts[3]?.value ? formatValue(filteredContracts[3].value) : "Value"}
-                      </span>
-                    </div>
+                                              <div className="flex items-center text-sm text-slate-600">
+                          <MapPin className="h-4 w-4 mr-2" />
+                          {filteredContracts[3]?.procuring_entity || "Location"}
+                        </div>
+                        <div className="flex items-center text-sm text-slate-600">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Deadline: {filteredContracts[3]?.submission_deadline ? formatDate(filteredContracts[3].submission_deadline) : "Date"}
+                        </div>
+                        <div className="flex items-center text-sm text-slate-600">
+                          <Calendar className="h-4 w-4 mr-2" />
+                          Posted: {filteredContracts[3]?.publish_date || filteredContracts[3]?.created_at ? formatDate(filteredContracts[3].publish_date || filteredContracts[3].created_at) : "Date"}
+                        </div>
+                        <div className="flex items-center justify-end">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            {filteredContracts[3]?.estimated_value_min && filteredContracts[3]?.estimated_value_max 
+                              ? `Estimated ${formatValue(filteredContracts[3].estimated_value_min)}-${formatValue(filteredContracts[3].estimated_value_max)}`
+                              : filteredContracts[3]?.estimated_value_min 
+                                ? `Estimated ${formatValue(filteredContracts[3].estimated_value_min)}`
+                                : filteredContracts[3]?.estimated_value_max 
+                                  ? `Estimated ${formatValue(filteredContracts[3].estimated_value_max)}`
+                                  : "Value not specified"
+                            }
+                          </span>
+                        </div>
                   </div>
                 </div>
                   
@@ -524,7 +502,7 @@ export default function DashboardPage() {
                           </h3>
                           <div className="flex items-center text-sm text-slate-600 mb-2">
                             <Building className="h-4 w-4 mr-1" />
-                            {filteredContracts[4]?.client || "Client Name"}
+                            {filteredContracts[4]?.procuring_entity || "Procuring Entity"}
                           </div>
                         </div>
                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -534,28 +512,35 @@ export default function DashboardPage() {
 
                       {/* Description */}
                       <p className="text-sm text-slate-600 mb-4">
-                        {filteredContracts[4]?.description || "Contract description..."}
+                        {filteredContracts[4]?.short_description || filteredContracts[4]?.evaluation_methodology || "Contract description..."}
                       </p>
 
                       {/* Details */}
                       <div className="grid grid-cols-2 gap-4 mb-4">
-                        <div className="flex items-center text-sm text-slate-600">
+                                                <div className="flex items-center text-sm text-slate-600">
                           <MapPin className="h-4 w-4 mr-2" />
-                          {filteredContracts[4]?.location || "Location"}
+                          {filteredContracts[4]?.procuring_entity || "Location"}
                         </div>
                         <div className="flex items-center text-sm text-slate-600">
                           <Calendar className="h-4 w-4 mr-2" />
-                          Deadline: {filteredContracts[4]?.deadline ? formatDate(filteredContracts[4].deadline) : "Date"}
-          </div>
+                          Deadline: {filteredContracts[4]?.submission_deadline ? formatDate(filteredContracts[4].submission_deadline) : "Date"}
+                        </div>
                         <div className="flex items-center text-sm text-slate-600">
                           <Calendar className="h-4 w-4 mr-2" />
-                          Posted: {filteredContracts[4]?.posted_date ? formatDate(filteredContracts[4].posted_date) : "Date"}
-                  </div>
+                          Posted: {filteredContracts[4]?.publish_date || filteredContracts[4]?.created_at ? formatDate(filteredContracts[4].publish_date || filteredContracts[4].created_at) : "Date"}
+                        </div>
                         <div className="flex items-center justify-end">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                            {filteredContracts[4]?.value ? formatValue(filteredContracts[4].value) : "Value"}
+                            {filteredContracts[4]?.estimated_value_min && filteredContracts[4]?.estimated_value_max 
+                              ? `Estimated ${formatValue(filteredContracts[4].estimated_value_min)}-${formatValue(filteredContracts[4].estimated_value_max)}`
+                              : filteredContracts[4]?.estimated_value_min 
+                                ? `Estimated ${formatValue(filteredContracts[4].estimated_value_min)}`
+                                : filteredContracts[4]?.estimated_value_max 
+                                  ? `Estimated ${formatValue(filteredContracts[4].estimated_value_max)}`
+                                  : "Value not specified"
+                            }
                           </span>
-                  </div>
+                        </div>
                 </div>
               </div>
                     

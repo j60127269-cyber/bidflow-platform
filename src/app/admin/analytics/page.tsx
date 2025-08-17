@@ -89,7 +89,7 @@ export default function AdminAnalytics() {
       const recentContracts = contracts.slice(0, 5);
       const recentActivity = [
         ...recentUsers.map(user => ({ type: 'user', data: user, date: user.created_at })),
-        ...recentContracts.map(contract => ({ type: 'contract', data: contract, date: contract.posted_date }))
+        ...recentContracts.map(contract => ({ type: 'contract', data: contract, date: contract.created_at }))
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()).slice(0, 10);
 
       setData({

@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
+import { Contract } from '@/types/database';
 import { 
   Plus, 
   Search, 
@@ -17,47 +18,6 @@ import {
   MapPin,
   FileText
 } from 'lucide-react';
-
-interface Contract {
-  id: string;
-  reference_number: string;
-  title: string;
-  short_description?: string;
-  category: string;
-  procurement_method: string;
-  estimated_value_min?: number;
-  estimated_value_max?: number;
-  currency: string;
-  bid_fee?: number;
-  bid_security_amount?: number;
-  bid_security_type?: string;
-  margin_of_preference: boolean;
-  competition_level: 'low' | 'medium' | 'high' | 'very_high';
-  publish_date?: string;
-  pre_bid_meeting_date?: string;
-  site_visit_date?: string;
-  submission_deadline: string;
-  bid_opening_date?: string;
-  procuring_entity: string;
-  contact_person?: string;
-  contact_position?: string;
-  evaluation_methodology?: string;
-  requires_registration: boolean;
-  requires_trading_license: boolean;
-  requires_tax_clearance: boolean;
-  requires_nssf_clearance: boolean;
-  requires_manufacturer_auth: boolean;
-  submission_method?: string;
-  submission_format?: string;
-  required_documents?: string[];
-  required_forms?: string[];
-  bid_attachments?: string[];
-  status: string;
-  current_stage: string;
-  award_information?: string;
-  created_at: string;
-  updated_at: string;
-}
 
 export default function AdminContracts() {
   const [contracts, setContracts] = useState<Contract[]>([]);

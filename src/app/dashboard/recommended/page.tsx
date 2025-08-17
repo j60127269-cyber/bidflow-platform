@@ -19,22 +19,7 @@ import {
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
-
-interface Contract {
-  id: string;
-  title: string;
-  client: string;
-  location: string;
-  value: number;
-  deadline: string;
-  category: string;
-  description: string;
-  status: string;
-  posted_date: string;
-  requirements: string[];
-  recommendationScore?: number;
-  recommendationReasons?: string[];
-}
+import { Contract } from "@/types/database";
 
 interface UserProfile {
   id: string;
@@ -105,7 +90,7 @@ export default function RecommendedPage() {
       const { data: contractsData, error: contractsError } = await supabase
         .from('contracts')
         .select('*')
-        .order('posted_date', { ascending: false });
+        .order('created_at', { ascending: false });
 
       if (contractsError) {
         console.error('Error fetching contracts:', contractsError);
@@ -138,17 +123,22 @@ export default function RecommendedPage() {
       }
 
       // Value range match (45% weight - increased since we removed location)
-      if (contract.value >= userProfile.min_contract_value && 
-          contract.value <= userProfile.max_contract_value) {
+      const contractValue = contract.estimated_value_min || contract.estimated_value_max || 0;
+      if (contractValue >= userProfile.min_contract_value && 
+          contractValue <= userProfile.max_contract_value) {
         score += 20;
-        reasons.push(`Contract value fits your range: ${formatValue(contract.value)}`);
+        reasons.push(`Contract value fits your range: ${formatValue(contractValue)}`);
       }
 
-      // Experience level match (15% weight)
-      const experienceMatch = contract.requirements && contract.requirements.some(req =>
-        req.toLowerCase().includes(`${userProfile.experience_years} years`) ||
-        req.toLowerCase().includes('experience')
-      );
+      // Experience level match (15% weight) - using required_documents and required_forms
+      const allRequirements = [
+        ...(contract.required_documents || []),
+        ...(contract.required_forms || []),
+        contract.evaluation_methodology || ''
+      ].join(' ').toLowerCase();
+      
+      const experienceMatch = allRequirements.includes(`${userProfile.experience_years} years`) ||
+                             allRequirements.includes('experience');
       if (experienceMatch) {
         score += 15;
         reasons.push(`Experience requirements match your profile`);
@@ -165,8 +155,8 @@ export default function RecommendedPage() {
     if (searchTerm) {
       filtered = filtered.filter(contract =>
         contract.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.client.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        contract.description.toLowerCase().includes(searchTerm.toLowerCase())
+        contract.procuring_entity.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        (contract.short_description || contract.evaluation_methodology || '').toLowerCase().includes(searchTerm.toLowerCase())
       );
     }
 
@@ -175,17 +165,17 @@ export default function RecommendedPage() {
       filtered = filtered.filter(contract => contract.category === selectedCategory);
     }
 
-    // Filter by location
+    // Filter by location (using procuring_entity)
     if (selectedLocation !== "All Locations") {
       filtered = filtered.filter(contract => 
-        contract.location.toLowerCase().includes(selectedLocation.toLowerCase())
+        contract.procuring_entity.toLowerCase().includes(selectedLocation.toLowerCase())
       );
     }
 
     // Filter by value
     if (selectedValue !== "Any Value") {
       filtered = filtered.filter(contract => {
-        const value = contract.value;
+        const value = contract.estimated_value_min || contract.estimated_value_max || 0;
         switch (selectedValue) {
           case "Under 50M UGX":
             return value < 50000000;
@@ -441,7 +431,7 @@ export default function RecommendedPage() {
                       </h3>
                       <div className="flex items-center text-sm text-slate-600 mb-2">
                         <Building className="h-4 w-4 mr-1" />
-                        {contract.client}
+                        {contract.procuring_entity}
                       </div>
                     </div>
                     <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
@@ -451,7 +441,7 @@ export default function RecommendedPage() {
 
                   {/* Description */}
                   <p className="text-sm text-slate-600 mb-4">
-                    {contract.description}
+                    {contract.short_description || contract.evaluation_methodology || 'No description available'}
                   </p>
 
                   
@@ -460,19 +450,26 @@ export default function RecommendedPage() {
                   <div className="grid grid-cols-2 gap-4 mb-4">
                     <div className="flex items-center text-sm text-slate-600">
                       <MapPin className="h-4 w-4 mr-2" />
-                      {contract.location}
+                      {contract.procuring_entity}
                     </div>
                     <div className="flex items-center text-sm text-slate-600">
                       <Calendar className="h-4 w-4 mr-2" />
-                      Deadline: {formatDate(contract.deadline)}
+                      Deadline: {formatDate(contract.submission_deadline)}
                     </div>
                     <div className="flex items-center text-sm text-slate-600">
                       <Calendar className="h-4 w-4 mr-2" />
-                      Posted: {formatDate(contract.posted_date)}
+                      Posted: {formatDate(contract.publish_date || contract.created_at)}
                     </div>
                     <div className="flex items-center justify-end">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
-                        {formatValue(contract.value)}
+                        {contract.estimated_value_min && contract.estimated_value_max 
+                          ? `Estimated ${formatValue(contract.estimated_value_min)}-${formatValue(contract.estimated_value_max)}`
+                          : contract.estimated_value_min 
+                            ? `Estimated ${formatValue(contract.estimated_value_min)}`
+                            : contract.estimated_value_max 
+                              ? `Estimated ${formatValue(contract.estimated_value_max)}`
+                              : 'Value not specified'
+                        }
                       </span>
                     </div>
                   </div>

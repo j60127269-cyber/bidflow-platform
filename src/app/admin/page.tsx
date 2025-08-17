@@ -253,7 +253,7 @@ export default function AdminDashboard() {
                   </div>
                   <div className="flex items-center space-x-2">
                     <span className="text-xs text-gray-500">
-                      {formatDate(contract.posted_date)}
+                      {formatDate(contract.created_at)}
                     </span>
                     <Link
                       href={`/admin/contracts/edit/${contract.id}`}

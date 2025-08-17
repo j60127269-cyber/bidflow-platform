@@ -10,7 +10,7 @@ export default function Home() {
           <div className="flex justify-between items-center h-16">
             <div className="flex items-center">
               <div className="flex-shrink-0">
-                <h1 className="text-2xl font-bold text-blue-600">BidFlow</h1>
+                <h1 className="text-2xl font-bold text-blue-600">BidCloud</h1>
               </div>
             </div>
             <div className="hidden md:block">
@@ -186,7 +186,7 @@ export default function Home() {
               Trusted by Leading Businesses
             </h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              See how BidFlow is helping Ugandan companies win more contracts
+              See how BidCloud is helping Ugandan companies win more contracts
             </p>
           </div>
 
@@ -198,7 +198,7 @@ export default function Home() {
                 ))}
               </div>
               <p className="text-slate-600 mb-6">
-                "BidFlow has transformed how we approach contract bidding. We've increased our win rate by 40% in just 6 months."
+                "BidCloud has transformed how we approach contract bidding. We've increased our win rate by 40% in just 6 months."
               </p>
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
@@ -327,7 +327,7 @@ export default function Home() {
             Ready to Win More Contracts?
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join hundreds of Ugandan businesses already using BidFlow to increase their contract win rates.
+            Join hundreds of Ugandan businesses already using BidCloud to increase their contract win rates.
           </p>
           <Link 
             href="/register" 
@@ -344,7 +344,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold text-blue-400 mb-4">BidFlow</h3>
+              <h3 className="text-2xl font-bold text-blue-400 mb-4">BidCloud</h3>
               <p className="text-slate-400">
                 Uganda's premier contract intelligence platform helping businesses 
                 win more contracts through data-driven insights.
@@ -376,7 +376,7 @@ export default function Home() {
             </div>
           </div>
           <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-400">
-            <p>&copy; 2025 BidFlow. All rights reserved.</p>
+            <p>&copy; 2025 BidCloud. All rights reserved.</p>
           </div>
         </div>
       </footer>
