@@ -75,7 +75,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Send WhatsApp notification with template
-        if (record.sms_alerts) {
+        if (record.whatsapp_alerts) {
           const whatsappMessage = whatsappService.createDeadlineReminderMessage(
             record.contracts.title,
             record.contracts.client,
@@ -143,7 +143,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Send WhatsApp notification with template
-        if (record.sms_alerts) {
+        if (record.whatsapp_alerts) {
           const whatsappMessage = whatsappService.createDeadlineReminderMessage(
             record.contracts.title,
             record.contracts.client,
@@ -210,7 +210,7 @@ export async function POST(request: NextRequest) {
         }
 
         // Send WhatsApp notification with template
-        if (record.sms_alerts) {
+        if (record.whatsapp_alerts) {
           const whatsappMessage = whatsappService.createDeadlineReminderMessage(
             record.contracts.title,
             record.contracts.client,

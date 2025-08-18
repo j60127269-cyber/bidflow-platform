@@ -1,7 +1,7 @@
--- Update Professional plan price to 20,000 UGX
+-- Update Professional plan price to 50,000 UGX
 UPDATE subscription_plans 
 SET 
-  price = 20000,
+  price = 50000,
   updated_at = NOW()
 WHERE name = 'Professional';
 

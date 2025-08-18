@@ -104,7 +104,7 @@ export interface BidTracking {
   user_id: string;
   contract_id: string;
   email_alerts: boolean;
-  sms_alerts: boolean;
+  whatsapp_alerts: boolean;
   push_alerts: boolean;
   tracking_active: boolean;
   created_at: string;

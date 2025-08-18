@@ -102,7 +102,7 @@ export default function OnboardingWelcome() {
             <div className="mb-6">
               <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-4">
                 <Star className="w-4 h-4 mr-2" />
-                Welcome to BidFlow, {user?.email?.split('@')[0]}!
+                Welcome to BidCloud, {user?.email?.split('@')[0]}!
               </span>
             </div>
             
@@ -146,7 +146,7 @@ export default function OnboardingWelcome() {
           {/* Benefits Section */}
           <div className="bg-white rounded-2xl shadow-lg p-8 mb-12">
             <h2 className="text-2xl font-bold text-slate-900 mb-6 text-center">
-              What You'll Get with BidFlow
+              What You'll Get with BidCloud
             </h2>
             
             <div className="grid md:grid-cols-2 gap-6">
@@ -212,7 +212,7 @@ export default function OnboardingWelcome() {
               ))}
             </div>
             <blockquote className="text-lg mb-4">
-              "BidFlow has transformed how we approach contract bidding. We've increased our win rate by 40% in just 6 months. The competition analysis feature is incredible - we now know exactly what to expect and can price our bids competitively."
+              "BidCloud has transformed how we approach contract bidding. We've increased our win rate by 40% in just 6 months. The competition analysis feature is incredible - we now know exactly what to expect and can price our bids competitively."
             </blockquote>
             <div className="flex items-center">
               <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">

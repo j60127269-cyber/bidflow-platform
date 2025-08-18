@@ -76,7 +76,7 @@ export default function RegisterPage() {
         <div className="max-w-md w-full space-y-8">
           <div className="text-center">
             <Link href="/" className="inline-block">
-              <h1 className="text-3xl font-bold text-blue-600">BidFlow</h1>
+              <h1 className="text-3xl font-bold text-blue-600">BidCloud</h1>
             </Link>
             <div className="mt-6">
               <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
@@ -94,7 +94,7 @@ export default function RegisterPage() {
               </p>
               <div className="bg-blue-50 border border-blue-200 rounded-lg p-4 mb-6">
                 <p className="text-sm text-blue-800">
-                  <strong>Note:</strong> You must verify your email before you can access BidFlow and subscribe to our services.
+                  <strong>Note:</strong> You must verify your email before you can access BidCloud and subscribe to our services.
                 </p>
               </div>
               <Link
@@ -115,7 +115,7 @@ export default function RegisterPage() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Link href="/" className="inline-block">
-            <h1 className="text-3xl font-bold text-blue-600">BidFlow</h1>
+            <h1 className="text-3xl font-bold text-blue-600">BidCloud</h1>
           </Link>
           <h2 className="mt-6 text-3xl font-bold text-slate-900">
             Create your account

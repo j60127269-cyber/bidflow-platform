@@ -11,7 +11,7 @@ const inter = Inter({
 });
 
 export const metadata: Metadata = {
-  title: "BidFlow - Contract Intelligence Platform",
+  title: "BidCloud - Contract Intelligence Platform",
   description: "Uganda's premier contract intelligence and bid management platform. Track contracts, analyze competition, and win more bids with data-driven insights.",
   keywords: "contracts, bidding, Uganda, procurement, analytics, bid management",
 };

@@ -216,7 +216,7 @@ export class NotificationService {
           }
 
           // Send WhatsApp notification with template
-          if (record.sms_alerts) {
+          if (record.whatsapp_alerts) {
             const whatsappMessage = `
               URGENT: Bid Deadline Tomorrow for ${record.contracts.title} with ${record.contracts.client}
               Deadline: ${deadlineFormatted}
@@ -260,7 +260,7 @@ export class NotificationService {
           }
 
           // Send WhatsApp notification with template
-          if (record.sms_alerts) {
+          if (record.whatsapp_alerts) {
             const whatsappMessage = `
               Bid Deadline Approaching for ${record.contracts.title} with ${record.contracts.client}
               Deadline: ${deadlineFormatted}
@@ -304,7 +304,7 @@ export class NotificationService {
           }
 
           // Send WhatsApp notification with template
-          if (record.sms_alerts) {
+          if (record.whatsapp_alerts) {
             const whatsappMessage = `
               Bid Deadline Coming Up for ${record.contracts.title} with ${record.contracts.client}
               Deadline: ${deadlineFormatted}
@@ -331,11 +331,11 @@ export class NotificationService {
   static async startTracking(
     userId: string,
     contractId: string,
-    preferences: {
-      email_alerts: boolean;
-      sms_alerts: boolean;
-      push_alerts: boolean;
-    }
+          preferences: {
+        email_alerts: boolean;
+        whatsapp_alerts: boolean;
+        push_alerts: boolean;
+      }
   ): Promise<BidTracking | null> {
     try {
       // First, check if contract exists, if not create a mock one
@@ -373,7 +373,7 @@ export class NotificationService {
           user_id: userId,
           contract_id: contractId,
           email_alerts: preferences.email_alerts,
-          sms_alerts: preferences.sms_alerts,
+          whatsapp_alerts: preferences.whatsapp_alerts,
           push_alerts: preferences.push_alerts,
           tracking_active: true,
         })
@@ -406,7 +406,7 @@ export class NotificationService {
         );
       }
 
-      if (preferences.sms_alerts) {
+      if (preferences.whatsapp_alerts) {
         // Get contract details for the WhatsApp template
         const { data: contract } = await supabase
           .from('contracts')

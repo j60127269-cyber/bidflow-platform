@@ -89,7 +89,7 @@ export default function Home() {
             </div>
             
             <div className="mt-8 text-sm text-slate-500">
-              <span className="font-semibold text-blue-600">20,000 UGX</span> per month • No setup fees • 7-day free trial
+              <span className="font-semibold text-blue-600">50,000 UGX</span> per month • No setup fees • 7-day free trial
             </div>
           </div>
         </div>
@@ -127,7 +127,7 @@ export default function Home() {
               <h3 className="text-xl font-semibold text-slate-900 mb-4">Competition Analysis</h3>
               <p className="text-slate-600">
                 Analyze historical bid data, competitor success rates, and market trends 
-                to make informed bidding decisions.
+                to make informed ai powered bidding decisions.
               </p>
             </div>
 
@@ -276,7 +276,7 @@ export default function Home() {
               <div className="text-center">
                 <h3 className="text-2xl font-bold text-slate-900 mb-2">Professional Plan</h3>
                 <div className="mb-6">
-                  <span className="text-4xl font-bold text-blue-600">20,000</span>
+                  <span className="text-4xl font-bold text-blue-600">50,000</span>
                   <span className="text-slate-600"> UGX</span>
                   <span className="text-slate-500 text-sm">/month</span>
                 </div>

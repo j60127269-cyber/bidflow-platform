@@ -110,7 +110,7 @@ export default function DashboardLayout({
               {/* Logo and primary navigation */}
               <div className="flex items-center">
             <Link href="/dashboard" className="flex items-center">
-              <h1 className="text-xl font-bold text-blue-600">BidFlow</h1>
+              <h1 className="text-xl font-bold text-blue-600">BidCloud</h1>
             </Link>
 
                 {/* Desktop navigation */}

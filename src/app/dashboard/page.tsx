@@ -34,19 +34,32 @@ export default function DashboardPage() {
   const [selectedValue, setSelectedValue] = useState("Any Value");
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
+  const [trackedContracts, setTrackedContracts] = useState<Set<string>>(new Set());
 
   // Fetch contracts from Supabase
   useEffect(() => {
     fetchContracts();
   }, []);
 
-  // Check subscription status
+  // Check subscription status and fetch tracked contracts
   useEffect(() => {
     const checkSubscription = async () => {
       if (user) {
         try {
           const hasSubscription = await subscriptionService.hasActiveSubscription(user.id);
           setHasActiveSubscription(hasSubscription);
+          
+          // Fetch tracked contracts
+          const { data: trackingData } = await supabase
+            .from('bid_tracking')
+            .select('contract_id')
+            .eq('user_id', user.id)
+            .eq('tracking_active', true);
+
+          if (trackingData) {
+            const trackedIds = new Set(trackingData.map(item => item.contract_id));
+            setTrackedContracts(trackedIds);
+          }
         } catch (error) {
           console.error('Error checking subscription:', error);
         } finally {
@@ -135,32 +148,17 @@ export default function DashboardPage() {
   }, [contracts, searchTerm, selectedCategory, selectedLocation, selectedValue]);
 
   const formatValue = (value: number) => {
-    // Generate estimated range based on the contract value
-    const generateEstimatedRange = (val: number) => {
-      if (val >= 1000000000) { // 1B+
-        const base = Math.floor(val / 1000000000);
-        const range = Math.max(1, Math.floor(base * 0.3)); // 30% range
-        return `Estimated ${base-range}B-${base+range}B UGX`;
-      } else if (val >= 1000000) { // 1M+
-        const base = Math.floor(val / 1000000);
-        const range = Math.max(1, Math.floor(base * 0.4)); // 40% range
-        return `Estimated ${base-range}M-${base+range}M UGX`;
-      } else if (val >= 100000) { // 100K+
-        const base = Math.floor(val / 100000);
-        const range = Math.max(1, Math.floor(base * 0.5)); // 50% range
-        return `Estimated ${base-range}00K-${base+range}00K UGX`;
-      } else if (val >= 10000) { // 10K+
-        const base = Math.floor(val / 10000);
-        const range = Math.max(1, Math.floor(base * 0.6)); // 60% range
-        return `Estimated ${base-range}0K-${base+range}0K UGX`;
-      } else {
-        const base = Math.floor(val / 1000);
-        const range = Math.max(1, Math.floor(base * 0.7)); // 70% range
-        return `Estimated ${base-range}K-${base+range}K UGX`;
-      }
-    };
-
-    return generateEstimatedRange(value);
+    if (value >= 1000000000) { // 1B+
+      return `${(value / 1000000000).toFixed(1)}B UGX`;
+    } else if (value >= 1000000) { // 1M+
+      return `${(value / 1000000).toFixed(1)}M UGX`;
+    } else if (value >= 100000) { // 100K+
+      return `${(value / 100000).toFixed(1)}00K UGX`;
+    } else if (value >= 10000) { // 10K+
+      return `${(value / 10000).toFixed(1)}0K UGX`;
+    } else {
+      return `${(value / 1000).toFixed(1)}K UGX`;
+    }
   };
 
   const formatDate = (dateString: string) => {
@@ -351,9 +349,17 @@ export default function DashboardPage() {
                         {contract.procuring_entity}
                       </div>
                     </div>
-                    <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
-                      {contract.category}
-                    </span>
+                    <div className="flex flex-col items-end space-y-1">
+                      <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                        {contract.category}
+                      </span>
+                      {trackedContracts.has(contract.id) && (
+                        <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                          <Target className="h-3 w-3 mr-1" />
+                          Tracked
+                        </span>
+                      )}
+                    </div>
                   </div>
 
                 {/* Description */}
@@ -405,11 +411,11 @@ export default function DashboardPage() {
                     </button>
           </div>
                   <Link
-                    href={`/dashboard/track-bid/${contract.id}`}
+                    href={`/dashboard/contracts/${contract.id}`}
                     className="flex items-center px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
                   >
                     <Target className="h-4 w-4 mr-1" />
-                    Track Bid
+                    View Details
                   </Link>
               </div>
             </div>
@@ -448,15 +454,15 @@ export default function DashboardPage() {
                                               <div className="flex items-center text-sm text-slate-600">
                           <MapPin className="h-4 w-4 mr-2" />
                           {filteredContracts[3]?.procuring_entity || "Location"}
-                        </div>
+            </div>
                         <div className="flex items-center text-sm text-slate-600">
                           <Calendar className="h-4 w-4 mr-2" />
                           Deadline: {filteredContracts[3]?.submission_deadline ? formatDate(filteredContracts[3].submission_deadline) : "Date"}
-                        </div>
+                      </div>
                         <div className="flex items-center text-sm text-slate-600">
                           <Calendar className="h-4 w-4 mr-2" />
                           Posted: {filteredContracts[3]?.publish_date || filteredContracts[3]?.created_at ? formatDate(filteredContracts[3].publish_date || filteredContracts[3].created_at) : "Date"}
-                        </div>
+                    </div>
                         <div className="flex items-center justify-end">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             {filteredContracts[3]?.estimated_value_min && filteredContracts[3]?.estimated_value_max 
@@ -467,8 +473,8 @@ export default function DashboardPage() {
                                   ? `Estimated ${formatValue(filteredContracts[3].estimated_value_max)}`
                                   : "Value not specified"
                             }
-                          </span>
-                        </div>
+                      </span>
+                    </div>
                   </div>
                 </div>
                   
@@ -524,11 +530,11 @@ export default function DashboardPage() {
                         <div className="flex items-center text-sm text-slate-600">
                           <Calendar className="h-4 w-4 mr-2" />
                           Deadline: {filteredContracts[4]?.submission_deadline ? formatDate(filteredContracts[4].submission_deadline) : "Date"}
-                        </div>
+          </div>
                         <div className="flex items-center text-sm text-slate-600">
                           <Calendar className="h-4 w-4 mr-2" />
                           Posted: {filteredContracts[4]?.publish_date || filteredContracts[4]?.created_at ? formatDate(filteredContracts[4].publish_date || filteredContracts[4].created_at) : "Date"}
-                        </div>
+                  </div>
                         <div className="flex items-center justify-end">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             {filteredContracts[4]?.estimated_value_min && filteredContracts[4]?.estimated_value_max 
@@ -540,7 +546,7 @@ export default function DashboardPage() {
                                   : "Value not specified"
                             }
                           </span>
-                        </div>
+                  </div>
                 </div>
               </div>
                     

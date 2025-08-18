@@ -19,22 +19,140 @@ import {
   Info
 } from "lucide-react";
 import Link from "next/link";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
 import { supabase } from "@/lib/supabase";
 import { parseBidAttachments, getFileDownloadUrl } from "@/lib/fileDisplayHelper";
 import { Contract } from "@/types/database";
+import { useAuth } from "@/contexts/AuthContext";
+import TrackingSetupModal from "@/components/TrackingSetupModal";
+import { TrackingPreferencesService } from "@/lib/trackingPreferences";
 
 export default function ContractDetailsPage() {
   const params = useParams();
+  const router = useRouter();
+  const { user } = useAuth();
   const contractId = params.id as string;
   const [contract, setContract] = useState<Contract | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [isTracking, setIsTracking] = useState(false);
+  const [trackingLoading, setTrackingLoading] = useState(false);
+  const [showTrackingModal, setShowTrackingModal] = useState(false);
 
   useEffect(() => {
     fetchContract();
-  }, [contractId]);
+    if (user) {
+      checkTrackingStatus();
+    }
+  }, [contractId, user]);
+
+  const checkTrackingStatus = async () => {
+    if (!user || !contractId) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('bid_tracking')
+        .select('*')
+        .eq('user_id', user.id)
+        .eq('contract_id', contractId)
+        .single();
+
+      if (error && error.code !== 'PGRST116') {
+        console.error('Error checking tracking status:', error);
+        return;
+      }
+
+      setIsTracking(!!data && data.tracking_active);
+    } catch (error) {
+      console.error('Error checking tracking status:', error);
+    }
+  };
+
+  const handleTrackContract = async () => {
+    if (!user) {
+      router.push('/login');
+      return;
+    }
+
+    if (isTracking) {
+      // Stop tracking
+      setTrackingLoading(true);
+      try {
+        const { error } = await supabase
+          .from('bid_tracking')
+          .update({ tracking_active: false })
+          .eq('user_id', user.id)
+          .eq('contract_id', contractId);
+
+        if (error) {
+          console.error('Error stopping tracking:', error);
+          return;
+        }
+
+        setIsTracking(false);
+      } catch (error) {
+        console.error('Error stopping tracking:', error);
+      } finally {
+        setTrackingLoading(false);
+      }
+    } else {
+      // Check if user has existing preferences for one-click tracking
+      const hasPreferences = await TrackingPreferencesService.hasExistingPreferences(user.id);
+      
+      if (hasPreferences) {
+        // Try to track with existing preferences
+        setTrackingLoading(true);
+        try {
+          const success = await TrackingPreferencesService.trackContractWithDefaults(user.id, contractId);
+          if (success) {
+            setIsTracking(true);
+          } else {
+            // Fallback to modal if tracking fails
+            setShowTrackingModal(true);
+          }
+        } catch (error) {
+          console.error('Error tracking with defaults:', error);
+          setShowTrackingModal(true);
+        } finally {
+          setTrackingLoading(false);
+        }
+      } else {
+        // First time tracking - show modal for preferences
+        setShowTrackingModal(true);
+      }
+    }
+  };
+
+  const handleTrackingSetup = async (preferences: any) => {
+    if (!user || !contract) return;
+
+    setTrackingLoading(true);
+    try {
+                const { error } = await supabase
+            .from('bid_tracking')
+            .upsert({
+              user_id: user.id,
+              contract_id: contractId,
+              email_alerts: preferences.email_alerts,
+              whatsapp_alerts: preferences.whatsapp_alerts,
+              push_alerts: preferences.push_alerts,
+              tracking_active: true
+            });
+
+      if (error) {
+        console.error('Error starting tracking:', error);
+        return;
+      }
+
+      setIsTracking(true);
+      setShowTrackingModal(false);
+    } catch (error) {
+      console.error('Error starting tracking:', error);
+    } finally {
+      setTrackingLoading(false);
+    }
+  };
 
   const fetchContract = async () => {
     try {
@@ -490,19 +608,41 @@ export default function ContractDetailsPage() {
             {/* Action Buttons */}
             <div className="bg-white shadow rounded-lg p-6">
               <div className="space-y-3">
-                <button className="w-full inline-flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700">
-                  <Target className="w-4 h-4 mr-2" />
-                  Track This Contract
+                <button 
+                  onClick={handleTrackContract}
+                  disabled={trackingLoading}
+                  className={`w-full inline-flex items-center justify-center px-4 py-2 border rounded-md shadow-sm text-sm font-medium transition-colors ${
+                    isTracking 
+                      ? 'border-red-300 text-red-700 bg-red-50 hover:bg-red-100' 
+                      : 'border-transparent text-white bg-blue-600 hover:bg-blue-700'
+                  } ${trackingLoading ? 'opacity-50 cursor-not-allowed' : ''}`}
+                >
+                  {trackingLoading ? (
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-current mr-2"></div>
+                  ) : (
+                    <Target className="w-4 h-4 mr-2" />
+                  )}
+                  {isTracking ? 'Stop Tracking' : 'Track This Contract'}
                 </button>
-                <button className="w-full inline-flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                  <Download className="w-4 h-4 mr-2" />
-                  Download Details
-                </button>
+                {isTracking && (
+                  <p className="text-sm text-green-600 text-center">
+                    ✓ You're tracking this contract. You'll receive alerts for important updates.
+                  </p>
+                )}
               </div>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Tracking Setup Modal */}
+      <TrackingSetupModal
+        isOpen={showTrackingModal}
+        onClose={() => setShowTrackingModal(false)}
+        onSave={handleTrackingSetup}
+        contractTitle={contract?.title || ''}
+        loading={trackingLoading}
+      />
     </div>
   );
 }

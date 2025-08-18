@@ -120,7 +120,7 @@ export default function AdminDashboard() {
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
           <p className="mt-1 text-sm text-gray-600">
-            Overview of your BidFlow platform
+            Overview of your BidCloud platform
           </p>
         </div>
         <div className="flex space-x-3">

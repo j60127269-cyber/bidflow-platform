@@ -82,10 +82,10 @@ export const usePayment = (): UsePaymentReturn => {
         redirect_url: `${window.location.origin}/payment/callback?payment_id=${paymentRecord.id}`,
         customer: {
           email: user.email || '',
-          name: user.user_metadata?.company || user.email || 'BidFlow User',
+          name: user.user_metadata?.company || user.email || 'BidCloud User',
         },
         customizations: {
-          title: 'BidFlow Subscription',
+          title: 'BidCloud Subscription',
           description: `Subscribe to ${plan.name} plan`,
           logo: `${window.location.origin}/logo.png`,
         },

@@ -76,7 +76,7 @@ CREATE TABLE IF NOT EXISTS bid_tracking (
   user_id UUID REFERENCES auth.users(id) NOT NULL,
   contract_id UUID REFERENCES contracts(id) NOT NULL,
   email_alerts BOOLEAN DEFAULT true,
-  sms_alerts BOOLEAN DEFAULT false,
+  whatsapp_alerts BOOLEAN DEFAULT false,
   push_alerts BOOLEAN DEFAULT true,
   tracking_active BOOLEAN DEFAULT true,
   created_at TIMESTAMP WITH TIME ZONE DEFAULT NOW(),
@@ -224,7 +224,7 @@ INSERT INTO subscription_plans (name, description, price, currency, billing_inte
 VALUES (
   'Professional',
   'Complete access to all BidFlow features for small to medium businesses',
-  20000,
+  50000,
   'UGX',
   'month',
   '{

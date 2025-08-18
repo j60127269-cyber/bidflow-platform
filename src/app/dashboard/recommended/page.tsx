@@ -493,13 +493,13 @@ export default function RecommendedPage() {
                          {getRecommendationText(score)} ({score}%)
                        </span>
                      </div>
-                     <Link
-                       href={`/dashboard/track-bid/${contract.id}`}
-                       className="flex items-center px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                     >
-                       <Target className="h-4 w-4 mr-1" />
-                       Track Bid
-                     </Link>
+                                       <Link
+                    href={`/dashboard/contracts/${contract.id}`}
+                    className="flex items-center px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  >
+                    <Target className="h-4 w-4 mr-1" />
+                    View Details
+                  </Link>
                    </div>
                 </div>
               </div>

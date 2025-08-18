@@ -1,49 +1,144 @@
+"use client";
+
 import { 
   Target, 
   Clock, 
-  CheckCircle, 
   XCircle, 
   Calendar,
   DollarSign,
   Building,
   Plus,
-  ArrowRight
+  ArrowRight,
+  Eye,
+  Trash2
 } from "lucide-react";
 import Link from "next/link";
+import { useState, useEffect } from "react";
+import { supabase } from "@/lib/supabase";
+import { useAuth } from "@/contexts/AuthContext";
+import { Contract } from "@/types/database";
+
+interface TrackedContract extends Contract {
+  tracking_id: string;
+  email_alerts: boolean;
+  whatsapp_alerts: boolean;
+  push_alerts: boolean;
+  tracking_active: boolean;
+}
 
 export default function TrackingPage() {
-  // Sample bid data
-  const bids = [
-    {
-      id: 1,
-      title: "Solar Energy Installation",
-      client: "Ministry of Education",
-      value: "35,000,000 UGX",
-      deadline: "2024-02-25",
-      status: "active",
-      progress: 75,
-      priority: "high",
-    },
-    {
-      id: 2,
-      title: "Water Supply System",
-      client: "National Water Corporation",
-      value: "95,000,000 UGX",
-      deadline: "2024-03-10",
-      status: "submitted",
-      progress: 100,
-      priority: "medium",
-    },
-    {
-      id: 3,
-      title: "Agricultural Equipment",
-      client: "Ministry of Agriculture",
-      value: "45,000,000 UGX",
-      status: "won",
-      progress: 100,
-      priority: "low",
-    },
-  ];
+  const { user } = useAuth();
+  const [trackedContracts, setTrackedContracts] = useState<TrackedContract[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+
+  // Fetch tracked contracts
+  useEffect(() => {
+    if (user) {
+      fetchTrackedContracts();
+    }
+  }, [user]);
+
+  const fetchTrackedContracts = async () => {
+    try {
+      setLoading(true);
+      // Step 1: fetch tracking rows for the current user
+      const { data: trackingRows, error: trackingError } = await supabase
+        .from('bid_tracking')
+        .select('id, contract_id, email_alerts, whatsapp_alerts, push_alerts, tracking_active')
+        .eq('user_id', user?.id)
+        .eq('tracking_active', true);
+
+      if (trackingError) {
+        console.error('Error fetching tracked contracts:', trackingError);
+        return;
+      }
+
+      if (!trackingRows || trackingRows.length === 0) {
+        setTrackedContracts([]);
+        return;
+      }
+
+      // Step 2: fetch the corresponding contracts
+      const contractIds = trackingRows.map((row: any) => row.contract_id);
+      const { data: contracts, error: contractsError } = await supabase
+        .from('contracts')
+        .select('*')
+        .in('id', contractIds);
+
+      if (contractsError) {
+        console.error('Error fetching related contracts:', contractsError);
+        return;
+      }
+
+      // Merge tracking info into each contract
+      const transformedData = (contracts || []).map((contract: any) => {
+        const tracking = trackingRows.find((row: any) => row.contract_id === contract.id);
+        return {
+          ...contract,
+          tracking_id: tracking?.id,
+          email_alerts: tracking?.email_alerts ?? false,
+          whatsapp_alerts: tracking?.whatsapp_alerts ?? false,
+          push_alerts: tracking?.push_alerts ?? false,
+          tracking_active: tracking?.tracking_active ?? false
+        };
+      });
+
+      setTrackedContracts(transformedData);
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleStopTracking = async (trackingId: string) => {
+    if (!confirm('Are you sure you want to stop tracking this contract?')) {
+      return;
+    }
+
+    setDeleteLoading(trackingId);
+    try {
+      const { error } = await supabase
+        .from('bid_tracking')
+        .update({ tracking_active: false })
+        .eq('id', trackingId);
+
+      if (error) {
+        console.error('Error stopping tracking:', error);
+        return;
+      }
+
+      // Remove from local state
+      setTrackedContracts(prev => prev.filter(contract => contract.tracking_id !== trackingId));
+    } catch (error) {
+      console.error('Error:', error);
+    } finally {
+      setDeleteLoading(null);
+    }
+  };
+
+  const formatValue = (value: number) => {
+    if (value >= 1000000000) { // 1B+
+      return `${(value / 1000000000).toFixed(1)}B UGX`;
+    } else if (value >= 1000000) { // 1M+
+      return `${(value / 1000000).toFixed(1)}M UGX`;
+    } else if (value >= 100000) { // 100K+
+      return `${(value / 100000).toFixed(1)}00K UGX`;
+    } else if (value >= 10000) { // 10K+
+      return `${(value / 10000).toFixed(1)}0K UGX`;
+    } else {
+      return `${(value / 1000).toFixed(1)}K UGX`;
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
+  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -107,8 +202,8 @@ export default function TrackingPage() {
               <Target className="h-6 w-6 text-blue-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-slate-600">Active Bids</p>
-              <p className="text-2xl font-semibold text-slate-900">1</p>
+              <p className="text-sm font-medium text-slate-600">Tracked Contracts</p>
+              <p className="text-2xl font-semibold text-slate-900">{trackedContracts.length}</p>
             </div>
           </div>
         </div>
@@ -120,19 +215,11 @@ export default function TrackingPage() {
             </div>
             <div className="ml-4">
               <p className="text-sm font-medium text-slate-600">Upcoming Deadlines</p>
-              <p className="text-2xl font-semibold text-slate-900">2</p>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg shadow p-6">
-          <div className="flex items-center">
-            <div className="flex-shrink-0 w-12 h-12 bg-green-50 rounded-lg flex items-center justify-center">
-              <CheckCircle className="h-6 w-6 text-green-600" />
-            </div>
-            <div className="ml-4">
-              <p className="text-sm font-medium text-slate-600">Won This Month</p>
-              <p className="text-2xl font-semibold text-slate-900">1</p>
+              <p className="text-2xl font-semibold text-slate-900">
+                {trackedContracts.filter(contract => 
+                  new Date(contract.submission_deadline) > new Date()
+                ).length}
+              </p>
             </div>
           </div>
         </div>
@@ -143,105 +230,137 @@ export default function TrackingPage() {
               <DollarSign className="h-6 w-6 text-purple-600" />
             </div>
             <div className="ml-4">
-              <p className="text-sm font-medium text-slate-600">Total Value</p>
-              <p className="text-2xl font-semibold text-slate-900">175M UGX</p>
+              <p className="text-sm font-medium text-slate-600">Total Contract Value</p>
+              <p className="text-2xl font-semibold text-slate-900">
+                {formatValue(
+                  trackedContracts.reduce((sum, c) => {
+                    const v = c.estimated_value_max ?? c.estimated_value_min ?? 0;
+                    return sum + v;
+                  }, 0)
+                )}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white rounded-lg shadow p-6">
+          <div className="flex items-center">
+            <div className="flex-shrink-0 w-12 h-12 bg-red-50 rounded-lg flex items-center justify-center">
+              <XCircle className="h-6 w-6 text-red-600" />
+            </div>
+            <div className="ml-4">
+              <p className="text-sm font-medium text-slate-600">Overdue</p>
+              <p className="text-2xl font-semibold text-slate-900">
+                {trackedContracts.filter(contract => new Date(contract.submission_deadline) < new Date()).length}
+              </p>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Bid List */}
-      <div className="bg-white rounded-lg shadow">
-        <div className="px-6 py-4 border-b border-slate-200">
-          <h3 className="text-lg font-medium text-slate-900">Your Bids</h3>
+      {/* Loading State */}
+      {loading && (
+        <div className="bg-white rounded-lg shadow p-12 text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">Loading tracked contracts...</p>
         </div>
-        <div className="divide-y divide-slate-200">
-          {bids.map((bid) => (
-            <div key={bid.id} className="p-6">
+      )}
+
+      {/* Tracked Contracts List */}
+      {!loading && (
+        <div className="bg-white rounded-lg shadow">
+          <div className="px-6 py-4 border-b border-slate-200">
+            <h3 className="text-lg font-medium text-slate-900">Tracked Contracts</h3>
+          </div>
+          <div className="divide-y divide-slate-200">
+            {trackedContracts.map((contract) => (
+            <div key={contract.id} className="p-6">
               <div className="flex items-start justify-between mb-4">
                 <div className="flex-1">
-                  <h4 className="text-lg font-semibold text-slate-900 mb-2">{bid.title}</h4>
+                  <h4 className="text-lg font-semibold text-slate-900 mb-2">{contract.title}</h4>
                   <div className="flex items-center text-sm text-slate-600 mb-2">
                     <Building className="h-4 w-4 mr-1" />
-                    {bid.client}
+                    {contract.procuring_entity}
                   </div>
                   <div className="flex items-center space-x-4 text-sm text-slate-600">
                     <span className="flex items-center">
                       <DollarSign className="h-4 w-4 mr-1" />
-                      {bid.value}
+                      {contract.estimated_value_min && contract.estimated_value_max 
+                        ? `Estimated ${formatValue(contract.estimated_value_min)}-${formatValue(contract.estimated_value_max)}`
+                        : contract.estimated_value_min 
+                          ? `Estimated ${formatValue(contract.estimated_value_min)}`
+                          : contract.estimated_value_max 
+                            ? `Estimated ${formatValue(contract.estimated_value_max)}`
+                            : 'Value not specified'}
                     </span>
-                    {bid.deadline && (
-                      <span className="flex items-center">
-                        <Calendar className="h-4 w-4 mr-1" />
-                        Deadline: {bid.deadline}
-                      </span>
-                    )}
+                    <span className="flex items-center">
+                      <Calendar className="h-4 w-4 mr-1" />
+                      Deadline: {formatDate(contract.submission_deadline)}
+                    </span>
                   </div>
                 </div>
                 <div className="flex items-center space-x-2">
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(bid.status)}`}>
-                    {bid.status}
+                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getStatusColor(contract.status)}`}>
+                    {contract.status}
                   </span>
-                  <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPriorityColor(bid.priority)}`}>
-                    {bid.priority} priority
+                  <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-blue-100 text-blue-800">
+                    {contract.category}
                   </span>
                 </div>
               </div>
 
-              {/* Progress Bar */}
+              {/* Alert Preferences */}
               <div className="mb-4">
-                <div className="flex items-center justify-between mb-2">
-                  <span className="text-sm font-medium text-slate-700">Progress</span>
-                  <span className="text-sm text-slate-600">{bid.progress}%</span>
-                </div>
-                <div className="w-full bg-slate-200 rounded-full h-2">
-                  <div 
-                    className={`h-2 rounded-full ${getProgressColor(bid.progress)}`}
-                    style={{ width: `${bid.progress}%` }}
-                  ></div>
+                <div className="flex items-center space-x-4 text-sm text-slate-600">
+                  <span className="flex items-center">
+                    <span className={`w-2 h-2 rounded-full mr-2 ${contract.email_alerts ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                    Email Alerts
+                  </span>
+                  <span className="flex items-center">
+                    <span className={`w-2 h-2 rounded-full mr-2 ${contract.whatsapp_alerts ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                    WhatsApp Alerts
+                  </span>
+                  <span className="flex items-center">
+                    <span className={`w-2 h-2 rounded-full mr-2 ${contract.push_alerts ? 'bg-green-500' : 'bg-gray-300'}`}></span>
+                    Push Alerts
+                  </span>
                 </div>
               </div>
 
               {/* Actions */}
               <div className="flex items-center justify-between pt-4 border-t border-slate-200">
                 <div className="flex items-center space-x-2">
-                  <button className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors">
-                    <ArrowRight className="h-4 w-4 mr-1" />
+                  <Link
+                    href={`/dashboard/contracts/${contract.id}`}
+                    className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                  >
+                    <Eye className="h-4 w-4 mr-1" />
                     View Details
-                  </button>
-                  <button className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-500 transition-colors">
-                    <Calendar className="h-4 w-4 mr-1" />
-                    Update Status
-                  </button>
+                  </Link>
                 </div>
                 <div className="flex items-center space-x-2">
-                  {bid.status === "active" && (
-                    <div className="flex items-center text-sm text-yellow-600">
-                      <Clock className="h-4 w-4 mr-1" />
-                      Action Required
-                    </div>
-                  )}
-                  {bid.status === "won" && (
-                    <div className="flex items-center text-sm text-green-600">
-                      <CheckCircle className="h-4 w-4 mr-1" />
-                      Success!
-                    </div>
-                  )}
-                  {bid.status === "lost" && (
-                    <div className="flex items-center text-sm text-red-600">
-                      <XCircle className="h-4 w-4 mr-1" />
-                      Review Needed
-                    </div>
-                  )}
+                  <button
+                    onClick={() => handleStopTracking(contract.tracking_id)}
+                    disabled={deleteLoading === contract.tracking_id}
+                    className="flex items-center px-3 py-2 text-sm font-medium text-red-600 hover:text-red-500 transition-colors disabled:opacity-50"
+                  >
+                    {deleteLoading === contract.tracking_id ? (
+                      <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600 mr-1"></div>
+                    ) : (
+                      <Trash2 className="h-4 w-4 mr-1" />
+                    )}
+                    Stop Tracking
+                  </button>
                 </div>
               </div>
             </div>
           ))}
         </div>
       </div>
+      )}
 
       {/* Empty State */}
-      {bids.length === 0 && (
+      {!loading && trackedContracts.length === 0 && (
         <div className="bg-white rounded-lg shadow p-12 text-center">
           <Target className="h-12 w-12 text-slate-400 mx-auto mb-4" />
           <h3 className="text-lg font-medium text-slate-900 mb-2">No bids tracked yet</h3>
@@ -260,3 +379,4 @@ export default function TrackingPage() {
     </div>
   );
 }
+

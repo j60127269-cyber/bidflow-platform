@@ -53,8 +53,9 @@ function LoginForm() {
 
       // Check subscription status
       const subscriptionStatus = await subscriptionService.getUserSubscriptionStatus(userId);
+      const status = subscriptionStatus?.status as string | undefined;
       
-      if (subscriptionStatus?.status === 'active' || subscriptionStatus?.status === 'trial') {
+      if (status === 'active' || status === 'trial') {
         return 'dashboard';
       } else {
         // User has profile but no active subscription
@@ -125,7 +126,7 @@ function LoginForm() {
       <div className="max-w-md w-full space-y-8">
         <div className="text-center">
           <Link href="/" className="inline-block">
-            <h1 className="text-3xl font-bold text-blue-600">BidFlow</h1>
+            <h1 className="text-3xl font-bold text-blue-600">BidCloud</h1>
           </Link>
           <h2 className="mt-6 text-3xl font-bold text-slate-900">
             Sign in to your account

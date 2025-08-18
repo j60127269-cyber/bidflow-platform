@@ -234,7 +234,7 @@ export default function OnboardingSubscription() {
               Choose Your Plan
             </h1>
             <p className="text-lg text-slate-600">
-              Get started with BidFlow and access all premium features
+              Get started with BidCloud and access all premium features
             </p>
           </div>
 
@@ -251,7 +251,7 @@ export default function OnboardingSubscription() {
             <div className="text-center mb-8">
               <h2 className="text-2xl font-bold text-slate-900 mb-2">Professional</h2>
               <div className="mb-6">
-                <span className="text-4xl font-bold text-slate-900">20,000</span>
+                <span className="text-4xl font-bold text-slate-900">50,000</span>
                 <span className="text-slate-600"> UGX</span>
                 <span className="text-slate-500 text-sm">/month</span>
               </div>
@@ -341,7 +341,7 @@ export default function OnboardingSubscription() {
                 <div className="w-16 h-16 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-4">
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
-                <h3 className="text-xl font-bold text-slate-900 mb-2">Welcome to BidFlow!</h3>
+                <h3 className="text-xl font-bold text-slate-900 mb-2">Welcome to BidCloud!</h3>
                 <p className="text-slate-600 mb-4">
                   Your account has been created successfully. Redirecting to your dashboard...
                 </p>

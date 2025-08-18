@@ -56,7 +56,7 @@ export default function SubscriptionPage() {
       <div className="max-w-4xl mx-auto px-4 py-8">
         <div className="mb-8">
           <h1 className="text-3xl font-bold text-slate-900 mb-2">Subscription Management</h1>
-          <p className="text-slate-600">Manage your BidFlow subscription and billing</p>
+          <p className="text-slate-600">Manage your BidCloud subscription and billing</p>
         </div>
 
         {/* Current Status */}
@@ -77,7 +77,7 @@ export default function SubscriptionPage() {
                 {subscriptionStatus.subscriptionEndsAt && (
                   <p><strong>Next billing:</strong> {new Date(subscriptionStatus.subscriptionEndsAt).toLocaleDateString()}</p>
                 )}
-                <p><strong>Amount:</strong> 20,000 UGX/month</p>
+                <p><strong>Amount:</strong> 50,000 UGX/month</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
@@ -111,8 +111,8 @@ export default function SubscriptionPage() {
                 ) : (
                   <p>You don't have an active subscription. Subscribe to access all premium features.</p>
                 )}
-                <p><strong>Professional Plan:</strong> 20,000 UGX/month</p>
-                <p><strong>Features:</strong> Unlimited access to all BidFlow features</p>
+                <p><strong>Professional Plan:</strong> 50,000 UGX/month</p>
+                <p><strong>Features:</strong> Unlimited access to all BidCloud features</p>
               </div>
               <div className="flex flex-col sm:flex-row gap-3">
                 <button
@@ -153,7 +153,7 @@ export default function SubscriptionPage() {
                 <h3 className="text-lg font-semibold text-slate-900 mb-4">Billing Cycle</h3>
                 <div className="bg-slate-50 rounded-lg p-4">
                   <p className="text-slate-700"><strong>Frequency:</strong> Monthly</p>
-                  <p className="text-slate-700"><strong>Amount:</strong> 20,000 UGX</p>
+                  <p className="text-slate-700"><strong>Amount:</strong> 50,000 UGX</p>
                   <p className="text-slate-700"><strong>Currency:</strong> UGX</p>
                 </div>
               </div>
@@ -206,7 +206,7 @@ export default function SubscriptionPage() {
               <h3 className="text-lg font-semibold text-slate-900 mb-4">Pricing</h3>
               <div className="bg-slate-50 rounded-lg p-6">
                 <div className="text-center">
-                  <div className="text-3xl font-bold text-slate-900 mb-2">20,000 UGX</div>
+                  <div className="text-3xl font-bold text-slate-900 mb-2">50,000 UGX</div>
                   <div className="text-slate-600 mb-4">per month</div>
                   <div className="text-sm text-slate-500">
                     <p>• Immediate access</p>
