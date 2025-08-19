@@ -50,7 +50,7 @@ export default function RegisterPage() {
       setError(error.message);
       setLoading(false);
     } else {
-      // Show verification message instead of redirecting
+      // Show verification message instead of redirectingg
       setShowVerificationMessage(true);
       setLoading(false);
     }
