@@ -280,28 +280,33 @@ export default function ContractDetailsPage() {
       {/* Header */}
       <div className="bg-white shadow">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex items-center justify-between h-16">
-            <div className="flex items-center space-x-4">
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 sm:py-0 sm:h-16 gap-4">
+            <div className="flex items-start sm:items-center space-x-4 min-w-0 flex-1">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700"
+                className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 flex-shrink-0"
               >
                 <ArrowLeft className="w-4 h-4 mr-1" />
-                Back to Dashboard
+                <span className="hidden sm:inline">Back to Dashboard</span>
+                <span className="sm:hidden">Back</span>
               </Link>
-              <div>
-                <h1 className="text-xl font-semibold text-gray-900">{contract.title}</h1>
-                <p className="text-sm text-gray-500">Reference: {contract.reference_number}</p>
+              <div className="min-w-0 flex-1">
+                <h1 className="text-lg sm:text-xl font-semibold text-gray-900 break-words leading-tight">
+                  {contract.title}
+                </h1>
+                <p className="text-sm text-gray-500 break-all mt-1">
+                  Reference: {contract.reference_number || 'Not specified'}
+                </p>
               </div>
             </div>
-            <div className="flex items-center space-x-3">
-              <button className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                <Bookmark className="w-4 h-4 mr-2" />
-                Save
+            <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
+              <button className="inline-flex items-center px-2 sm:px-3 py-2 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <Bookmark className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Save</span>
               </button>
-              <button className="inline-flex items-center px-3 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50">
-                <Share2 className="w-4 h-4 mr-2" />
-                Share
+              <button className="inline-flex items-center px-2 sm:px-3 py-2 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
+                <Share2 className="w-4 h-4 mr-1 sm:mr-2" />
+                <span className="hidden sm:inline">Share</span>
               </button>
             </div>
           </div>
@@ -321,11 +326,11 @@ export default function ContractDetailsPage() {
               {contract.short_description && (
                 <div className="mb-4">
                   <label className="block text-sm font-medium text-gray-500">Description</label>
-                  <p className="mt-1 text-sm text-gray-900">{contract.short_description}</p>
+                  <p className="mt-1 text-sm text-gray-900 break-words leading-relaxed">{contract.short_description}</p>
                 </div>
               )}
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div>
                   <label className="block text-sm font-medium text-gray-500">Category</label>
                   <p className="mt-1 text-sm text-gray-900 capitalize">{contract.category}</p>
@@ -417,13 +422,13 @@ export default function ContractDetailsPage() {
                 {contract.evaluation_methodology && (
                   <div>
                     <label className="block text-sm font-medium text-gray-500">Evaluation Methodology</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.evaluation_methodology}</p>
+                    <p className="mt-1 text-sm text-gray-900 break-words leading-relaxed">{contract.evaluation_methodology}</p>
                   </div>
                 )}
                 
                 <div>
                   <label className="block text-sm font-medium text-gray-500 mb-2">Required Certificates</label>
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
                     {contract.requires_registration && (
                       <div className="flex items-center">
                         <CheckCircle className="w-4 h-4 text-green-500 mr-2" />
@@ -462,7 +467,7 @@ export default function ContractDetailsPage() {
                   {contract.required_documents && contract.required_documents.length > 0 ? (
                     <ul className="list-disc list-inside space-y-1">
                       {contract.required_documents.map((doc, index) => (
-                        <li key={index} className="text-sm text-gray-900">{doc}</li>
+                        <li key={index} className="text-sm text-gray-900 break-words leading-relaxed">{doc}</li>
                       ))}
                     </ul>
                   ) : (
@@ -475,7 +480,7 @@ export default function ContractDetailsPage() {
                   {contract.required_forms && contract.required_forms.length > 0 ? (
                     <ul className="list-disc list-inside space-y-1">
                       {contract.required_forms.map((form, index) => (
-                        <li key={index} className="text-sm text-gray-900">{form}</li>
+                        <li key={index} className="text-sm text-gray-900 break-words leading-relaxed">{form}</li>
                       ))}
                     </ul>
                   ) : (
@@ -494,18 +499,18 @@ export default function ContractDetailsPage() {
               <div className="space-y-3">
                 <div>
                   <label className="block text-sm font-medium text-gray-500">Entity Name</label>
-                  <p className="mt-1 text-sm text-gray-900">{contract.procuring_entity}</p>
+                  <p className="mt-1 text-sm text-gray-900 break-words leading-relaxed">{contract.procuring_entity}</p>
                 </div>
                 {contract.contact_person && (
                   <div>
                     <label className="block text-sm font-medium text-gray-500">Contact Person</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.contact_person}</p>
+                    <p className="mt-1 text-sm text-gray-900 break-words leading-relaxed">{contract.contact_person}</p>
                   </div>
                 )}
                 {contract.contact_position && (
                   <div>
                     <label className="block text-sm font-medium text-gray-500">Position</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.contact_position}</p>
+                    <p className="mt-1 text-sm text-gray-900 break-words leading-relaxed">{contract.contact_position}</p>
                   </div>
                 )}
               </div>
@@ -559,7 +564,7 @@ export default function ContractDetailsPage() {
                 {contract.submission_format && (
                   <div>
                     <label className="block text-sm font-medium text-gray-500">Format</label>
-                    <p className="mt-1 text-sm text-gray-900">{contract.submission_format}</p>
+                    <p className="mt-1 text-sm text-gray-900 break-words leading-relaxed">{contract.submission_format}</p>
                   </div>
                 )}
               </div>
@@ -574,10 +579,10 @@ export default function ContractDetailsPage() {
                   <div className="space-y-2">
                     {parsedAttachments.map((file, index) => (
                       <div key={index} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50">
-                        <div className="flex items-center space-x-3">
-                          <FileText className="h-5 w-5 text-blue-500" />
-                          <div>
-                            <p className="text-sm font-medium text-gray-900">{file.name}</p>
+                        <div className="flex items-center space-x-3 min-w-0 flex-1">
+                          <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
+                          <div className="min-w-0 flex-1">
+                            <p className="text-sm font-medium text-gray-900 break-words">{file.name}</p>
                             {file.size > 0 && (
                               <p className="text-xs text-gray-500">
                                 {Math.round(file.size / 1024)} KB
