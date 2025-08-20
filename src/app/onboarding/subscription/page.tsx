@@ -276,10 +276,6 @@ export default function OnboardingSubscription() {
                   <Zap className="w-4 h-4 mr-1" />
                   <span className="text-sm">Mobile Money</span>
                 </div>
-                <div className="flex items-center text-slate-600">
-                  <Shield className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Bank Transfer</span>
-                </div>
               </div>
             </div>
 
