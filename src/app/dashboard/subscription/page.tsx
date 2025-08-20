@@ -11,10 +11,9 @@ const features = [
   "Unlimited tender alerts",
   "Advanced search & filtering", 
   "Unlimited saved tenders",
-  "1GB document storage",
   "Email support",
   "Real-time notifications",
-  "Bid tracking & analytics",
+  "Bid tracking & ai analytics",
   "AI-powered recommendations"
 ];
 
@@ -178,10 +177,7 @@ export default function SubscriptionPage() {
                 <Zap className="w-3 h-3 mr-1" />
                 <span className="text-xs">Mobile Money</span>
               </div>
-              <div className="flex items-center text-slate-600">
-                <Shield className="w-3 h-3 mr-1" />
-                <span className="text-xs">Bank Transfer</span>
-              </div>
+              
             </div>
           </div>
 
