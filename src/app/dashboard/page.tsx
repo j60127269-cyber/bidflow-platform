@@ -21,6 +21,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { subscriptionService } from "@/lib/subscriptionService";
 import { useRouter } from "next/navigation";
 import { Contract } from "@/types/database";
+import { TrackingPreferencesService } from "@/lib/trackingPreferences";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -35,6 +36,7 @@ export default function DashboardPage() {
   const [hasActiveSubscription, setHasActiveSubscription] = useState(false);
   const [subscriptionLoading, setSubscriptionLoading] = useState(true);
   const [trackedContracts, setTrackedContracts] = useState<Set<string>>(new Set());
+  const [trackingLoading, setTrackingLoading] = useState<{ [key: string]: boolean }>({});
 
   // Fetch contracts from Supabase
   useEffect(() => {
@@ -190,6 +192,58 @@ export default function DashboardPage() {
 
   const handleUpgrade = () => {
     router.push('/dashboard/subscription');
+  };
+
+  // Handle track/untrack contract
+  const handleTrackContract = async (contractId: string) => {
+    try {
+      if (!user) {
+        console.error('No user found');
+        return;
+      }
+
+      setTrackingLoading(prev => ({ ...prev, [contractId]: true }));
+
+      if (trackedContracts.has(contractId)) {
+        // Stop tracking
+        const { error } = await supabase
+          .from('bid_tracking')
+          .update({ tracking_active: false })
+          .eq('user_id', user.id)
+          .eq('contract_id', contractId);
+
+        if (error) {
+          console.error('Error stopping tracking:', error);
+          return;
+        }
+
+        setTrackedContracts(prev => {
+          const newSet = new Set(prev);
+          newSet.delete(contractId);
+          return newSet;
+        });
+      } else {
+        // Start tracking using one-click logic
+        const hasPreferences = await TrackingPreferencesService.hasExistingPreferences(user.id);
+        
+        if (hasPreferences) {
+          const success = await TrackingPreferencesService.trackContractWithDefaults(user.id, contractId);
+          if (success) {
+            setTrackedContracts(prev => new Set([...prev, contractId]));
+          } else {
+            console.error('Failed to track contract');
+          }
+        } else {
+          // First time tracking - redirect to contract detail page where modal will show
+          window.location.href = `/dashboard/contracts/${contractId}`;
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error tracking contract:', error);
+    } finally {
+      setTrackingLoading(prev => ({ ...prev, [contractId]: false }));
+    }
   };
 
 
@@ -410,13 +464,27 @@ export default function DashboardPage() {
                       Save
                     </button>
           </div>
-                  <Link
-                    href={`/dashboard/contracts/${contract.id}`}
-                    className="flex items-center px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                  <button
+                    onClick={() => handleTrackContract(contract.id)}
+                    disabled={trackingLoading[contract.id]}
+                    className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
+                      trackedContracts.has(contract.id)
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
                   >
-                    <Target className="h-4 w-4 mr-1" />
-                    View Details
-                  </Link>
+                    {trackingLoading[contract.id] ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                        {trackedContracts.has(contract.id) ? 'Untracking...' : 'Tracking...'}
+                      </>
+                    ) : (
+                      <>
+                        <Target className="h-4 w-4 mr-1" />
+                        {trackedContracts.has(contract.id) ? 'Untrack' : 'Track'}
+                      </>
+                    )}
+                  </button>
               </div>
             </div>
           </div>
