@@ -13,10 +13,9 @@ const features = [
   "Unlimited tender alerts",
   "Advanced search & filtering", 
   "Unlimited saved tenders",
-  "1GB document storage",
   "Email support",
   "Real-time notifications",
-  "Bid tracking & analytics",
+  "Bid tracking &  AI analytics",
   "AI-powered recommendations"
 ];
 
