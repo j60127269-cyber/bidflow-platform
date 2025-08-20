@@ -44,9 +44,8 @@ export default function RecommendedPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [selectedValue, setSelectedValue] = useState("Any Value");
-  const [hasTrackingPreferences, setHasTrackingPreferences] = useState(false);
+  const [trackingStates, setTrackingStates] = useState<{ [key: string]: boolean }>({});
   const [trackingLoading, setTrackingLoading] = useState<{ [key: string]: boolean }>({});
-  const [trackedContracts, setTrackedContracts] = useState<Set<string>>(new Set());
 
   // Fetch user profile and contracts
   useEffect(() => {
@@ -103,25 +102,89 @@ export default function RecommendedPage() {
 
       setContracts(contractsData || []);
 
-      // Check if user has existing tracking preferences
-      const hasPreferences = await TrackingPreferencesService.hasExistingPreferences(user.id);
-      setHasTrackingPreferences(hasPreferences);
-
-      // Fetch tracked contracts
-      const { data: trackingData } = await supabase
-        .from('bid_tracking')
-        .select('contract_id')
-        .eq('user_id', user.id)
-        .eq('tracking_active', true);
-
-      if (trackingData) {
-        const trackedIds = new Set(trackingData.map(item => item.contract_id));
-        setTrackedContracts(trackedIds);
-      }
+      // Fetch tracking states for all contracts
+      await fetchTrackingStates(user.id, contractsData || []);
     } catch (error) {
       console.error('Error:', error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Fetch tracking states for contracts
+  const fetchTrackingStates = async (userId: string, contracts: Contract[]) => {
+    try {
+      const contractIds = contracts.map(c => c.id);
+      const { data: trackingData, error } = await supabase
+        .from('bid_tracking')
+        .select('contract_id')
+        .eq('user_id', userId)
+        .eq('tracking_active', true)
+        .in('contract_id', contractIds);
+
+      if (error) {
+        console.error('Error fetching tracking states:', error);
+        return;
+      }
+
+      const trackingStatesMap: { [key: string]: boolean } = {};
+      trackingData?.forEach(item => {
+        trackingStatesMap[item.contract_id] = true;
+      });
+
+      setTrackingStates(trackingStatesMap);
+    } catch (error) {
+      console.error('Error fetching tracking states:', error);
+    }
+  };
+
+  // Handle track/untrack contract
+  const handleTrackContract = async (contractId: string) => {
+    try {
+      // Get current user
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) {
+        console.error('No user found');
+        return;
+      }
+
+      setTrackingLoading(prev => ({ ...prev, [contractId]: true }));
+
+      if (trackingStates[contractId]) {
+        // Stop tracking
+        const { error } = await supabase
+          .from('bid_tracking')
+          .update({ tracking_active: false })
+          .eq('user_id', user.id)
+          .eq('contract_id', contractId);
+
+        if (error) {
+          console.error('Error stopping tracking:', error);
+          return;
+        }
+
+        setTrackingStates(prev => ({ ...prev, [contractId]: false }));
+      } else {
+        // Start tracking using one-click logic
+        const hasPreferences = await TrackingPreferencesService.hasExistingPreferences(user.id);
+        
+        if (hasPreferences) {
+          const success = await TrackingPreferencesService.trackContractWithDefaults(user.id, contractId);
+          if (success) {
+            setTrackingStates(prev => ({ ...prev, [contractId]: true }));
+          } else {
+            console.error('Failed to track contract');
+          }
+        } else {
+          // First time tracking - redirect to contract detail page where modal will show
+          window.location.href = `/dashboard/contracts/${contractId}`;
+          return;
+        }
+      }
+    } catch (error) {
+      console.error('Error tracking contract:', error);
+    } finally {
+      setTrackingLoading(prev => ({ ...prev, [contractId]: false }));
     }
   };
 
@@ -266,25 +329,6 @@ export default function RecommendedPage() {
     if (score >= 60) return "Good Match";
     if (score >= 40) return "Fair Match";
     return "Low Match";
-  };
-
-  const handleTrackContract = async (contractId: string) => {
-    try {
-      setTrackingLoading(prev => ({ ...prev, [contractId]: true }));
-      
-      const { data: { user } } = await supabase.auth.getUser();
-      if (!user) return;
-
-      const success = await TrackingPreferencesService.trackContractWithDefaults(user.id, contractId);
-      
-      if (success) {
-        setTrackedContracts(prev => new Set([...prev, contractId]));
-      }
-    } catch (error) {
-      console.error('Error tracking contract:', error);
-    } finally {
-      setTrackingLoading(prev => ({ ...prev, [contractId]: false }));
-    }
   };
 
   const categories = [
@@ -532,34 +576,27 @@ export default function RecommendedPage() {
                          {getRecommendationText(score)} ({score}%)
                        </span>
                      </div>
-                                       {hasTrackingPreferences && (
-                                         <button
-                                           onClick={() => handleTrackContract(contract.id)}
-                                           disabled={trackingLoading[contract.id]}
-                                           className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full sm:w-auto ${
-                                             trackedContracts.has(contract.id)
-                                               ? 'bg-green-600 text-white hover:bg-green-700'
-                                               : 'bg-blue-600 text-white hover:bg-blue-700'
-                                           }`}
-                                         >
-                                           {trackingLoading[contract.id] ? (
-                                             <>
-                                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
-                                               Tracking...
-                                             </>
-                                           ) : trackedContracts.has(contract.id) ? (
-                                             <>
-                                               <Target className="h-4 w-4 mr-1" />
-                                               Tracked
-                                             </>
-                                           ) : (
-                                             <>
-                                               <Target className="h-4 w-4 mr-1" />
-                                               Track
-                                             </>
-                                           )}
-                                         </button>
-                                       )}
+                                       <button
+                    onClick={() => handleTrackContract(contract.id)}
+                    disabled={trackingLoading[contract.id]}
+                    className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full sm:w-auto ${
+                      trackingStates[contract.id]
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
+                    {trackingLoading[contract.id] ? (
+                      <>
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                        {trackingStates[contract.id] ? 'Untracking...' : 'Tracking...'}
+                      </>
+                    ) : (
+                      <>
+                        <Target className="h-4 w-4 mr-1" />
+                        {trackingStates[contract.id] ? 'Untrack' : 'Track'}
+                      </>
+                    )}
+                  </button>
                    </div>
                 </div>
               </div>
