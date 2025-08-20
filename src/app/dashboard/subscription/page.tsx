@@ -177,7 +177,6 @@ export default function SubscriptionPage() {
                 <Zap className="w-3 h-3 mr-1" />
                 <span className="text-xs">Mobile Money</span>
               </div>
-              
             </div>
           </div>
 
