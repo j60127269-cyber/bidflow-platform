@@ -2,10 +2,21 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, CreditCard, AlertCircle, Calendar } from "lucide-react";
+import { CheckCircle, CreditCard, AlertCircle, Calendar, Zap, Shield, Star, TrendingUp, Users, Award } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePayment } from "@/hooks/usePayment";
 import { subscriptionService } from "@/lib/subscriptionService";
+
+const features = [
+  "Unlimited tender alerts",
+  "Advanced search & filtering", 
+  "Unlimited saved tenders",
+  "1GB document storage",
+  "Email support",
+  "Real-time notifications",
+  "Bid tracking & analytics",
+  "AI-powered recommendations"
+];
 
 export default function SubscriptionPage() {
   const router = useRouter();
@@ -38,8 +49,6 @@ export default function SubscriptionPage() {
     }
   };
 
-
-
   if (!subscriptionStatus) {
     return (
       <div className="min-h-screen bg-slate-50 flex items-center justify-center">
@@ -51,21 +60,20 @@ export default function SubscriptionPage() {
     );
   }
 
-  return (
-    <div className="min-h-screen bg-slate-50">
-      <div className="max-w-4xl mx-auto px-4 py-8">
-        <div className="mb-8">
-          <h1 className="text-3xl font-bold text-slate-900 mb-2">Subscription Management</h1>
-          <p className="text-slate-600">Manage your BidCloud subscription and billing</p>
-        </div>
+  // If user has active subscription, show management view
+  if (subscriptionStatus.status === 'active') {
+    return (
+      <div className="min-h-screen bg-slate-50">
+        <div className="max-w-4xl mx-auto px-4 py-8">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-slate-900 mb-2">Subscription Management</h1>
+            <p className="text-slate-600">Manage your BidCloud subscription and billing</p>
+          </div>
 
-        {/* Current Status */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Current Status</h2>
-          
-
-
-          {subscriptionStatus.status === 'active' && (
+          {/* Current Status */}
+          <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
+            <h2 className="text-xl font-bold text-slate-900 mb-6">Current Status</h2>
+            
             <div className="bg-green-50 border border-green-200 rounded-lg p-6">
               <div className="flex items-center mb-4">
                 <CheckCircle className="w-6 h-6 text-green-600 mr-3" />
@@ -95,47 +103,9 @@ export default function SubscriptionPage() {
                 </button>
               </div>
             </div>
-          )}
+          </div>
 
-          {(subscriptionStatus.status === 'none' || subscriptionStatus.status === 'expired') && (
-            <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-6">
-              <div className="flex items-center mb-4">
-                <AlertCircle className="w-6 h-6 text-yellow-600 mr-3" />
-                <h3 className="text-lg font-semibold text-slate-900">
-                  {subscriptionStatus.status === 'expired' ? 'Subscription Expired' : 'No Active Subscription'}
-                </h3>
-              </div>
-              <div className="space-y-2 text-slate-700 mb-6">
-                {subscriptionStatus.status === 'expired' ? (
-                  <p>Your subscription has expired. Renew to continue accessing all premium features.</p>
-                ) : (
-                  <p>You don't have an active subscription. Subscribe to access all premium features.</p>
-                )}
-                <p><strong>Professional Plan:</strong> 50,000 UGX/month</p>
-                <p><strong>Features:</strong> Unlimited access to all BidCloud features</p>
-              </div>
-              <div className="flex flex-col sm:flex-row gap-3">
-                <button
-                  onClick={handleSubscribe}
-                  disabled={loading || paymentState.loading}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors disabled:opacity-50 flex items-center justify-center"
-                >
-                  <CreditCard className="w-4 h-4 mr-2" />
-                  {loading || paymentState.loading ? 'Processing...' : (subscriptionStatus.status === 'expired' ? 'Renew Subscription' : 'Subscribe Now')}
-                </button>
-                <button
-                  onClick={() => router.push('/dashboard')}
-                  className="bg-white hover:bg-gray-50 text-blue-600 border border-blue-600 px-6 py-3 rounded-lg font-medium transition-colors"
-                >
-                  Continue with Limited Access
-                </button>
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Billing Information */}
-        {subscriptionStatus.status === 'active' && (
+          {/* Billing Information */}
           <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
             <h2 className="text-xl font-bold text-slate-900 mb-6">Billing Information</h2>
             <div className="grid md:grid-cols-2 gap-6">
@@ -159,72 +129,204 @@ export default function SubscriptionPage() {
               </div>
             </div>
           </div>
-        )}
+        </div>
+      </div>
+    );
+  }
 
-        {/* Plan Details */}
-        <div className="bg-white rounded-2xl shadow-xl p-8 mb-8">
-          <h2 className="text-xl font-bold text-slate-900 mb-6">Professional Plan</h2>
-          <div className="grid md:grid-cols-2 gap-8">
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Features</h3>
-              <ul className="space-y-3">
-                <li className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                  <span>Unlimited tender alerts</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                  <span>Advanced search & filtering</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                  <span>Unlimited saved tenders</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                  <span>1GB document storage</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                  <span>Email support</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                  <span>Real-time notifications</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                  <span>Bid tracking & analytics</span>
-                </li>
-                <li className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                  <span>AI-powered recommendations</span>
-                </li>
-              </ul>
+  // For users without active subscription, show enticing subscription card
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
+      <div className="max-w-6xl mx-auto px-4 py-8">
+        {/* Header */}
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold text-slate-900 mb-4">
+            Upgrade to Professional
+          </h1>
+          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
+            Unlock the full potential of BidCloud with unlimited access to premium features and advanced bidding tools
+          </p>
+        </div>
+
+        {/* Stats Section */}
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+          <div className="bg-white p-6 rounded-xl shadow-sm text-center">
+            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <TrendingUp className="w-6 h-6 text-blue-600" />
             </div>
-            <div>
-              <h3 className="text-lg font-semibold text-slate-900 mb-4">Pricing</h3>
-              <div className="bg-slate-50 rounded-lg p-6">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-slate-900 mb-2">50,000 UGX</div>
-                  <div className="text-slate-600 mb-4">per month</div>
-                  <div className="text-sm text-slate-500">
-                    <p>• Immediate access</p>
-                    <p>• Cancel anytime</p>
-                    <p>• No setup fees</p>
+            <div className="text-2xl font-bold text-blue-600 mb-2">40%</div>
+            <div className="text-slate-600">Average Win Rate Increase</div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-xl shadow-sm text-center">
+            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <Users className="w-6 h-6 text-green-600" />
+            </div>
+            <div className="text-2xl font-bold text-green-600 mb-2">500+</div>
+            <div className="text-slate-600">Active Businesses</div>
+          </div>
+          
+          <div className="bg-white p-6 rounded-xl shadow-sm text-center">
+            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
+              <Award className="w-6 h-6 text-purple-600" />
+            </div>
+            <div className="text-2xl font-bold text-purple-600 mb-2">2,000+</div>
+            <div className="text-slate-600">Contracts Tracked</div>
+          </div>
+        </div>
+
+        <div className="grid lg:grid-cols-2 gap-8 items-start">
+          {/* Subscription Card */}
+          <div className="bg-white rounded-2xl shadow-xl p-8 relative border">
+            {/* Plan Title & Price */}
+            <div className="text-center mb-8">
+              <h2 className="text-3xl font-bold text-slate-900 mb-2">Professional</h2>
+              <div className="mb-6">
+                <span className="text-5xl font-bold text-slate-900">50,000</span>
+                <span className="text-slate-600"> UGX</span>
+                <span className="text-slate-500 text-lg">/month</span>
+              </div>
+            </div>
+
+            {/* Features List */}
+            <div className="space-y-4 mb-8">
+              {features.map((feature, index) => (
+                <div key={index} className="flex items-center">
+                  <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0" />
+                  <span className="text-slate-700">{feature}</span>
+                </div>
+              ))}
+            </div>
+
+            {/* Payment Methods */}
+            <div className="mb-6 p-4 bg-slate-50 rounded-lg">
+              <h3 className="text-sm font-semibold text-slate-900 mb-3">Secure Payment Methods</h3>
+              <div className="flex items-center justify-center space-x-4">
+                <div className="flex items-center text-slate-600">
+                  <CreditCard className="w-4 h-4 mr-1" />
+                  <span className="text-sm">Cards</span>
+                </div>
+                <div className="flex items-center text-slate-600">
+                  <Zap className="w-4 h-4 mr-1" />
+                  <span className="text-sm">Mobile Money</span>
+                </div>
+                <div className="flex items-center text-slate-600">
+                  <Shield className="w-4 h-4 mr-1" />
+                  <span className="text-sm">Bank Transfer</span>
+                </div>
+              </div>
+            </div>
+
+            {/* CTA Button */}
+            <button
+              onClick={handleSubscribe}
+              disabled={loading || paymentState.loading}
+              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+            >
+              {loading || paymentState.loading ? (
+                <>
+                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
+                  Processing...
+                </>
+              ) : (
+                'Subscribe Now'
+              )}
+            </button>
+
+            {/* Error Message */}
+            {paymentState.error && (
+              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+                <p className="text-red-600 text-sm">{paymentState.error}</p>
+              </div>
+            )}
+
+            {/* Subscription Info */}
+            <div className="mt-6 text-center">
+              <p className="text-sm text-slate-600">
+                Cancel anytime • Secure payment via Flutterwave • Immediate access to all features
+              </p>
+            </div>
+          </div>
+
+          {/* Benefits & Testimonials */}
+          <div className="space-y-8">
+            {/* Benefits */}
+            <div className="bg-white rounded-2xl shadow-xl p-8">
+              <h3 className="text-2xl font-bold text-slate-900 mb-6">Why Upgrade?</h3>
+              <div className="space-y-4">
+                <div className="flex items-start">
+                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                    <Star className="w-4 h-4 text-blue-600" />
                   </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-900 mb-1">Find More Opportunities</h4>
+                    <p className="text-slate-600 text-sm">Access unlimited tender alerts and never miss a relevant contract opportunity.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                    <TrendingUp className="w-4 h-4 text-green-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-900 mb-1">Win More Contracts</h4>
+                    <p className="text-slate-600 text-sm">Use advanced analytics and AI recommendations to price competitively.</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-start">
+                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
+                    <Zap className="w-4 h-4 text-purple-600" />
+                  </div>
+                  <div>
+                    <h4 className="font-semibold text-slate-900 mb-1">Save Time</h4>
+                    <p className="text-slate-600 text-sm">Automated notifications and smart filtering help you focus on what matters.</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            {/* Testimonial */}
+            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
+              <div className="flex items-center mb-4">
+                {[...Array(5)].map((_, i) => (
+                  <Star key={i} className="w-5 h-5 text-yellow-300 fill-current" />
+                ))}
+              </div>
+              <blockquote className="text-lg mb-4">
+                "BidCloud has transformed how we approach contract bidding. We've increased our win rate by 40% in just 6 months. The competition analysis feature is incredible."
+              </blockquote>
+              <div className="flex items-center">
+                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">
+                  <span className="text-white font-semibold">JK</span>
+                </div>
+                <div>
+                  <div className="font-semibold">John Kato</div>
+                  <div className="text-blue-100 text-sm">Construction Manager, Kampala Builders</div>
+                </div>
+              </div>
+            </div>
+
+            {/* Current Status Warning */}
+            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
+              <div className="flex items-start">
+                <AlertCircle className="w-6 h-6 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" />
+                <div>
+                  <h3 className="text-lg font-semibold text-yellow-800 mb-2">Limited Access</h3>
+                  <p className="text-yellow-700 text-sm mb-4">
+                    You're currently on a limited plan. Upgrade to Professional to unlock all features and maximize your contract win rate.
+                  </p>
+                  <button
+                    onClick={() => router.push('/dashboard')}
+                    className="text-yellow-800 hover:text-yellow-900 font-medium text-sm underline"
+                  >
+                    Continue with limited access →
+                  </button>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        {/* Error Message */}
-        {paymentState.error && (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-4 mb-8">
-            <p className="text-red-600 text-sm">{paymentState.error}</p>
-          </div>
-        )}
       </div>
     </div>
   );
