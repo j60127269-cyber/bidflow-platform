@@ -8,6 +8,21 @@ const supabase = createClient(
 
 export async function POST(request: Request) {
   try {
+    // Check environment variables first
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL;
+    const serviceRoleKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+    
+    if (!supabaseUrl || !serviceRoleKey) {
+      console.error('Missing environment variables:', { 
+        hasUrl: !!supabaseUrl, 
+        hasKey: !!serviceRoleKey 
+      });
+      return NextResponse.json({ 
+        error: 'Server configuration error. Please check environment variables.',
+        details: 'Missing Supabase configuration'
+      }, { status: 500 });
+    }
+
     const { email, role = 'admin' } = await request.json();
 
     if (!email) {
