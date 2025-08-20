@@ -281,19 +281,19 @@ export default function RecommendedPage() {
   return (
     <div className="space-y-6">
       {/* Page Header */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Recommended Bids</h1>
           <p className="mt-1 text-sm text-slate-600">
             Personalized recommendations based on your profile and preferences
           </p>
         </div>
-        <div className="flex items-center space-x-2">
-          <button className="flex items-center px-4 py-2 text-slate-600 hover:text-slate-900 transition-colors">
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
+          <button className="flex items-center justify-center px-3 py-2 text-slate-600 hover:text-slate-900 transition-colors text-sm">
             <Settings className="w-4 h-4 mr-2" />
             Update Preferences
           </button>
-          <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+          <button className="flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
             <Bookmark className="w-4 h-4 mr-2" />
             Saved Contracts
           </button>
@@ -303,12 +303,12 @@ export default function RecommendedPage() {
       {/* Profile Summary */}
       {userProfile && (
         <div className="bg-gradient-to-r from-blue-50 to-indigo-50 rounded-lg p-6 border border-blue-200">
-          <div className="flex items-center justify-between">
-            <div>
+          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
+            <div className="flex-1">
               <h2 className="text-lg font-semibold text-slate-900 mb-2">
                 Recommendations for {userProfile.company_name}
               </h2>
-              <div className="flex items-center space-x-6 text-sm text-slate-600">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm text-slate-600">
                 <span className="flex items-center">
                   <User className="w-4 h-4 mr-1" />
                   {userProfile.business_type}
@@ -320,7 +320,7 @@ export default function RecommendedPage() {
                 </span>
               </div>
             </div>
-            <div className="text-right">
+            <div className="text-center sm:text-right">
                              <div className="text-2xl font-bold text-blue-600">
                  {filteredContracts.filter(c => (c as { recommendationScore: number }).recommendationScore >= 60).length}
                </div>
@@ -389,7 +389,7 @@ export default function RecommendedPage() {
       </div>
 
       {/* Results */}
-      <div className="flex items-center justify-between">
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
         <p className="text-sm text-slate-600">
           Showing {filteredContracts.length} recommended contracts
         </p>
@@ -447,7 +447,7 @@ export default function RecommendedPage() {
                   
 
                   {/* Details */}
-                  <div className="grid grid-cols-2 gap-4 mb-4">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
                     <div className="flex items-center text-sm text-slate-600">
                       <MapPin className="h-4 w-4 mr-2" />
                       {contract.procuring_entity}
@@ -460,7 +460,7 @@ export default function RecommendedPage() {
                       <Calendar className="h-4 w-4 mr-2" />
                       Posted: {formatDate(contract.publish_date || contract.created_at)}
                     </div>
-                    <div className="flex items-center justify-end">
+                    <div className="flex items-center sm:justify-end">
                       <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                         {contract.estimated_value_min && contract.estimated_value_max 
                           ? `Estimated ${formatValue(contract.estimated_value_min)}-${formatValue(contract.estimated_value_max)}`
@@ -475,8 +475,8 @@ export default function RecommendedPage() {
                   </div>
 
                                      {/* Actions */}
-                   <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                     <div className="flex items-center space-x-2">
+                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-slate-200 space-y-3 sm:space-y-0">
+                     <div className="flex flex-wrap items-center gap-2">
                        <Link
                          href={`/dashboard/contracts/${contract.id}`}
                          className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
@@ -495,7 +495,7 @@ export default function RecommendedPage() {
                      </div>
                                        <Link
                     href={`/dashboard/contracts/${contract.id}`}
-                    className="flex items-center px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    className="flex items-center justify-center px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
                   >
                     <Target className="h-4 w-4 mr-1" />
                     View Details
