@@ -20,6 +20,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Contract } from "@/types/database";
+import { TrackingPreferencesService } from "@/lib/trackingPreferences";
 
 interface UserProfile {
   id: string;
@@ -43,6 +44,9 @@ export default function RecommendedPage() {
   const [selectedCategory, setSelectedCategory] = useState("All Categories");
   const [selectedLocation, setSelectedLocation] = useState("All Locations");
   const [selectedValue, setSelectedValue] = useState("Any Value");
+  const [hasTrackingPreferences, setHasTrackingPreferences] = useState(false);
+  const [trackingLoading, setTrackingLoading] = useState<{ [key: string]: boolean }>({});
+  const [trackedContracts, setTrackedContracts] = useState<Set<string>>(new Set());
 
   // Fetch user profile and contracts
   useEffect(() => {
@@ -98,6 +102,22 @@ export default function RecommendedPage() {
       }
 
       setContracts(contractsData || []);
+
+      // Check if user has existing tracking preferences
+      const hasPreferences = await TrackingPreferencesService.hasExistingPreferences(user.id);
+      setHasTrackingPreferences(hasPreferences);
+
+      // Fetch tracked contracts
+      const { data: trackingData } = await supabase
+        .from('bid_tracking')
+        .select('contract_id')
+        .eq('user_id', user.id)
+        .eq('tracking_active', true);
+
+      if (trackingData) {
+        const trackedIds = new Set(trackingData.map(item => item.contract_id));
+        setTrackedContracts(trackedIds);
+      }
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -246,6 +266,25 @@ export default function RecommendedPage() {
     if (score >= 60) return "Good Match";
     if (score >= 40) return "Fair Match";
     return "Low Match";
+  };
+
+  const handleTrackContract = async (contractId: string) => {
+    try {
+      setTrackingLoading(prev => ({ ...prev, [contractId]: true }));
+      
+      const { data: { user } } = await supabase.auth.getUser();
+      if (!user) return;
+
+      const success = await TrackingPreferencesService.trackContractWithDefaults(user.id, contractId);
+      
+      if (success) {
+        setTrackedContracts(prev => new Set([...prev, contractId]));
+      }
+    } catch (error) {
+      console.error('Error tracking contract:', error);
+    } finally {
+      setTrackingLoading(prev => ({ ...prev, [contractId]: false }));
+    }
   };
 
   const categories = [
@@ -493,13 +532,34 @@ export default function RecommendedPage() {
                          {getRecommendationText(score)} ({score}%)
                        </span>
                      </div>
-                                       <Link
-                    href={`/dashboard/contracts/${contract.id}`}
-                    className="flex items-center justify-center px-3 py-2 text-sm font-medium bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors w-full sm:w-auto"
-                  >
-                    <Target className="h-4 w-4 mr-1" />
-                    View Details
-                  </Link>
+                                       {hasTrackingPreferences && (
+                                         <button
+                                           onClick={() => handleTrackContract(contract.id)}
+                                           disabled={trackingLoading[contract.id]}
+                                           className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full sm:w-auto ${
+                                             trackedContracts.has(contract.id)
+                                               ? 'bg-green-600 text-white hover:bg-green-700'
+                                               : 'bg-blue-600 text-white hover:bg-blue-700'
+                                           }`}
+                                         >
+                                           {trackingLoading[contract.id] ? (
+                                             <>
+                                               <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
+                                               Tracking...
+                                             </>
+                                           ) : trackedContracts.has(contract.id) ? (
+                                             <>
+                                               <Target className="h-4 w-4 mr-1" />
+                                               Tracked
+                                             </>
+                                           ) : (
+                                             <>
+                                               <Target className="h-4 w-4 mr-1" />
+                                               Track
+                                             </>
+                                           )}
+                                         </button>
+                                       )}
                    </div>
                 </div>
               </div>
