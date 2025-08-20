@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/contexts/AuthContext';
 import { supabase } from '@/lib/supabase';
 import { subscriptionService } from '@/lib/subscriptionService';
+import { onboardingService } from '@/lib/onboardingService';
 import { Profile } from '@/types/database';
 import { 
   User, 
@@ -54,22 +55,10 @@ export default function ProfilePage() {
       if (!user) return;
       
       try {
-        // Check if user has a profile with onboarding data
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('preferred_categories, business_type, min_contract_value')
-          .eq('id', user.id)
-          .single();
-
-        if (error && error.code === 'PGRST116') {
-          // No profile exists - redirect to onboarding
-          console.log('No profile found, redirecting to onboarding');
-          window.location.href = '/onboarding/welcome';
-          return;
-        }
-
-        if (profile && (!profile.preferred_categories || !profile.business_type || !profile.min_contract_value)) {
-          // Profile exists but onboarding is incomplete - redirect to onboarding
+        const hasCompleted = await onboardingService.hasCompletedOnboarding(user.id);
+        
+        if (!hasCompleted) {
+          // User hasn't completed onboarding - redirect to onboarding
           console.log('Onboarding incomplete, redirecting to onboarding');
           window.location.href = '/onboarding/welcome';
           return;

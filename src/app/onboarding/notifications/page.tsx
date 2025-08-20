@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { ArrowRight, ArrowLeft, Bell, Mail, MessageCircle, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
+import { onboardingService } from "@/lib/onboardingService";
 
 const notificationTypes = [
   {

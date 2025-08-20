@@ -7,6 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { usePayment } from "@/hooks/usePayment";
 import { subscriptionService } from "@/lib/subscriptionService";
 import { supabase } from "@/lib/supabase";
+import { onboardingService } from "@/lib/onboardingService";
 
 const features = [
   "Unlimited tender alerts",
@@ -85,9 +86,12 @@ export default function OnboardingSubscription() {
         if (error) {
           console.error('Error updating profile:', error);
         } else {
+          // Mark onboarding as completed
+          await onboardingService.markOnboardingCompleted(user.id);
+          
           // Redirect to dashboard with restricted access
           console.log('Skip - redirecting to dashboard'); // Debug log
-    router.push('/dashboard');
+          router.push('/dashboard');
         }
       }
     } catch (error) {

@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { subscriptionService } from '@/lib/subscriptionService';
+import { onboardingService } from '@/lib/onboardingService';
 import { supabase } from '@/lib/supabase';
 
 export default function AuthCallbackPage() {
@@ -21,15 +22,11 @@ export default function AuthCallbackPage() {
         return 'email_not_verified';
       }
 
-      // Check if user has a profile (completed onboarding)
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('*')
-        .eq('id', userId)
-        .single();
-
-      if (profileError && profileError.code === 'PGRST116') {
-        // No profile found - user hasn't completed onboarding
+      // Check if user has completed onboarding
+      const hasCompletedOnboarding = await onboardingService.hasCompletedOnboarding(userId);
+      
+      if (!hasCompletedOnboarding) {
+        // User hasn't completed onboarding
         return 'onboarding';
       }
 

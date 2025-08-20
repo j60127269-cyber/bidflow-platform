@@ -5,6 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import { useAuth } from '@/contexts/AuthContext';
 import { flutterwaveService } from '@/lib/flutterwaveService';
 import { subscriptionService } from '@/lib/subscriptionService';
+import { onboardingService } from '@/lib/onboardingService';
 import { supabase } from '@/lib/supabase';
 import { CheckCircle, XCircle, Loader2, ArrowRight } from 'lucide-react';
 
@@ -70,6 +71,9 @@ function PaymentCallbackForm() {
               status: 'active',
               current_period_end: currentPeriodEnd.toISOString(),
             });
+
+            // Mark onboarding as completed
+            await onboardingService.markOnboardingCompleted(payment.user_id);
 
             setStatus('success');
             setMessage('Payment successful! Your subscription has been activated.');

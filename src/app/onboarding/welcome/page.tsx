@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { ArrowRight, TrendingUp, Users, Award, Star, CheckCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { supabase } from "@/lib/supabase";
+import { onboardingService } from "@/lib/onboardingService";
 
 export default function OnboardingWelcome() {
   const router = useRouter();
@@ -18,13 +18,9 @@ export default function OnboardingWelcome() {
       if (!user) return;
       
       try {
-        const { data: profile, error } = await supabase
-          .from('profiles')
-          .select('preferred_categories, business_type, min_contract_value')
-          .eq('id', user.id)
-          .single();
-
-        if (profile && profile.preferred_categories && profile.business_type && profile.min_contract_value) {
+        const hasCompleted = await onboardingService.hasCompletedOnboarding(user.id);
+        
+        if (hasCompleted) {
           // User has completed onboarding, redirect to dashboard
           router.push('/dashboard');
           return;

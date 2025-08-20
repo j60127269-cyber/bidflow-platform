@@ -11,7 +11,8 @@ export interface Profile {
   min_contract_value?: number;
   max_contract_value?: number;
   certifications?: string[];
-
+  team_size?: number;
+  onboarding_completed?: boolean;
   subscription_status?: 'none' | 'active' | 'cancelled' | 'expired';
   subscription_id?: string;
   created_at: string;
