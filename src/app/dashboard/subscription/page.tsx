@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { useRouter } from "next/navigation";
-import { CheckCircle, CreditCard, AlertCircle, Calendar, Zap, Shield, Star, TrendingUp, Users, Award } from "lucide-react";
+import { CheckCircle, CreditCard, AlertCircle, Zap, Shield } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { usePayment } from "@/hooks/usePayment";
 import { subscriptionService } from "@/lib/subscriptionService";
@@ -134,198 +134,96 @@ export default function SubscriptionPage() {
     );
   }
 
-  // For users without active subscription, show enticing subscription card
+  // For users without active subscription, show minimal subscription card
   return (
-    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-50">
-      <div className="max-w-6xl mx-auto px-4 py-8">
+    <div className="min-h-screen bg-slate-50 flex items-center justify-center p-4">
+      <div className="max-w-md w-full">
         {/* Header */}
-        <div className="text-center mb-12">
-          <h1 className="text-4xl font-bold text-slate-900 mb-4">
-            Upgrade to Professional
-          </h1>
-          <p className="text-xl text-slate-600 max-w-3xl mx-auto">
-            Unlock the full potential of BidCloud with unlimited access to premium features and advanced bidding tools
-          </p>
+        <div className="text-center mb-8">
+          <h1 className="text-2xl font-bold text-slate-900 mb-2">Upgrade to Professional</h1>
+          <p className="text-slate-600">Get unlimited access to all BidCloud features</p>
         </div>
 
-        {/* Stats Section */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
-          <div className="bg-white p-6 rounded-xl shadow-sm text-center">
-            <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <TrendingUp className="w-6 h-6 text-blue-600" />
+        {/* Subscription Card */}
+        <div className="bg-white rounded-2xl shadow-xl p-8 border">
+          {/* Plan Title & Price */}
+          <div className="text-center mb-6">
+            <h2 className="text-2xl font-bold text-slate-900 mb-2">Professional</h2>
+            <div className="mb-4">
+              <span className="text-4xl font-bold text-slate-900">50,000</span>
+              <span className="text-slate-600"> UGX</span>
+              <span className="text-slate-500">/month</span>
             </div>
-            <div className="text-2xl font-bold text-blue-600 mb-2">40%</div>
-            <div className="text-slate-600">Average Win Rate Increase</div>
           </div>
-          
-          <div className="bg-white p-6 rounded-xl shadow-sm text-center">
-            <div className="w-12 h-12 bg-green-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Users className="w-6 h-6 text-green-600" />
-            </div>
-            <div className="text-2xl font-bold text-green-600 mb-2">500+</div>
-            <div className="text-slate-600">Active Businesses</div>
-          </div>
-          
-          <div className="bg-white p-6 rounded-xl shadow-sm text-center">
-            <div className="w-12 h-12 bg-purple-100 rounded-lg flex items-center justify-center mx-auto mb-4">
-              <Award className="w-6 h-6 text-purple-600" />
-            </div>
-            <div className="text-2xl font-bold text-purple-600 mb-2">2,000+</div>
-            <div className="text-slate-600">Contracts Tracked</div>
-          </div>
-        </div>
 
-        <div className="grid lg:grid-cols-2 gap-8 items-start">
-          {/* Subscription Card */}
-          <div className="bg-white rounded-2xl shadow-xl p-8 relative border">
-            {/* Plan Title & Price */}
-            <div className="text-center mb-8">
-              <h2 className="text-3xl font-bold text-slate-900 mb-2">Professional</h2>
-              <div className="mb-6">
-                <span className="text-5xl font-bold text-slate-900">50,000</span>
-                <span className="text-slate-600"> UGX</span>
-                <span className="text-slate-500 text-lg">/month</span>
+          {/* Features List */}
+          <div className="space-y-3 mb-6">
+            {features.map((feature, index) => (
+              <div key={index} className="flex items-center">
+                <CheckCircle className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
+                <span className="text-sm text-slate-700">{feature}</span>
+              </div>
+            ))}
+          </div>
+
+          {/* Payment Methods */}
+          <div className="mb-6 p-3 bg-slate-50 rounded-lg">
+            <h3 className="text-xs font-semibold text-slate-900 mb-2">Secure Payment Methods</h3>
+            <div className="flex items-center justify-center space-x-4">
+              <div className="flex items-center text-slate-600">
+                <CreditCard className="w-3 h-3 mr-1" />
+                <span className="text-xs">Cards</span>
+              </div>
+              <div className="flex items-center text-slate-600">
+                <Zap className="w-3 h-3 mr-1" />
+                <span className="text-xs">Mobile Money</span>
+              </div>
+              <div className="flex items-center text-slate-600">
+                <Shield className="w-3 h-3 mr-1" />
+                <span className="text-xs">Bank Transfer</span>
               </div>
             </div>
+          </div>
 
-            {/* Features List */}
-            <div className="space-y-4 mb-8">
-              {features.map((feature, index) => (
-                <div key={index} className="flex items-center">
-                  <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0" />
-                  <span className="text-slate-700">{feature}</span>
-                </div>
-              ))}
-            </div>
-
-            {/* Payment Methods */}
-            <div className="mb-6 p-4 bg-slate-50 rounded-lg">
-              <h3 className="text-sm font-semibold text-slate-900 mb-3">Secure Payment Methods</h3>
-              <div className="flex items-center justify-center space-x-4">
-                <div className="flex items-center text-slate-600">
-                  <CreditCard className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Cards</span>
-                </div>
-                <div className="flex items-center text-slate-600">
-                  <Zap className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Mobile Money</span>
-                </div>
-                <div className="flex items-center text-slate-600">
-                  <Shield className="w-4 h-4 mr-1" />
-                  <span className="text-sm">Bank Transfer</span>
-                </div>
-              </div>
-            </div>
-
-            {/* CTA Button */}
-            <button
-              onClick={handleSubscribe}
-              disabled={loading || paymentState.loading}
-              className="w-full bg-blue-600 hover:bg-blue-700 text-white py-4 px-6 rounded-lg font-semibold transition-colors shadow-lg hover:shadow-xl transform hover:-translate-y-0.5 disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
-            >
-              {loading || paymentState.loading ? (
-                <>
-                  <div className="animate-spin rounded-full h-5 w-5 border-b-2 border-white mr-2"></div>
-                  Processing...
-                </>
-              ) : (
-                'Subscribe Now'
-              )}
-            </button>
-
-            {/* Error Message */}
-            {paymentState.error && (
-              <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
-                <p className="text-red-600 text-sm">{paymentState.error}</p>
-              </div>
+          {/* CTA Button */}
+          <button
+            onClick={handleSubscribe}
+            disabled={loading || paymentState.loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 text-white py-3 px-4 rounded-lg font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center"
+          >
+            {loading || paymentState.loading ? (
+              <>
+                <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-2"></div>
+                Processing...
+              </>
+            ) : (
+              'Subscribe Now'
             )}
+          </button>
 
-            {/* Subscription Info */}
-            <div className="mt-6 text-center">
-              <p className="text-sm text-slate-600">
-                Cancel anytime • Secure payment via Flutterwave • Immediate access to all features
-              </p>
+          {/* Error Message */}
+          {paymentState.error && (
+            <div className="mt-4 p-3 bg-red-50 border border-red-200 rounded-lg">
+              <p className="text-red-600 text-sm">{paymentState.error}</p>
             </div>
+          )}
+
+          {/* Subscription Info */}
+          <div className="mt-4 text-center">
+            <p className="text-xs text-slate-500">
+              Cancel anytime • Secure payment via Flutterwave
+            </p>
           </div>
+        </div>
 
-          {/* Benefits & Testimonials */}
-          <div className="space-y-8">
-            {/* Benefits */}
-            <div className="bg-white rounded-2xl shadow-xl p-8">
-              <h3 className="text-2xl font-bold text-slate-900 mb-6">Why Upgrade?</h3>
-              <div className="space-y-4">
-                <div className="flex items-start">
-                  <div className="w-8 h-8 bg-blue-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <Star className="w-4 h-4 text-blue-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900 mb-1">Find More Opportunities</h4>
-                    <p className="text-slate-600 text-sm">Access unlimited tender alerts and never miss a relevant contract opportunity.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="w-8 h-8 bg-green-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <TrendingUp className="w-4 h-4 text-green-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900 mb-1">Win More Contracts</h4>
-                    <p className="text-slate-600 text-sm">Use advanced analytics and AI recommendations to price competitively.</p>
-                  </div>
-                </div>
-                
-                <div className="flex items-start">
-                  <div className="w-8 h-8 bg-purple-100 rounded-full flex items-center justify-center mr-3 flex-shrink-0">
-                    <Zap className="w-4 h-4 text-purple-600" />
-                  </div>
-                  <div>
-                    <h4 className="font-semibold text-slate-900 mb-1">Save Time</h4>
-                    <p className="text-slate-600 text-sm">Automated notifications and smart filtering help you focus on what matters.</p>
-                  </div>
-                </div>
-              </div>
-            </div>
-
-            {/* Testimonial */}
-            <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 text-white">
-              <div className="flex items-center mb-4">
-                {[...Array(5)].map((_, i) => (
-                  <Star key={i} className="w-5 h-5 text-yellow-300 fill-current" />
-                ))}
-              </div>
-              <blockquote className="text-lg mb-4">
-                "BidCloud has transformed how we approach contract bidding. We've increased our win rate by 40% in just 6 months. The competition analysis feature is incredible."
-              </blockquote>
-              <div className="flex items-center">
-                <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">
-                  <span className="text-white font-semibold">JK</span>
-                </div>
-                <div>
-                  <div className="font-semibold">John Kato</div>
-                  <div className="text-blue-100 text-sm">Construction Manager, Kampala Builders</div>
-                </div>
-              </div>
-            </div>
-
-            {/* Current Status Warning */}
-            <div className="bg-yellow-50 border border-yellow-200 rounded-2xl p-6">
-              <div className="flex items-start">
-                <AlertCircle className="w-6 h-6 text-yellow-600 mr-3 mt-0.5 flex-shrink-0" />
-                <div>
-                  <h3 className="text-lg font-semibold text-yellow-800 mb-2">Limited Access</h3>
-                  <p className="text-yellow-700 text-sm mb-4">
-                    You're currently on a limited plan. Upgrade to Professional to unlock all features and maximize your contract win rate.
-                  </p>
-                  <button
-                    onClick={() => router.push('/dashboard')}
-                    className="text-yellow-800 hover:text-yellow-900 font-medium text-sm underline"
-                  >
-                    Continue with limited access →
-                  </button>
-                </div>
-              </div>
-            </div>
-          </div>
+        {/* Skip Option */}
+        <div className="text-center mt-6">
+          <button
+            onClick={() => router.push('/dashboard')}
+            className="text-slate-500 hover:text-slate-700 text-sm underline"
+          >
+            Continue with limited access
+          </button>
         </div>
       </div>
     </div>
