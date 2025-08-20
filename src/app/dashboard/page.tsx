@@ -449,21 +449,17 @@ export default function DashboardPage() {
                   </div>
         </div>
 
-                {/* Actions */}
-                <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                  <div className="flex items-center space-x-2">
-                    <Link
-                      href={`/dashboard/contracts/${contract.id}`}
-                      className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
-                    >
-                      <Eye className="h-4 w-4 mr-1" />
-                      View Details
-                    </Link>
-                    <button className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-500 transition-colors">
-                      <Bookmark className="h-4 w-4 mr-1" />
-                      Save
-                    </button>
-          </div>
+                                 {/* Actions */}
+                 <div className="flex items-center justify-between pt-4 border-t border-slate-200">
+                   <div className="flex items-center space-x-2">
+                     <Link
+                       href={`/dashboard/contracts/${contract.id}`}
+                       className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                     >
+                       <Eye className="h-4 w-4 mr-1" />
+                       View Details
+                     </Link>
+                   </div>
                   <button
                     onClick={() => handleTrackContract(contract.id)}
                     disabled={trackingLoading[contract.id]}
