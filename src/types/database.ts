@@ -15,6 +15,7 @@ export interface Profile {
   onboarding_completed?: boolean;
   subscription_status?: 'none' | 'active' | 'cancelled' | 'expired';
   subscription_id?: string;
+  role?: 'user' | 'admin' | 'super_admin';
   created_at: string;
   updated_at: string;
 }

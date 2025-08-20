@@ -40,6 +40,21 @@ function LoginForm() {
         return 'email_not_verified';
       }
 
+      // Check if user has admin role
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('role')
+        .eq('id', userId)
+        .single();
+
+      if (profile?.role === 'admin' || profile?.role === 'super_admin') {
+        // User is admin, check if they're trying to access admin panel
+        const redirectTo = searchParams.get('redirect');
+        if (redirectTo && redirectTo.startsWith('/admin')) {
+          return 'admin';
+        }
+      }
+
       // Check if user has completed onboarding
       const hasCompletedOnboarding = await onboardingService.hasCompletedOnboarding(userId);
       
@@ -79,6 +94,10 @@ function LoginForm() {
           case 'email_not_verified':
             setError("Please verify your email address before signing in. Check your email for a verification link.");
             setLoading(false);
+            break;
+          case 'admin':
+            const redirectTo = searchParams.get('redirect') || '/admin';
+            router.push(redirectTo);
             break;
           case 'dashboard':
             router.push('/dashboard');
