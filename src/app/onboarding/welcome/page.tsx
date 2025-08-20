@@ -200,26 +200,7 @@ export default function OnboardingWelcome() {
             </div>
           </div>
 
-          {/* Testimonial */}
-          <div className="bg-gradient-to-r from-blue-600 to-indigo-600 rounded-2xl p-8 mb-12 text-white">
-            <div className="flex items-center mb-4">
-              {[...Array(5)].map((_, i) => (
-                <Star key={i} className="w-5 h-5 text-yellow-300 fill-current" />
-              ))}
-            </div>
-            <blockquote className="text-lg mb-4">
-              "BidCloud has transformed how we approach contract bidding. We've increased our win rate by 40% in just 6 months. The competition analysis feature is incredible - we now know exactly what to expect and can price our bids competitively."
-            </blockquote>
-            <div className="flex items-center">
-              <div className="w-12 h-12 bg-white/20 rounded-full flex items-center justify-center mr-4">
-                <span className="text-white font-semibold">JK</span>
-              </div>
-              <div>
-                <div className="font-semibold">John Kato</div>
-                <div className="text-blue-100 text-sm">Construction Manager, Kampala Builders</div>
-              </div>
-            </div>
-          </div>
+
 
           {/* CTA Section */}
           <div className="text-center">
