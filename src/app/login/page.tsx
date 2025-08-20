@@ -48,16 +48,9 @@ function LoginForm() {
         return 'onboarding';
       }
 
-      // Check subscription status
-      const subscriptionStatus = await subscriptionService.getUserSubscriptionStatus(userId);
-      const status = subscriptionStatus?.status as string | undefined;
-      
-      if (status === 'active' || status === 'trial') {
-        return 'dashboard';
-      } else {
-        // User has profile but no active subscription
-        return 'subscription';
-      }
+      // If user has completed onboarding, always go to dashboard
+      // Subscription status is handled within the dashboard
+      return 'dashboard';
     } catch (error) {
       console.error('Error checking user status:', error);
       // Default to onboarding if there's an error
@@ -89,9 +82,6 @@ function LoginForm() {
             break;
           case 'dashboard':
             router.push('/dashboard');
-            break;
-          case 'subscription':
-            router.push('/onboarding/subscription');
             break;
           case 'onboarding':
           default:
