@@ -290,12 +290,7 @@ export default function DashboardPage() {
               Discover and track government and private sector contracts
         </p>
       </div>
-                     <div className="flex items-center space-x-2">
-             <Link href="/dashboard/tracking" className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-               <Bookmark className="w-4 h-4 mr-2" />
-               Saved Contracts
-             </Link>
-           </div>
+
         </div>
 
       {/* Search and Filters */}

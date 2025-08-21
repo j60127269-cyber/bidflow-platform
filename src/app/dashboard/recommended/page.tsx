@@ -376,10 +376,7 @@ export default function RecommendedPage() {
             <Settings className="w-4 h-4 mr-2" />
             Update Preferences
           </button>
-          <button className="flex items-center justify-center px-3 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-            <Bookmark className="w-4 h-4 mr-2" />
-            Saved Contracts
-          </button>
+
         </div>
       </div>
 
