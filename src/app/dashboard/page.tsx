@@ -389,7 +389,7 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                       {getDisplayContracts().map((contract, index) => (
-              <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200 relative h-[420px] flex flex-col">
+              <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200 relative h-[520px] flex flex-col">
 
                 
                 <div className="p-6 flex-1 flex flex-col">
@@ -418,13 +418,9 @@ export default function DashboardPage() {
                   </div>
 
                 {/* Description */}
-                <div className="text-sm text-slate-600 mb-4 flex-1">
-                  <TruncatedText 
-                    text={contract.short_description || contract.evaluation_methodology || 'No description available'}
-                    maxLength={120}
-                    className="line-clamp-3"
-                  />
-                </div>
+                <p className="text-sm text-slate-600 mb-4 line-clamp-6 flex-1">
+                  {contract.short_description || contract.evaluation_methodology || 'No description available'}
+                </p>
 
                 {/* Details */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
@@ -495,7 +491,7 @@ export default function DashboardPage() {
             {!hasActiveSubscription && filteredContracts.length > 3 && (
               <>
                 {/* First Blurred Card */}
-                <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden h-[420px] flex flex-col">
+                <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden h-[520px] flex flex-col">
                   <div className="p-6 blur-sm flex-1 flex flex-col">
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
@@ -514,7 +510,7 @@ export default function DashboardPage() {
       </div>
 
                                           {/* Description */}
-                      <p className="text-sm text-slate-600 mb-4 line-clamp-3 flex-1">
+                      <p className="text-sm text-slate-600 mb-4 line-clamp-6 flex-1">
                         {filteredContracts[3]?.short_description || filteredContracts[3]?.evaluation_methodology || "Contract description..."}
                       </p>
 
@@ -567,7 +563,7 @@ export default function DashboardPage() {
 
                 {/* Second Blurred Card */}
                 {filteredContracts.length > 4 && (
-                  <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden h-[420px] flex flex-col">
+                  <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden h-[520px] flex flex-col">
                     <div className="p-6 blur-sm flex-1 flex flex-col">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
@@ -586,7 +582,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Description */}
-                      <p className="text-sm text-slate-600 mb-4 line-clamp-3 flex-1">
+                      <p className="text-sm text-slate-600 mb-4 line-clamp-6 flex-1">
                         {filteredContracts[4]?.short_description || filteredContracts[4]?.evaluation_methodology || "Contract description..."}
                       </p>
 
