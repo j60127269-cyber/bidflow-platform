@@ -1,3 +1,4 @@
+import Link from "next/link";
 import { 
   BarChart3, 
   TrendingUp, 
