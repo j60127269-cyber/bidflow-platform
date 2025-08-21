@@ -234,10 +234,10 @@ export default function AnalyticsPage() {
           Track your first bid to see analytics and insights
         </p>
         <div className="flex justify-center space-x-4">
-          <button className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+          <Link href="/dashboard" className="inline-flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
             <Target className="w-4 h-4 mr-2" />
             Track New Bid
-          </button>
+          </Link>
           <button className="inline-flex items-center px-4 py-2 border border-slate-300 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-50 transition-colors">
             <Users className="w-4 h-4 mr-2" />
             View Examples

@@ -290,12 +290,12 @@ export default function DashboardPage() {
               Discover and track government and private sector contracts
         </p>
       </div>
-          <div className="flex items-center space-x-2">
-            <button className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
-              <Bookmark className="w-4 h-4 mr-2" />
-              Saved Contracts
-            </button>
-          </div>
+                     <div className="flex items-center space-x-2">
+             <Link href="/dashboard/tracking" className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors">
+               <Bookmark className="w-4 h-4 mr-2" />
+               Saved Contracts
+             </Link>
+           </div>
         </div>
 
       {/* Search and Filters */}
@@ -389,10 +389,10 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                       {getDisplayContracts().map((contract, index) => (
-              <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200 relative h-[520px] flex flex-col">
+                              <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200 relative">
 
-                
-                <div className="p-6 flex-1 flex flex-col">
+                 
+                <div className="p-6">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -417,8 +417,8 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                                {/* Description */}
-                <p className="text-sm text-slate-600 mb-4 line-clamp-6">
+                                                                 {/* Description */}
+                <p className="text-sm text-slate-600 mb-4">
                   {contract.short_description || contract.evaluation_methodology || 'No description available'}
                 </p>
 
@@ -450,26 +450,26 @@ export default function DashboardPage() {
                   </div>
         </div>
 
-                                 {/* Actions */}
-                <div className="flex items-center justify-between pt-4 border-t border-slate-200">
-                   <div className="flex items-center space-x-2">
-                     <Link
-                       href={`/dashboard/contracts/${contract.id}`}
-                       className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
-                     >
-                       <Eye className="h-4 w-4 mr-1" />
-                       View Details
-                     </Link>
-                   </div>
-                  <button
-                    onClick={() => handleTrackContract(contract.id)}
-                    disabled={trackingLoading[contract.id]}
-                    className={`flex items-center px-3 py-2 text-sm font-medium rounded-lg transition-colors ${
-                      trackedContracts.has(contract.id)
-                        ? 'bg-green-600 text-white hover:bg-green-700'
-                        : 'bg-blue-600 text-white hover:bg-blue-700'
-                    } disabled:opacity-50 disabled:cursor-not-allowed`}
-                  >
+                                                                   {/* Actions */}
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-slate-200 space-y-3 sm:space-y-0">
+                                       <div className="flex flex-wrap items-center gap-2">
+                      <Link
+                        href={`/dashboard/contracts/${contract.id}`}
+                        className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                      >
+                        <Eye className="h-4 w-4 mr-1" />
+                        View Details
+                      </Link>
+                    </div>
+                                     <button
+                     onClick={() => handleTrackContract(contract.id)}
+                     disabled={trackingLoading[contract.id]}
+                     className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full sm:w-auto ${
+                       trackedContracts.has(contract.id)
+                         ? 'bg-green-600 text-white hover:bg-green-700'
+                         : 'bg-blue-600 text-white hover:bg-blue-700'
+                     } disabled:opacity-50 disabled:cursor-not-allowed`}
+                   >
                     {trackingLoading[contract.id] ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
@@ -491,8 +491,8 @@ export default function DashboardPage() {
             {!hasActiveSubscription && filteredContracts.length > 3 && (
               <>
                 {/* First Blurred Card */}
-                <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden h-[520px] flex flex-col">
-                  <div className="p-6 blur-sm flex flex-col">
+                <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden">
+                  <div className="p-6 blur-sm">
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -509,8 +509,8 @@ export default function DashboardPage() {
                       </span>
       </div>
 
-                                          {/* Description */}
-                      <p className="text-sm text-slate-600 mb-4 line-clamp-6">
+                                                                                     {/* Description */}
+                      <p className="text-sm text-slate-600 mb-4">
                         {filteredContracts[3]?.short_description || filteredContracts[3]?.evaluation_methodology || "Contract description..."}
                       </p>
 
@@ -563,8 +563,8 @@ export default function DashboardPage() {
 
                 {/* Second Blurred Card */}
                 {filteredContracts.length > 4 && (
-                  <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden h-[520px] flex flex-col">
-                    <div className="p-6 blur-sm flex flex-col">
+                  <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden">
+                    <div className="p-6 blur-sm">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
@@ -582,7 +582,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Description */}
-                      <p className="text-sm text-slate-600 mb-4 line-clamp-6">
+                      <p className="text-sm text-slate-600 mb-4">
                         {filteredContracts[4]?.short_description || filteredContracts[4]?.evaluation_methodology || "Contract description..."}
                       </p>
 
