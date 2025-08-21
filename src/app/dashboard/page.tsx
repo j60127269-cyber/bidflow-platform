@@ -417,8 +417,8 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                {/* Description */}
-                <p className="text-sm text-slate-600 mb-4">
+                                {/* Description */}
+                <p className="text-sm text-slate-600 mb-4 line-clamp-6">
                   {contract.short_description || contract.evaluation_methodology || 'No description available'}
                 </p>
 
@@ -451,7 +451,7 @@ export default function DashboardPage() {
         </div>
 
                                  {/* Actions */}
-                 <div className="flex items-center justify-between pt-4 border-t border-slate-200 mt-auto">
+                <div className="flex items-center justify-between pt-4 border-t border-slate-200">
                    <div className="flex items-center space-x-2">
                      <Link
                        href={`/dashboard/contracts/${contract.id}`}
@@ -492,7 +492,7 @@ export default function DashboardPage() {
               <>
                 {/* First Blurred Card */}
                 <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden h-[520px] flex flex-col">
-                  <div className="p-6 blur-sm flex-1 flex flex-col">
+                  <div className="p-6 blur-sm flex flex-col">
                     {/* Header */}
                     <div className="flex items-start justify-between mb-4">
                       <div className="flex-1">
@@ -510,7 +510,7 @@ export default function DashboardPage() {
       </div>
 
                                           {/* Description */}
-                      <p className="text-sm text-slate-600 mb-4">
+                      <p className="text-sm text-slate-600 mb-4 line-clamp-6">
                         {filteredContracts[3]?.short_description || filteredContracts[3]?.evaluation_methodology || "Contract description..."}
                       </p>
 
@@ -564,7 +564,7 @@ export default function DashboardPage() {
                 {/* Second Blurred Card */}
                 {filteredContracts.length > 4 && (
                   <div className="bg-white rounded-lg shadow border border-slate-200 relative overflow-hidden h-[520px] flex flex-col">
-                    <div className="p-6 blur-sm flex-1 flex flex-col">
+                    <div className="p-6 blur-sm flex flex-col">
                       {/* Header */}
                       <div className="flex items-start justify-between mb-4">
                         <div className="flex-1">
@@ -582,7 +582,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Description */}
-                      <p className="text-sm text-slate-600 mb-4">
+                      <p className="text-sm text-slate-600 mb-4 line-clamp-6">
                         {filteredContracts[4]?.short_description || filteredContracts[4]?.evaluation_methodology || "Contract description..."}
                       </p>
 
