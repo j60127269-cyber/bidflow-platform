@@ -67,10 +67,12 @@ export interface Contract {
   required_forms?: string[]; // Array of mandatory forms to submit
   bid_attachments?: string[]; // Array of bid document URLs or file names
   
-  // 4. STATUS & TRACKING (3 variables)
+  // 4. STATUS & TRACKING (5 variables)
   status: 'open' | 'closed' | 'awarded' | 'cancelled';
   current_stage: string; // published, evaluation, awarded, completed
   award_information?: string; // Information about award if status is 'awarded'
+  awarded_value?: number; // Actual awarded contract value
+  awarded_to?: string; // Company awarded the contract
   
   // Metadata
   created_at: string;

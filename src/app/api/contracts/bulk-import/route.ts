@@ -43,6 +43,8 @@ interface ContractData {
   status: string;
   current_stage: string;
   award_information?: string;
+  awarded_value?: number;
+  awarded_to?: string;
 }
 
 function processContractData(contract: any): ContractData {
@@ -81,6 +83,8 @@ function processContractData(contract: any): ContractData {
     status: (contract.status?.toLowerCase() || 'open') as string,
     current_stage: (contract.current_stage?.toLowerCase() || 'published') as string,
     award_information: contract.award_information?.trim() || null,
+    awarded_value: contract.awarded_value ? parseFloat(contract.awarded_value) : null,
+    awarded_to: contract.awarded_to?.trim() || null,
     bid_attachments: [] // Empty array for imported contracts
   };
 }
@@ -198,9 +202,15 @@ export async function POST(request: NextRequest) {
       console.error('Error inserting contracts:', insertError);
       console.error('Error details:', insertError.details);
       console.error('Error hint:', insertError.hint);
+      console.error('Error code:', insertError.code);
+      console.error('Error message:', insertError.message);
+      console.error('Sample contract data that failed:', processedContracts[0]);
       return NextResponse.json(
         { 
           error: 'Failed to insert contracts',
+          details: insertError.message,
+          hint: insertError.hint,
+          code: insertError.code,
           success: 0,
           failed: processedContracts.length,
           errors: [insertError.message]
