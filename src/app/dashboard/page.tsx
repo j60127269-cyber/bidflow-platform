@@ -418,7 +418,7 @@ export default function DashboardPage() {
                   </div>
 
                 {/* Description */}
-                <p className="text-sm text-slate-600 mb-4 line-clamp-6 flex-1">
+                <p className="text-sm text-slate-600 mb-4 line-clamp-6">
                   {contract.short_description || contract.evaluation_methodology || 'No description available'}
                 </p>
 
@@ -510,7 +510,7 @@ export default function DashboardPage() {
       </div>
 
                                           {/* Description */}
-                      <p className="text-sm text-slate-600 mb-4 line-clamp-6 flex-1">
+                      <p className="text-sm text-slate-600 mb-4 line-clamp-6">
                         {filteredContracts[3]?.short_description || filteredContracts[3]?.evaluation_methodology || "Contract description..."}
                       </p>
 
@@ -582,7 +582,7 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Description */}
-                      <p className="text-sm text-slate-600 mb-4 line-clamp-6 flex-1">
+                      <p className="text-sm text-slate-600 mb-4 line-clamp-6">
                         {filteredContracts[4]?.short_description || filteredContracts[4]?.evaluation_methodology || "Contract description..."}
                       </p>
 
