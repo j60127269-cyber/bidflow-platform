@@ -140,7 +140,7 @@ export default function EditContractPage() {
         console.error('Failed to update contract');
       }
     } catch (error) {
-      console.error('Error updating contract:', error);
+        console.error('Error updating contract:', error);
     } finally {
       setSaving(false);
     }
@@ -157,7 +157,7 @@ export default function EditContractPage() {
   return (
     <div className="max-w-4xl mx-auto p-6">
       <div className="mb-6">
-        <h1 className="text-2xl font-bold text-gray-900">Edit Contract</h1>
+            <h1 className="text-2xl font-bold text-gray-900">Edit Contract</h1>
         <p className="text-gray-600">Update contract information</p>
       </div>
 
@@ -471,15 +471,15 @@ export default function EditContractPage() {
                 <div>
                   <label className="block text-sm font-medium text-gray-700 mb-1">
                     Awarded To
-                  </label>
-                  <input
-                    type="text"
+              </label>
+              <input
+                type="text"
                     value={contract.awarded_to || ''}
                     onChange={(e) => setContract(prev => ({ ...prev, awarded_to: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                     placeholder="Company awarded the contract"
-                  />
-                </div>
+              />
+            </div>
               </>
             )}
           </div>
@@ -532,7 +532,7 @@ export default function EditContractPage() {
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Evaluation methodology"
               />
-            </div>
+        </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -559,8 +559,8 @@ export default function EditContractPage() {
                 onChange={(e) => setContract(prev => ({ ...prev, submission_format: e.target.value }))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Submission format"
-              />
-            </div>
+          />
+        </div>
 
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
@@ -577,19 +577,19 @@ export default function EditContractPage() {
                 <option value="high">High</option>
               </select>
             </div>
-          </div>
+            </div>
 
           <div className="mt-4">
-            <label className="block text-sm font-medium text-gray-700 mb-1">
-              Award Information
-            </label>
-            <textarea
-              value={contract.award_information || ''}
-              onChange={(e) => setContract(prev => ({ ...prev, award_information: e.target.value }))}
-              rows={3}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-              placeholder="Award details and information"
-            />
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Award Information
+              </label>
+              <textarea
+                value={contract.award_information || ''}
+                onChange={(e) => setContract(prev => ({ ...prev, award_information: e.target.value }))}
+                rows={3}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="Award details and information"
+              />
           </div>
         </div>
 

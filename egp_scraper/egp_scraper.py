@@ -59,7 +59,7 @@ class EGPScraper:
             # Perform login
             response = self.session.post(login_url, data=login_data)
             
-            # Check if login was successful
+                # Check if login was successful
             if response.status_code == 200:
                 # Check for successful login indicators
                 if 'dashboard' in response.url or 'logout' in response.text:
@@ -81,7 +81,7 @@ class EGPScraper:
         except Exception as e:
             logger.error(f"Login error: {str(e)}")
             return False
-
+    
     def get_bid_notices(self, category: str = "all", max_pages: int = 5) -> List[Dict]:
         """Get bid notices using the AJAX API endpoint"""
         try:
@@ -90,7 +90,7 @@ class EGPScraper:
             # The API endpoint for bid archives
             api_url = f"{self.base_url}/api/v1/public_bid_archives"
             
-            contracts = []
+        contracts = []
             page = 1
             
             while page <= max_pages:
@@ -141,7 +141,7 @@ class EGPScraper:
                 except json.JSONDecodeError as e:
                     logger.error(f"Error parsing JSON response for page {page}: {str(e)}")
                     break
-            
+                
             logger.info(f"Total contracts fetched: {len(contracts)}")
             return contracts
             
@@ -225,7 +225,7 @@ class EGPScraper:
         except Exception as e:
             logger.error(f"Error extracting contract data: {str(e)}")
             return None
-
+    
     def _extract_contract_data(self, item) -> Optional[Dict]:
         """Legacy method - kept for compatibility but not used with API approach"""
         try:
@@ -264,7 +264,7 @@ class EGPScraper:
         except Exception as e:
             logger.error(f"Error extracting contract data: {str(e)}")
             return None
-
+    
     def _extract_procuring_entity(self, item) -> str:
         """Extract procuring entity from item"""
         try:
@@ -316,7 +316,7 @@ class EGPScraper:
             return 'other'
         except:
             return 'other'
-
+    
     def _extract_category(self, item) -> str:
         """Extract category from item"""
         try:
@@ -326,13 +326,13 @@ class EGPScraper:
             return 'other'
         except:
             return 'other'
-
+    
     def _extract_date(self, item) -> str:
         """Extract date from item"""
         try:
             # Look for date elements
             date_elem = item.find(class_='date') or item.find('time') or item.find('span', class_='date')
-            if date_elem:
+        if date_elem:
                 return self._parse_date(date_elem.get_text().strip())
             
             # Try to find any text that looks like a date
@@ -345,7 +345,7 @@ class EGPScraper:
             return "Unknown"
         except:
             return "Unknown"
-
+    
     def _parse_date(self, date_str: str) -> str:
         """Parse and standardize date format"""
         try:
@@ -375,7 +375,7 @@ class EGPScraper:
         except Exception as e:
             logger.error(f"Error parsing date '{date_str}': {str(e)}")
             return date_str.strip()
-
+    
     def _get_contract_details(self, link: str) -> Dict:
         """Get detailed contract information"""
         try:
@@ -399,7 +399,7 @@ class EGPScraper:
         except Exception as e:
             logger.error(f"Error getting contract details: {str(e)}")
             return {}
-
+    
     def _parse_estimated_value(self, value_text: str) -> Dict:
         """Parse estimated value from text"""
         try:
@@ -418,14 +418,14 @@ class EGPScraper:
             return {}
         except:
             return {}
-
+    
     def export_to_csv(self, contracts: List[Dict], filename: str = None) -> str:
         """Export contracts to CSV file"""
         try:
-            if not filename:
-                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+        if not filename:
+            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 filename = f'egp_contracts_{timestamp}.csv'
-            
+        
             # Convert to DataFrame and export
             df = pd.DataFrame(contracts)
             df.to_csv(filename, index=False, encoding='utf-8')
