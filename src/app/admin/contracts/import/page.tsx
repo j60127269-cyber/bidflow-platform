@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { ArrowLeft, Upload, FileText, CheckCircle, AlertCircle, Loader2, Download } from 'lucide-react';
 import Link from 'next/link';
@@ -41,6 +41,7 @@ interface ContractRow {
   status: string;
   current_stage: string;
   award_information?: string;
+  publish_status?: 'draft' | 'published' | 'archived';
 }
 
 interface ValidationError {
@@ -56,11 +57,60 @@ export default function ImportContracts() {
   const [validationErrors, setValidationErrors] = useState<ValidationError[]>([]);
   const [isValid, setIsValid] = useState(false);
   const [importing, setImporting] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [importResults, setImportResults] = useState<{
     success: number;
     failed: number;
     errors: string[];
   } | null>(null);
+
+  // Load saved data from localStorage on component mount
+  useEffect(() => {
+    const savedData = localStorage.getItem('import_contracts_data');
+    if (savedData) {
+      try {
+        const parsed = JSON.parse(savedData);
+        setParsedData(parsed.data || []);
+        setValidationErrors(parsed.errors || []);
+        setIsValid(parsed.isValid || false);
+        setHasUnsavedChanges(true);
+      } catch (error) {
+        console.error('Error loading saved import data:', error);
+      }
+    }
+  }, []);
+
+  // Save data to localStorage whenever it changes
+  useEffect(() => {
+    if (parsedData.length > 0) {
+      const dataToSave = {
+        data: parsedData,
+        errors: validationErrors,
+        isValid,
+        timestamp: Date.now()
+      };
+      localStorage.setItem('import_contracts_data', JSON.stringify(dataToSave));
+    }
+  }, [parsedData, validationErrors, isValid]);
+
+  // Clear localStorage when import is successful
+  const clearSavedData = () => {
+    localStorage.removeItem('import_contracts_data');
+    setHasUnsavedChanges(false);
+  };
+
+  // Warn user about unsaved changes when leaving the page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const handleFileSelect = useCallback((event: React.ChangeEvent<HTMLInputElement>) => {
     const selectedFile = event.target.files?.[0];
@@ -79,6 +129,7 @@ export default function ImportContracts() {
       complete: (results: any) => {
         const contracts = results.data as ContractRow[];
         setParsedData(contracts);
+        setHasUnsavedChanges(true);
         validateData(contracts);
       },
       error: (error: any) => {
@@ -146,6 +197,7 @@ export default function ImportContracts() {
       if (response.ok) {
         setImportResults(result);
         if (result.success > 0) {
+          clearSavedData();
           alert(`Successfully imported ${result.success} contracts!`);
           router.push('/admin/contracts');
         }
@@ -213,13 +265,29 @@ export default function ImportContracts() {
           <div className="px-6 py-4 border-b border-gray-200">
             <div className="flex items-center justify-between">
               <div className="flex items-center space-x-3">
-                <Link
-                  href="/admin/contracts"
+                <button
+                  onClick={() => {
+                    if (hasUnsavedChanges) {
+                      if (confirm('You have unsaved import data. Are you sure you want to leave? This will clear your imported data.')) {
+                        clearSavedData();
+                        router.push('/admin/contracts');
+                      }
+                    } else {
+                      router.push('/admin/contracts');
+                    }
+                  }}
                   className="text-gray-400 hover:text-gray-600"
                 >
                   <ArrowLeft className="h-6 w-6" />
-                </Link>
-                <h1 className="text-2xl font-bold text-gray-900">Import Contracts</h1>
+                </button>
+                <div>
+                  <h1 className="text-2xl font-bold text-gray-900">Import Contracts</h1>
+                  {hasUnsavedChanges && (
+                    <p className="text-sm text-orange-600 mt-1">
+                      ⚠️ You have unsaved import data
+                    </p>
+                  )}
+                </div>
               </div>
             </div>
           </div>
@@ -259,13 +327,30 @@ export default function ImportContracts() {
                     Download our CSV template to see the required format and column names.
                   </p>
                 </div>
-                <button
-                  onClick={downloadTemplate}
-                  className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
-                >
-                  <Download className="h-4 w-4 mr-2" />
-                  Download Template
-                </button>
+                <div className="flex space-x-2">
+                  {hasUnsavedChanges && (
+                    <button
+                      onClick={() => {
+                        if (confirm('Are you sure you want to clear the imported data?')) {
+                          clearSavedData();
+                          setParsedData([]);
+                          setValidationErrors([]);
+                          setIsValid(false);
+                        }
+                      }}
+                      className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-red-700 bg-red-100 hover:bg-red-200"
+                    >
+                      Clear Data
+                    </button>
+                  )}
+                  <button
+                    onClick={downloadTemplate}
+                    className="inline-flex items-center px-3 py-2 border border-transparent text-sm leading-4 font-medium rounded-md text-blue-700 bg-blue-100 hover:bg-blue-200"
+                  >
+                    <Download className="h-4 w-4 mr-2" />
+                    Download Template
+                  </button>
+                </div>
               </div>
             </div>
 
@@ -368,12 +453,21 @@ export default function ImportContracts() {
 
             {/* Action Buttons */}
             <div className="flex justify-end space-x-4">
-              <Link
-                href="/admin/contracts"
+              <button
+                onClick={() => {
+                  if (hasUnsavedChanges) {
+                    if (confirm('You have unsaved import data. Are you sure you want to leave? This will clear your imported data.')) {
+                      clearSavedData();
+                      router.push('/admin/contracts');
+                    }
+                  } else {
+                    router.push('/admin/contracts');
+                  }
+                }}
                 className="px-4 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
               >
                 Cancel
-              </Link>
+              </button>
               <button
                 onClick={handleImport}
                 disabled={!isValid || importing || parsedData.length === 0}

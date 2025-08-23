@@ -83,6 +83,7 @@ export default function DashboardPage() {
       const { data, error } = await supabase
         .from('contracts')
         .select('*')
+        .eq('publish_status', 'published') // Only show published contracts to clients
         .order('created_at', { ascending: false });
 
       if (error) {
@@ -384,9 +385,9 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                       {getDisplayContracts().map((contract, index) => (
-                              <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200 relative">
+              <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200 relative">
 
-                 
+                
                 <div className="p-6">
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
@@ -412,7 +413,7 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                                                                 {/* Description */}
+                {/* Description */}
                 <p className="text-sm text-slate-600 mb-4">
                   {contract.short_description || contract.evaluation_methodology || 'No description available'}
                 </p>
@@ -445,26 +446,26 @@ export default function DashboardPage() {
                   </div>
         </div>
 
-                                                                   {/* Actions */}
+                                 {/* Actions */}
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-slate-200 space-y-3 sm:space-y-0">
                                        <div className="flex flex-wrap items-center gap-2">
-                      <Link
-                        href={`/dashboard/contracts/${contract.id}`}
-                        className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
-                      >
-                        <Eye className="h-4 w-4 mr-1" />
-                        View Details
-                      </Link>
-                    </div>
-                                     <button
-                     onClick={() => handleTrackContract(contract.id)}
-                     disabled={trackingLoading[contract.id]}
+                     <Link
+                       href={`/dashboard/contracts/${contract.id}`}
+                       className="flex items-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-500 transition-colors"
+                     >
+                       <Eye className="h-4 w-4 mr-1" />
+                       View Details
+                     </Link>
+                   </div>
+                  <button
+                    onClick={() => handleTrackContract(contract.id)}
+                    disabled={trackingLoading[contract.id]}
                      className={`flex items-center justify-center px-3 py-2 text-sm font-medium rounded-lg transition-colors w-full sm:w-auto ${
-                       trackedContracts.has(contract.id)
-                         ? 'bg-green-600 text-white hover:bg-green-700'
-                         : 'bg-blue-600 text-white hover:bg-blue-700'
-                     } disabled:opacity-50 disabled:cursor-not-allowed`}
-                   >
+                      trackedContracts.has(contract.id)
+                        ? 'bg-green-600 text-white hover:bg-green-700'
+                        : 'bg-blue-600 text-white hover:bg-blue-700'
+                    } disabled:opacity-50 disabled:cursor-not-allowed`}
+                  >
                     {trackingLoading[contract.id] ? (
                       <>
                         <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white mr-1"></div>
@@ -504,7 +505,7 @@ export default function DashboardPage() {
                       </span>
       </div>
 
-                                                                                     {/* Description */}
+                                          {/* Description */}
                       <p className="text-sm text-slate-600 mb-4">
                         {filteredContracts[3]?.short_description || filteredContracts[3]?.evaluation_methodology || "Contract description..."}
                       </p>

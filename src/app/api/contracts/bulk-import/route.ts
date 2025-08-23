@@ -43,6 +43,9 @@ interface ContractData {
   status: string;
   current_stage: string;
   award_information?: string;
+  publish_status: 'draft' | 'published' | 'archived';
+  published_at?: string;
+  published_by?: string;
 }
 
 function processContractData(contract: any): ContractData {
@@ -81,6 +84,9 @@ function processContractData(contract: any): ContractData {
     status: (contract.status?.toLowerCase() || 'open') as string,
     current_stage: (contract.current_stage?.toLowerCase() || 'published') as string,
     award_information: contract.award_information?.trim() || null,
+    publish_status: (contract.publish_status?.toLowerCase() || 'draft') as 'draft' | 'published' | 'archived',
+    published_at: null, // Will be set when admin publishes
+    published_by: null, // Will be set when admin publishes
     bid_attachments: [] // Empty array for imported contracts
   };
 }

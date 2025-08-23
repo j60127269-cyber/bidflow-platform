@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
@@ -47,6 +47,9 @@ interface ContractForm {
   award_information?: string;
   awarded_value?: number;
   awarded_to?: string;
+  publish_status: 'draft' | 'published' | 'archived';
+  published_at?: string;
+  published_by?: string;
 }
 
 const categories = [
@@ -91,6 +94,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
   const { id } = use(params);
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [contract, setContract] = useState<ContractForm>({
     reference_number: '',
     title: '',
@@ -128,15 +132,29 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     current_stage: 'Published',
     award_information: '',
     awarded_value: undefined,
-    awarded_to: ''
+    awarded_to: '',
+    publish_status: 'draft',
+    published_at: '',
+    published_by: ''
   });
 
   const [newDocument, setNewDocument] = useState('');
   const [newForm, setNewForm] = useState('');
 
+  const updateContract = useCallback((updates: Partial<ContractForm>) => {
+    setContract(prev => ({ ...prev, ...updates }));
+    setHasUnsavedChanges(true);
+  }, []);
+
+  // Override setContract to track changes
+  const setContractWithTracking = useCallback((updater: ContractForm | ((prev: ContractForm) => ContractForm)) => {
+    setContract(updater);
+    setHasUnsavedChanges(true);
+  }, []);
+
   const addDocument = () => {
     if (newDocument.trim()) {
-      setContract(prev => ({
+      setContractWithTracking(prev => ({
         ...prev,
         required_documents: [...(prev.required_documents || []), newDocument.trim()]
       }));
@@ -145,7 +163,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
   };
 
   const removeDocument = (index: number) => {
-    setContract(prev => ({
+    setContractWithTracking(prev => ({
       ...prev,
       required_documents: prev.required_documents?.filter((_, i) => i !== index) || []
     }));
@@ -153,7 +171,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
 
   const addForm = () => {
     if (newForm.trim()) {
-      setContract(prev => ({
+      setContractWithTracking(prev => ({
         ...prev,
         required_forms: [...(prev.required_forms || []), newForm.trim()]
       }));
@@ -162,31 +180,27 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
   };
 
   const removeForm = (index: number) => {
-    setContract(prev => ({
+    setContractWithTracking(prev => ({
       ...prev,
       required_forms: prev.required_forms?.filter((_, i) => i !== index) || []
     }));
   };
 
   const handleFilesUploaded = (files: UploadedFile[]) => {
-    setContract(prev => ({
+    setContractWithTracking(prev => ({
       ...prev,
       bid_attachments: [...(prev.bid_attachments || []), ...files]
     }));
   };
 
   const handleFileDeleted = (filePath: string) => {
-    setContract(prev => ({
+    setContractWithTracking(prev => ({
       ...prev,
       bid_attachments: (prev.bid_attachments || []).filter(file => file.path !== filePath)
     }));
   };
 
-  useEffect(() => {
-    fetchContract();
-  }, [id]);
-
-  const fetchContract = async () => {
+  const fetchContract = useCallback(async () => {
     try {
       setLoading(true);
       const { data, error } = await supabase
@@ -248,7 +262,10 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           current_stage: data.current_stage || 'Published',
           award_information: data.award_information || '',
           awarded_value: data.awarded_value || undefined,
-          awarded_to: data.awarded_to || ''
+          awarded_to: data.awarded_to || '',
+          publish_status: data.publish_status || 'draft',
+          published_at: data.published_at ? new Date(data.published_at).toISOString().split('T')[0] : '',
+          published_by: data.published_by || ''
         });
       }
     } catch (error) {
@@ -257,7 +274,24 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     } finally {
       setLoading(false);
     }
-  };
+  }, [id]);
+
+  useEffect(() => {
+    fetchContract();
+  }, [fetchContract]);
+
+  // Warn user about unsaved changes when leaving the page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -265,6 +299,16 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     try {
       setSaving(true);
       
+      // Check if we need to update published_at and published_by
+      const originalData = await supabase
+        .from('contracts')
+        .select('publish_status')
+        .eq('id', id)
+        .single();
+
+      const wasPublished = originalData.data?.publish_status === 'published';
+      const isNowPublished = contract.publish_status === 'published';
+
       // Only update the fields that are actually in the form
       const updateData: any = {
         reference_number: contract.reference_number,
@@ -278,8 +322,16 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
         procuring_entity: contract.procuring_entity,
         status: contract.status,
         current_stage: contract.current_stage,
+        publish_status: contract.publish_status,
         updated_at: new Date().toISOString()
       };
+
+      // If changing from draft/archived to published, set published_at and published_by
+      if (!wasPublished && isNowPublished) {
+        updateData.published_at = new Date().toISOString();
+        // TODO: Get current admin user ID for published_by
+        // updateData.published_by = currentAdminUserId;
+      }
 
       // Only add optional fields if they have values
       if (contract.short_description) updateData.short_description = contract.short_description;
@@ -333,6 +385,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       }
 
       alert('Contract updated successfully!');
+      setHasUnsavedChanges(false);
       router.push('/admin/contracts');
     } catch (error) {
       console.error('Error:', error);
@@ -357,16 +410,29 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     <div className="max-w-4xl mx-auto p-6">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center space-x-4">
-          <Link
-            href="/admin/contracts"
+          <button
+            onClick={() => {
+              if (hasUnsavedChanges) {
+                if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
+                  router.push('/admin/contracts');
+                }
+              } else {
+                router.push('/admin/contracts');
+              }
+            }}
             className="inline-flex items-center text-gray-600 hover:text-gray-900"
           >
             <ArrowLeft className="w-4 h-4 mr-2" />
             Back to Contracts
-          </Link>
+          </button>
           <div>
             <h1 className="text-2xl font-bold text-gray-900">Edit Contract</h1>
             <p className="text-sm text-gray-600">Update contract information</p>
+            {hasUnsavedChanges && (
+              <p className="text-sm text-orange-600 mt-1">
+                ⚠️ You have unsaved changes
+              </p>
+            )}
           </div>
         </div>
       </div>
@@ -857,8 +923,28 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
 
         {/* Status */}
         <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Status & Stage</h2>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <h2 className="text-lg font-semibold text-gray-900 mb-4">Status & Visibility</h2>
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Publish Status *
+              </label>
+              <select
+                required
+                value={contract.publish_status}
+                onChange={(e) => setContract(prev => ({ ...prev, publish_status: e.target.value as 'draft' | 'published' | 'archived' }))}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+              >
+                <option value="draft">Draft (Admin Only)</option>
+                <option value="published">Published (Visible to Clients)</option>
+                <option value="archived">Archived (Hidden)</option>
+              </select>
+              <p className="text-xs text-gray-500 mt-1">
+                {contract.publish_status === 'draft' && 'Only visible to admin users'}
+                {contract.publish_status === 'published' && 'Visible to all clients on dashboard'}
+                {contract.publish_status === 'archived' && 'Hidden from all users'}
+              </p>
+            </div>
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Status *
@@ -889,7 +975,19 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 ))}
               </select>
             </div>
-            <div className="md:col-span-2">
+          </div>
+
+          {/* Published Info */}
+          {contract.publish_status === 'published' && contract.published_at && (
+            <div className="mt-4 p-3 bg-green-50 border border-green-200 rounded-md">
+              <p className="text-sm text-green-800">
+                📅 Published on: {new Date(contract.published_at).toLocaleDateString()} at {new Date(contract.published_at).toLocaleTimeString()}
+              </p>
+            </div>
+          )}
+
+          <div className="mt-4">
+            <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">
                 Award Information
               </label>
@@ -901,48 +999,63 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 placeholder="Award details and information"
               />
             </div>
-            {contract.status === 'Awarded' && (
-              <>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Awarded Value
-                  </label>
-                  <input
-                    type="number"
-                    value={contract.awarded_value || ''}
-                    onChange={(e) => setContract(prev => ({ ...prev, awarded_value: e.target.value ? Number(e.target.value) : undefined }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Actual awarded amount"
-                  />
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
-                    Awarded To
-                  </label>
-                  <input
-                    type="text"
-                    value={contract.awarded_to || ''}
-                    onChange={(e) => setContract(prev => ({ ...prev, awarded_to: e.target.value }))}
-                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                    placeholder="Company that won the contract"
-                  />
-                </div>
-              </>
-            )}
           </div>
+
+          {/* Awarded Fields */}
+          {contract.status === 'Awarded' && (
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Awarded Value
+                </label>
+                <input
+                  type="number"
+                  value={contract.awarded_value || ''}
+                  onChange={(e) => setContract(prev => ({ ...prev, awarded_value: e.target.value ? Number(e.target.value) : undefined }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Actual awarded amount"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Awarded To
+                </label>
+                <input
+                  type="text"
+                  value={contract.awarded_to || ''}
+                  onChange={(e) => setContract(prev => ({ ...prev, awarded_to: e.target.value }))}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  placeholder="Company that won the contract"
+                />
+              </div>
+            </div>
+          )}
         </div>
 
         <div className="flex justify-end space-x-4">
-          <Link
-            href="/admin/contracts"
+          <button
+            type="button"
+            onClick={() => {
+              if (hasUnsavedChanges) {
+                if (confirm('You have unsaved changes. Are you sure you want to leave?')) {
+                  router.push('/admin/contracts');
+                }
+              } else {
+                router.push('/admin/contracts');
+              }
+            }}
             className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
           >
             Cancel
-          </Link>
+          </button>
           <button
             type="submit"
             disabled={saving}
-            className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
+            className={`inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white disabled:opacity-50 ${
+              hasUnsavedChanges 
+                ? 'bg-orange-600 hover:bg-orange-700' 
+                : 'bg-blue-600 hover:bg-blue-700'
+            }`}
           >
             {saving ? (
               <>
@@ -952,7 +1065,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
             ) : (
               <>
                 <Save className="-ml-1 mr-2 h-4 w-4" />
-                Save Changes
+                {hasUnsavedChanges ? 'Save Changes*' : 'Save Changes'}
               </>
             )}
           </button>
@@ -960,931 +1073,6 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       </form>
     </div>
   );
-}
-
-
-                value={contract.estimated_value_max || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, estimated_value_max: e.target.value ? Number(e.target.value) : undefined }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                placeholder="Maximum value"
-
-              />
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Currency *
-
-              </label>
-
-              <select
-
-                required
-
-                value={contract.currency}
-
-                onChange={(e) => setContract(prev => ({ ...prev, currency: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-              >
-
-                <option value="UGX">UGX</option>
-
-                <option value="USD">USD</option>
-
-                <option value="EUR">EUR</option>
-
-                <option value="GBP">GBP</option>
-
-              </select>
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Bid Fee
-
-              </label>
-
-              <input
-
-                type="number"
-
-                value={contract.bid_fee || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, bid_fee: e.target.value ? Number(e.target.value) : undefined }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                placeholder="Bid fee amount"
-
-              />
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Bid Security Amount
-
-              </label>
-
-              <input
-
-                type="number"
-
-                value={contract.bid_security_amount || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, bid_security_amount: e.target.value ? Number(e.target.value) : undefined }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                placeholder="Security amount"
-
-              />
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Bid Security Type
-
-              </label>
-
-              <input
-
-                type="text"
-
-                value={contract.bid_security_type || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, bid_security_type: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                placeholder="e.g., Bank Guarantee"
-
-              />
-
-            </div>
-
-            <div className="md:col-span-2">
-
-              <label className="flex items-center">
-
-                <input
-
-                  type="checkbox"
-
-                  checked={contract.margin_of_preference}
-
-                  onChange={(e) => setContract(prev => ({ ...prev, margin_of_preference: e.target.checked }))}
-
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-
-                />
-
-                <span className="ml-2 text-sm text-gray-700">Margin of Preference Applicable</span>
-
-              </label>
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Competition Level *
-
-              </label>
-
-              <select
-
-                required
-
-                value={contract.competition_level}
-
-                onChange={(e) => setContract(prev => ({ ...prev, competition_level: e.target.value as 'low' | 'medium' | 'high' | 'very_high' }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-              >
-
-                {competitionLevels.map((level) => (
-
-                  <option key={level.value} value={level.value}>{level.label}</option>
-
-                ))}
-
-              </select>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        {/* Timeline */}
-
-        <div className="bg-white rounded-lg shadow p-6">
-
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Publish Date
-
-              </label>
-
-              <input
-
-                type="date"
-
-                value={contract.publish_date || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, publish_date: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-              />
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Pre-bid Meeting Date
-
-              </label>
-
-              <input
-
-                type="date"
-
-                value={contract.pre_bid_meeting_date || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, pre_bid_meeting_date: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-              />
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Site Visit Date
-
-              </label>
-
-              <input
-
-                type="date"
-
-                value={contract.site_visit_date || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, site_visit_date: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-              />
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Submission Deadline *
-
-              </label>
-
-              <input
-
-                type="date"
-
-                required
-
-                value={contract.submission_deadline}
-
-                onChange={(e) => setContract(prev => ({ ...prev, submission_deadline: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-              />
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Bid Opening Date
-
-              </label>
-
-              <input
-
-                type="date"
-
-                value={contract.bid_opening_date || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, bid_opening_date: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-              />
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        {/* Procuring Entity */}
-
-        <div className="bg-white rounded-lg shadow p-6">
-
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Procuring Entity</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Entity Name *
-
-              </label>
-
-              <input
-
-                type="text"
-
-                required
-
-                value={contract.procuring_entity}
-
-                onChange={(e) => setContract(prev => ({ ...prev, procuring_entity: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                placeholder="Procuring entity name"
-
-              />
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Contact Person
-
-              </label>
-
-              <input
-
-                type="text"
-
-                value={contract.contact_person || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, contact_person: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                placeholder="Contact person name"
-
-              />
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Contact Position
-
-              </label>
-
-              <input
-
-                type="text"
-
-                value={contract.contact_position || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, contact_position: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                placeholder="Contact person position"
-
-              />
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Evaluation Methodology
-
-              </label>
-
-              <input
-
-                type="text"
-
-                value={contract.evaluation_methodology || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, evaluation_methodology: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                placeholder="e.g., Technical Compliance Selection"
-
-              />
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        {/* Requirements */}
-
-        <div className="bg-white rounded-lg shadow p-6">
-
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Requirements & Eligibility</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            <div className="space-y-3">
-
-              <label className="flex items-center">
-
-                <input
-
-                  type="checkbox"
-
-                  checked={contract.requires_registration}
-
-                  onChange={(e) => setContract(prev => ({ ...prev, requires_registration: e.target.checked }))}
-
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-
-                />
-
-                <span className="ml-2 text-sm text-gray-700">Registration/Incorporation</span>
-
-              </label>
-
-              <label className="flex items-center">
-
-                <input
-
-                  type="checkbox"
-
-                  checked={contract.requires_trading_license}
-
-                  onChange={(e) => setContract(prev => ({ ...prev, requires_trading_license: e.target.checked }))}
-
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-
-                />
-
-                <span className="ml-2 text-sm text-gray-700">Trading License</span>
-
-              </label>
-
-              <label className="flex items-center">
-
-                <input
-
-                  type="checkbox"
-
-                  checked={contract.requires_tax_clearance}
-
-                  onChange={(e) => setContract(prev => ({ ...prev, requires_tax_clearance: e.target.checked }))}
-
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-
-                />
-
-                <span className="ml-2 text-sm text-gray-700">Tax Clearance Certificate</span>
-
-              </label>
-
-            </div>
-
-            <div className="space-y-3">
-
-              <label className="flex items-center">
-
-                <input
-
-                  type="checkbox"
-
-                  checked={contract.requires_nssf_clearance}
-
-                  onChange={(e) => setContract(prev => ({ ...prev, requires_nssf_clearance: e.target.checked }))}
-
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-
-                />
-
-                <span className="ml-2 text-sm text-gray-700">NSSF Clearance</span>
-
-              </label>
-
-              <label className="flex items-center">
-
-                <input
-
-                  type="checkbox"
-
-                  checked={contract.requires_manufacturer_auth}
-
-                  onChange={(e) => setContract(prev => ({ ...prev, requires_manufacturer_auth: e.target.checked }))}
-
-                  className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
-
-                />
-
-                <span className="ml-2 text-sm text-gray-700">Manufacturer's Authorization</span>
-
-              </label>
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        {/* Submission Details */}
-
-        <div className="bg-white rounded-lg shadow p-6">
-
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Submission Details</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Submission Method
-
-              </label>
-
-              <input
-
-                type="text"
-
-                value={contract.submission_method || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, submission_method: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                placeholder="e.g., Online, Physical"
-
-              />
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Submission Format
-
-              </label>
-
-              <input
-
-                type="text"
-
-                value={contract.submission_format || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, submission_format: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                placeholder="e.g., Electronic submission"
-
-              />
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        {/* Required Documents */}
-
-        <div className="bg-white rounded-lg shadow p-6">
-
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Required Documents</h2>
-
-          <div className="space-y-4">
-
-            <div className="flex space-x-2">
-
-              <input
-
-                type="text"
-
-                value={newDocument}
-
-                onChange={(e) => setNewDocument(e.target.value)}
-
-                placeholder="Add required document"
-
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addDocument())}
-
-              />
-
-              <button
-
-                type="button"
-
-                onClick={addDocument}
-
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-
-              >
-
-                Add
-
-              </button>
-
-            </div>
-
-            {contract.required_documents && contract.required_documents.length > 0 && (
-
-              <ul className="space-y-2">
-
-                {contract.required_documents.map((doc, index) => (
-
-                  <li key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-
-                    <span className="text-sm">{doc}</span>
-
-                    <button
-
-                      type="button"
-
-                      onClick={() => removeDocument(index)}
-
-                      className="text-red-600 hover:text-red-800"
-
-                    >
-
-                      Remove
-
-                    </button>
-
-                  </li>
-
-                ))}
-
-              </ul>
-
-            )}
-
-          </div>
-
-        </div>
-
-
-
-        {/* Required Forms */}
-
-        <div className="bg-white rounded-lg shadow p-6">
-
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Required Forms</h2>
-
-          <div className="space-y-4">
-
-            <div className="flex space-x-2">
-
-              <input
-
-                type="text"
-
-                value={newForm}
-
-                onChange={(e) => setNewForm(e.target.value)}
-
-                placeholder="Add required form"
-
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addForm())}
-
-              />
-
-              <button
-
-                type="button"
-
-                onClick={addForm}
-
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-
-              >
-
-                Add
-
-              </button>
-
-            </div>
-
-            {contract.required_forms && contract.required_forms.length > 0 && (
-
-              <ul className="space-y-2">
-
-                {contract.required_forms.map((form, index) => (
-
-                  <li key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-
-                    <span className="text-sm">{form}</span>
-
-                    <button
-
-                      type="button"
-
-                      onClick={() => removeForm(index)}
-
-                      className="text-red-600 hover:text-red-800"
-
-                    >
-
-                      Remove
-
-                    </button>
-
-                  </li>
-
-                ))}
-
-              </ul>
-
-            )}
-
-          </div>
-
-        </div>
-
-
-
-        {/* Bid Attachments */}
-
-        <div className="bg-white rounded-lg shadow p-6">
-
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Bid Attachments</h2>
-
-          <FileUpload
-
-            contractId={contract.reference_number || 'edit-contract'}
-
-            onFilesUploaded={handleFilesUploaded}
-
-            existingFiles={contract.bid_attachments}
-
-            onFileDeleted={handleFileDeleted}
-
-          />
-
-        </div>
-
-
-
-        {/* Status */}
-
-        <div className="bg-white rounded-lg shadow p-6">
-
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Status & Stage</h2>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Status *
-
-              </label>
-
-              <select
-
-                required
-
-                value={contract.status}
-
-                onChange={(e) => setContract(prev => ({ ...prev, status: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-              >
-
-                {statuses.map((status) => (
-
-                  <option key={status} value={status}>{status}</option>
-
-                ))}
-
-              </select>
-
-            </div>
-
-            <div>
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Current Stage *
-
-              </label>
-
-              <select
-
-                required
-
-                value={contract.current_stage}
-
-                onChange={(e) => setContract(prev => ({ ...prev, current_stage: e.target.value }))}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-              >
-
-                {stages.map((stage) => (
-
-                  <option key={stage} value={stage}>{stage}</option>
-
-                ))}
-
-              </select>
-
-            </div>
-
-            <div className="md:col-span-2">
-
-              <label className="block text-sm font-medium text-gray-700 mb-1">
-
-                Award Information
-
-              </label>
-
-              <textarea
-
-                value={contract.award_information || ''}
-
-                onChange={(e) => setContract(prev => ({ ...prev, award_information: e.target.value }))}
-
-                rows={3}
-
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-
-                placeholder="Award details and information"
-
-              />
-
-            </div>
-
-          </div>
-
-        </div>
-
-
-
-        <div className="flex justify-end space-x-4">
-
-          <Link
-
-            href="/admin/contracts"
-
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
-
-          >
-
-            Cancel
-
-          </Link>
-
-          <button
-
-            type="submit"
-
-            disabled={saving}
-
-            className="inline-flex items-center px-6 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50"
-
-          >
-
-            {saving ? (
-
-              <>
-
-                <Loader2 className="animate-spin -ml-1 mr-2 h-4 w-4" />
-
-                Saving...
-
-              </>
-
-            ) : (
-
-              <>
-
-                <Save className="-ml-1 mr-2 h-4 w-4" />
-
-                Save Changes
-
-              </>
-
-            )}
-
-          </button>
-
-        </div>
-
-      </form>
-
-    </div>
-
-  );
-
 }
 
 
