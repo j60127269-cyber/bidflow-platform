@@ -43,8 +43,6 @@ interface ContractData {
   status: string;
   current_stage: string;
   award_information?: string;
-  awarded_value?: number;
-  awarded_to?: string;
 }
 
 function processContractData(contract: any): ContractData {
@@ -83,8 +81,6 @@ function processContractData(contract: any): ContractData {
     status: (contract.status?.toLowerCase() || 'open') as string,
     current_stage: (contract.current_stage?.toLowerCase() || 'published') as string,
     award_information: contract.award_information?.trim() || null,
-    awarded_value: contract.awarded_value ? parseFloat(contract.awarded_value) : null,
-    awarded_to: contract.awarded_to?.trim() || null,
     bid_attachments: [] // Empty array for imported contracts
   };
 }
@@ -92,50 +88,10 @@ function processContractData(contract: any): ContractData {
 export async function POST(request: NextRequest) {
   try {
     console.log('Bulk import API called');
-    
-    // Check environment variables
-    if (!process.env.NEXT_PUBLIC_SUPABASE_URL) {
-      console.error('Missing NEXT_PUBLIC_SUPABASE_URL environment variable');
-      return NextResponse.json(
-        { error: 'Missing Supabase URL configuration' },
-        { status: 500 }
-      );
-    }
-    
-    if (!process.env.SUPABASE_SERVICE_ROLE_KEY) {
-      console.error('Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
-      return NextResponse.json(
-        { error: 'Missing Supabase service role key configuration' },
-        { status: 500 }
-      );
-    }
-    
     const body = await request.json();
     const { contracts } = body;
 
     console.log('Received contracts:', contracts?.length || 0);
-
-    // Test database connection
-    console.log('Testing database connection...');
-    const { data: testData, error: testError } = await supabase
-      .from('contracts')
-      .select('count')
-      .limit(1);
-    
-    if (testError) {
-      console.error('Database connection test failed:', testError);
-      return NextResponse.json(
-        { 
-          error: 'Database connection failed',
-          details: testError.message,
-          hint: testError.hint,
-          code: testError.code
-        },
-        { status: 500 }
-      );
-    }
-    
-    console.log('Database connection test successful');
 
     if (!contracts || !Array.isArray(contracts)) {
       console.log('Invalid contracts data received');
@@ -202,8 +158,6 @@ export async function POST(request: NextRequest) {
     }
 
     // Check for existing reference numbers in database
-    console.log('Checking for existing contracts with reference numbers:', referenceNumbers);
-    
     const { data: existingContracts, error: checkError } = await supabase
       .from('contracts')
       .select('reference_number')
@@ -211,16 +165,8 @@ export async function POST(request: NextRequest) {
 
     if (checkError) {
       console.error('Error checking existing contracts:', checkError);
-      console.error('Error details:', checkError.details);
-      console.error('Error hint:', checkError.hint);
-      console.error('Error code:', checkError.code);
       return NextResponse.json(
-        { 
-          error: 'Failed to check existing contracts',
-          details: checkError.message,
-          hint: checkError.hint,
-          code: checkError.code
-        },
+        { error: 'Failed to check existing contracts' },
         { status: 500 }
       );
     }
@@ -252,15 +198,9 @@ export async function POST(request: NextRequest) {
       console.error('Error inserting contracts:', insertError);
       console.error('Error details:', insertError.details);
       console.error('Error hint:', insertError.hint);
-      console.error('Error code:', insertError.code);
-      console.error('Error message:', insertError.message);
-      console.error('Sample contract data that failed:', processedContracts[0]);
       return NextResponse.json(
         { 
           error: 'Failed to insert contracts',
-          details: insertError.message,
-          hint: insertError.hint,
-          code: insertError.code,
           success: 0,
           failed: processedContracts.length,
           errors: [insertError.message]

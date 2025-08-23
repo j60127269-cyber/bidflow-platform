@@ -275,7 +275,7 @@ class EGPScraper:
             return "Unknown"
         except:
             return "Unknown"
-
+    
     def _extract_reference_from_url(self, url: str) -> str:
         """Extract reference number from URL"""
         try:

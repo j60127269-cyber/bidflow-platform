@@ -41,8 +41,6 @@ interface ContractRow {
   status: string;
   current_stage: string;
   award_information?: string;
-  awarded_value?: number;
-  awarded_to?: string;
 }
 
 interface ValidationError {
@@ -194,9 +192,7 @@ export default function ImportContracts() {
         required_documents: 'Registration/Incorporation,Trading License,Tax Clearance Certificate,NSSF Clearance',
         required_forms: 'Bid Submission Sheet,Price Schedule,Code of Ethical Conduct',
         status: 'open',
-        current_stage: 'published',
-        awarded_value: '',
-        awarded_to: ''
+        current_stage: 'published'
       }
     ];
 
