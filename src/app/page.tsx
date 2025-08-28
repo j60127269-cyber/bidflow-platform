@@ -186,7 +186,7 @@ export default function Home() {
               Trusted by Leading Businesses
             </h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
-              See how BidCloud is helping Ugandan companies win more contracts
+              See how BidCloud is helping  companies win more contracts
             </p>
           </div>
 

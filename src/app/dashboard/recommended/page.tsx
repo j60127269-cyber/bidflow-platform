@@ -216,7 +216,7 @@ export default function RecommendedPage() {
       // Experience level match (15% weight) - using required_documents and required_forms
       const allRequirements = [
         ...(contract.required_documents || []),
-        ...(contract.required_forms || []),
+
         contract.evaluation_methodology || ''
       ].join(' ').toLowerCase();
       

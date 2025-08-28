@@ -48,7 +48,7 @@ interface ContractForm {
   submission_method: string;
   submission_format: string;
   required_documents: string[];
-  required_forms: string[];
+
   bid_attachments: UploadedFile[];
   
   // 4. STATUS & TRACKING (3 variables)
@@ -95,7 +95,7 @@ export default function AddContract() {
     submission_method: 'physical',
     submission_format: '',
     required_documents: [],
-    required_forms: [],
+    
     bid_attachments: [] as UploadedFile[],
     
     // Status & Tracking
@@ -107,7 +107,7 @@ export default function AddContract() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [newDocument, setNewDocument] = useState('');
-  const [newForm, setNewForm] = useState('');
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -142,22 +142,7 @@ export default function AddContract() {
     }));
   };
 
-  const addForm = () => {
-    if (newForm.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        required_forms: [...prev.required_forms, newForm.trim()]
-      }));
-      setNewForm('');
-    }
-  };
 
-  const removeForm = (index: number) => {
-    setFormData(prev => ({
-      ...prev,
-      required_forms: prev.required_forms.filter((_, i) => i !== index)
-    }));
-  };
 
   const handleFilesUploaded = (files: UploadedFile[]) => {
     setFormData(prev => ({
@@ -828,44 +813,7 @@ export default function AddContract() {
                   </div>
                 </div>
 
-                <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
-                    Required Forms
-                  </label>
-                  <div className="space-y-2">
-                    {formData.required_forms.map((form, index) => (
-                      <div key={index} className="flex items-center space-x-2">
-                        <span className="flex-1 px-3 py-2 bg-gray-50 border border-gray-300 rounded-md text-sm">
-                          {form}
-                        </span>
-                        <button
-                          type="button"
-                          onClick={() => removeForm(index)}
-                          className="p-1 text-red-600 hover:text-red-800"
-                        >
-                          <Trash2 className="w-4 h-4" />
-                        </button>
-                      </div>
-                    ))}
-                    <div className="flex space-x-2">
-                      <input
-                        type="text"
-                        value={newForm}
-                        onChange={(e) => setNewForm(e.target.value)}
-                        placeholder="Add required form"
-                        className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
-                        onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addForm())}
-                      />
-                      <button
-                        type="button"
-                        onClick={addForm}
-                        className="px-3 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2"
-                      >
-                        <Plus className="w-4 h-4" />
-                      </button>
-                    </div>
-                  </div>
-                </div>
+
 
                 <div className="md:col-span-2">
                   <label className="block text-sm font-medium text-gray-700 mb-2">

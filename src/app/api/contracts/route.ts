@@ -40,3 +40,32 @@ export async function POST(request: NextRequest) {
     );
   }
 }
+
+export async function GET() {
+  try {
+    const { data: contracts, error } = await supabase
+      .from('contracts')
+      .select('*')
+      .order('created_at', { ascending: false });
+
+    if (error) {
+      console.error('Error fetching contracts:', error);
+      return NextResponse.json({ 
+        error: 'Failed to fetch contracts', 
+        details: error 
+      }, { status: 500 });
+    }
+
+    return NextResponse.json({
+      success: true,
+      contracts: contracts || []
+    });
+
+  } catch (error) {
+    console.error('API error:', error);
+    return NextResponse.json({ 
+      error: 'Internal server error', 
+      details: error 
+    }, { status: 500 });
+  }
+}

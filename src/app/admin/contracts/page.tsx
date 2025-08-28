@@ -499,20 +499,22 @@ export default function AdminContracts() {
               {filteredContracts.map((contract) => (
                 <li key={contract.id}>
                   <div className="px-4 py-4 sm:px-6">
-                    <div className="flex items-center justify-between">
-                      <div className="flex items-center">
+                    <div className="flex items-start justify-between">
+                      <div className="flex items-start flex-1 min-w-0">
                         <input
                           type="checkbox"
                           checked={selectedContracts.has(contract.id)}
                           onChange={() => handleSelectContract(contract.id)}
-                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-4"
+                          className="h-4 w-4 text-blue-600 focus:ring-blue-500 border-gray-300 rounded mr-4 mt-1 flex-shrink-0"
                         />
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between">
-                            <p className="text-sm font-medium text-blue-600 truncate">
-                              {contract.title}
-                            </p>
-                            <div className="ml-2 flex-shrink-0 flex space-x-2">
+                          <div className="flex items-start justify-between">
+                            <div className="flex-1 min-w-0 mr-4">
+                              <p className="text-sm font-medium text-blue-600 break-words leading-tight">
+                                {contract.title}
+                              </p>
+                            </div>
+                            <div className="flex-shrink-0 flex space-x-2 flex-wrap">
                               <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getPublishStatusColor(contract.publish_status || 'draft')}`}>
                                 {(contract.publish_status || 'draft').charAt(0).toUpperCase() + (contract.publish_status || 'draft').slice(1)}
                               </span>
@@ -560,23 +562,26 @@ export default function AdminContracts() {
                           </div>
                         </div>
                       </div>
-                      <div className="ml-5 flex-shrink-0 flex space-x-2">
+                      <div className="ml-4 flex-shrink-0 flex space-x-2">
                         <Link
                           href={`/admin/contracts/edit/${contract.id}`}
-                          className="text-blue-600 hover:text-blue-900"
+                          className="p-2 text-blue-600 hover:text-blue-900 hover:bg-blue-50 rounded-md transition-colors"
+                          title="Edit Contract"
                         >
                           <Edit className="h-4 w-4" />
                         </Link>
                         <Link
                           href={`/dashboard/contracts/${contract.id}`}
-                          className="text-gray-600 hover:text-gray-900"
+                          className="p-2 text-gray-600 hover:text-gray-900 hover:bg-gray-50 rounded-md transition-colors"
+                          title="View Contract"
                         >
                           <Eye className="h-4 w-4" />
                         </Link>
                         <button
                           onClick={() => handleDelete(contract.id)}
                           disabled={deleteLoading === contract.id}
-                          className="text-red-600 hover:text-red-900 disabled:opacity-50"
+                          className="p-2 text-red-600 hover:text-red-900 hover:bg-red-50 rounded-md transition-colors disabled:opacity-50"
+                          title="Delete Contract"
                         >
                           {deleteLoading === contract.id ? (
                             <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-red-600"></div>

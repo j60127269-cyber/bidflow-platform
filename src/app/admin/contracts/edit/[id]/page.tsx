@@ -40,7 +40,7 @@ interface ContractForm {
   submission_method?: string;
   submission_format?: string;
   required_documents?: string[];
-  required_forms?: string[];
+
   bid_attachments?: UploadedFile[];
   status: string;
   current_stage: string;
@@ -50,6 +50,7 @@ interface ContractForm {
   publish_status: 'draft' | 'published' | 'archived';
   published_at?: string;
   published_by?: string;
+  detail_url?: string;
 }
 
 const categories = [
@@ -126,31 +127,41 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     submission_method: '',
     submission_format: '',
     required_documents: [],
-    required_forms: [],
+    
     bid_attachments: [] as UploadedFile[],
     status: 'Open',
     current_stage: 'Published',
     award_information: '',
     awarded_value: undefined,
     awarded_to: '',
-    publish_status: 'draft',
-    published_at: '',
-    published_by: ''
+         publish_status: 'draft',
+     published_at: '',
+     published_by: '',
+     detail_url: ''
   });
 
   const [newDocument, setNewDocument] = useState('');
-  const [newForm, setNewForm] = useState('');
 
   const updateContract = useCallback((updates: Partial<ContractForm>) => {
-    setContract(prev => ({ ...prev, ...updates }));
+    setContract(prev => {
+      const newContract = { ...prev, ...updates };
+      // Save to localStorage
+      localStorage.setItem(`contract_edit_${id}`, JSON.stringify(newContract));
+      return newContract;
+    });
     setHasUnsavedChanges(true);
-  }, []);
+  }, [id]);
 
   // Override setContract to track changes
   const setContractWithTracking = useCallback((updater: ContractForm | ((prev: ContractForm) => ContractForm)) => {
-    setContract(updater);
+    setContract(prev => {
+      const newContract = typeof updater === 'function' ? updater(prev) : updater;
+      // Save to localStorage
+      localStorage.setItem(`contract_edit_${id}`, JSON.stringify(newContract));
+      return newContract;
+    });
     setHasUnsavedChanges(true);
-  }, []);
+  }, [id]);
 
   const addDocument = () => {
     if (newDocument.trim()) {
@@ -169,22 +180,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     }));
   };
 
-  const addForm = () => {
-    if (newForm.trim()) {
-      setContractWithTracking(prev => ({
-        ...prev,
-        required_forms: [...(prev.required_forms || []), newForm.trim()]
-      }));
-      setNewForm('');
-    }
-  };
 
-  const removeForm = (index: number) => {
-    setContractWithTracking(prev => ({
-      ...prev,
-      required_forms: prev.required_forms?.filter((_, i) => i !== index) || []
-    }));
-  };
 
   const handleFilesUploaded = (files: UploadedFile[]) => {
     setContractWithTracking(prev => ({
@@ -200,9 +196,31 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     }));
   };
 
+  const clearSavedData = () => {
+    localStorage.removeItem(`contract_edit_${id}`);
+    setHasUnsavedChanges(false);
+    fetchContract(); // Reload from database
+  };
+
   const fetchContract = useCallback(async () => {
     try {
       setLoading(true);
+      
+      // Check for saved form data in localStorage first
+      const savedData = localStorage.getItem(`contract_edit_${id}`);
+      if (savedData) {
+        try {
+          const parsedData = JSON.parse(savedData);
+          setContract(parsedData);
+          setHasUnsavedChanges(true);
+          setLoading(false);
+          return; // Use saved data instead of fetching from database
+        } catch (e) {
+          console.error('Error parsing saved data:', e);
+          localStorage.removeItem(`contract_edit_${id}`);
+        }
+      }
+
       const { data, error } = await supabase
         .from('contracts')
         .select('*')
@@ -247,7 +265,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           submission_method: data.submission_method || '',
           submission_format: data.submission_format || '',
           required_documents: data.required_documents || [],
-          required_forms: data.required_forms || [],
+
           bid_attachments: data.bid_attachments ? data.bid_attachments.map((attachment: any) => {
             if (typeof attachment === 'string') {
               try {
@@ -263,9 +281,10 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           award_information: data.award_information || '',
           awarded_value: data.awarded_value || undefined,
           awarded_to: data.awarded_to || '',
-          publish_status: data.publish_status || 'draft',
-          published_at: data.published_at ? new Date(data.published_at).toISOString().split('T')[0] : '',
-          published_by: data.published_by || ''
+                     publish_status: data.publish_status || 'draft',
+           published_at: data.published_at ? new Date(data.published_at).toISOString().split('T')[0] : '',
+           published_by: data.published_by || '',
+           detail_url: data.detail_url || ''
         });
       }
     } catch (error) {
@@ -308,7 +327,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
 
       const wasPublished = originalData.data?.publish_status === 'published';
       const isNowPublished = contract.publish_status === 'published';
-
+      
       // Only update the fields that are actually in the form
       const updateData: any = {
         reference_number: contract.reference_number,
@@ -348,8 +367,9 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       if (contract.submission_method) updateData.submission_method = contract.submission_method;
       if (contract.submission_format) updateData.submission_format = contract.submission_format;
       if (contract.award_information) updateData.award_information = contract.award_information;
-      if (contract.awarded_value) updateData.awarded_value = contract.awarded_value;
-      if (contract.awarded_to) updateData.awarded_to = contract.awarded_to;
+       if (contract.awarded_value) updateData.awarded_value = contract.awarded_value;
+       if (contract.awarded_to) updateData.awarded_to = contract.awarded_to;
+       if (contract.detail_url) updateData.detail_url = contract.detail_url;
 
       // Add boolean fields
       updateData.margin_of_preference = contract.margin_of_preference;
@@ -364,9 +384,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       if (contract.required_documents && contract.required_documents.length > 0) {
         updateData.required_documents = contract.required_documents;
       }
-      if (contract.required_forms && contract.required_forms.length > 0) {
-        updateData.required_forms = contract.required_forms;
-      }
+
       if (contract.bid_attachments && contract.bid_attachments.length > 0) {
         updateData.bid_attachments = contract.bid_attachments;
       }
@@ -386,6 +404,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
 
       alert('Contract updated successfully!');
       setHasUnsavedChanges(false);
+      clearSavedData(); // Clear saved form data
       router.push('/admin/contracts');
     } catch (error) {
       console.error('Error:', error);
@@ -429,9 +448,18 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
             <h1 className="text-2xl font-bold text-gray-900">Edit Contract</h1>
             <p className="text-sm text-gray-600">Update contract information</p>
             {hasUnsavedChanges && (
-              <p className="text-sm text-orange-600 mt-1">
-                ⚠️ You have unsaved changes
-              </p>
+              <div className="flex items-center space-x-2 mt-1">
+                <p className="text-sm text-orange-600">
+                  ⚠️ You have unsaved changes
+                </p>
+                <button
+                  type="button"
+                  onClick={clearSavedData}
+                  className="text-xs text-blue-600 hover:text-blue-800 underline"
+                >
+                  Clear saved data
+                </button>
+              </div>
             )}
           </div>
         </div>
@@ -450,7 +478,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 type="text"
                 required
                 value={contract.reference_number}
-                onChange={(e) => setContract(prev => ({ ...prev, reference_number: e.target.value }))}
+                onChange={(e) => updateContract({ reference_number: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="e.g., URSB/SUPLS/2025-2026/00011"
               />
@@ -463,7 +491,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 type="text"
                 required
                 value={contract.title}
-                onChange={(e) => setContract(prev => ({ ...prev, title: e.target.value }))}
+                onChange={(e) => updateContract({ title: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Contract title"
               />
@@ -474,7 +502,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               </label>
               <textarea
                 value={contract.short_description || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, short_description: e.target.value }))}
+                onChange={(e) => updateContract({ short_description: e.target.value })}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Brief description of the contract"
@@ -487,7 +515,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <select
                 required
                 value={contract.category}
-                onChange={(e) => setContract(prev => ({ ...prev, category: e.target.value }))}
+                onChange={(e) => updateContract({ category: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Select category</option>
@@ -503,7 +531,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <select
                 required
                 value={contract.procurement_method}
-                onChange={(e) => setContract(prev => ({ ...prev, procurement_method: e.target.value }))}
+                onChange={(e) => updateContract({ procurement_method: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="">Select method</option>
@@ -526,7 +554,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="number"
                 value={contract.estimated_value_min || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, estimated_value_min: e.target.value ? Number(e.target.value) : undefined }))}
+                onChange={(e) => updateContract({ estimated_value_min: e.target.value ? Number(e.target.value) : undefined })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Minimum value"
               />
@@ -538,7 +566,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="number"
                 value={contract.estimated_value_max || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, estimated_value_max: e.target.value ? Number(e.target.value) : undefined }))}
+                onChange={(e) => updateContract({ estimated_value_max: e.target.value ? Number(e.target.value) : undefined })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Maximum value"
               />
@@ -550,7 +578,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <select
                 required
                 value={contract.currency}
-                onChange={(e) => setContract(prev => ({ ...prev, currency: e.target.value }))}
+                onChange={(e) => updateContract({ currency: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="UGX">UGX</option>
@@ -566,7 +594,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="number"
                 value={contract.bid_fee || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, bid_fee: e.target.value ? Number(e.target.value) : undefined }))}
+                onChange={(e) => updateContract({ bid_fee: e.target.value ? Number(e.target.value) : undefined })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Bid fee amount"
               />
@@ -578,7 +606,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="number"
                 value={contract.bid_security_amount || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, bid_security_amount: e.target.value ? Number(e.target.value) : undefined }))}
+                onChange={(e) => updateContract({ bid_security_amount: e.target.value ? Number(e.target.value) : undefined })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Security amount"
               />
@@ -590,7 +618,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="text"
                 value={contract.bid_security_type || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, bid_security_type: e.target.value }))}
+                onChange={(e) => updateContract({ bid_security_type: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="e.g., Bank Guarantee"
               />
@@ -600,7 +628,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 <input
                   type="checkbox"
                   checked={contract.margin_of_preference}
-                  onChange={(e) => setContract(prev => ({ ...prev, margin_of_preference: e.target.checked }))}
+                  onChange={(e) => updateContract({ margin_of_preference: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">Margin of Preference Applicable</span>
@@ -613,7 +641,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <select
                 required
                 value={contract.competition_level}
-                onChange={(e) => setContract(prev => ({ ...prev, competition_level: e.target.value as 'low' | 'medium' | 'high' | 'very_high' }))}
+                onChange={(e) => updateContract({ competition_level: e.target.value as 'low' | 'medium' | 'high' | 'very_high' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {competitionLevels.map((level) => (
@@ -635,7 +663,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="date"
                 value={contract.publish_date || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, publish_date: e.target.value }))}
+                onChange={(e) => updateContract({ publish_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
@@ -646,7 +674,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="date"
                 value={contract.pre_bid_meeting_date || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, pre_bid_meeting_date: e.target.value }))}
+                onChange={(e) => updateContract({ pre_bid_meeting_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
@@ -657,7 +685,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="date"
                 value={contract.site_visit_date || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, site_visit_date: e.target.value }))}
+                onChange={(e) => updateContract({ site_visit_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
@@ -669,7 +697,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 type="date"
                 required
                 value={contract.submission_deadline}
-                onChange={(e) => setContract(prev => ({ ...prev, submission_deadline: e.target.value }))}
+                onChange={(e) => updateContract({ submission_deadline: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
@@ -680,7 +708,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="date"
                 value={contract.bid_opening_date || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, bid_opening_date: e.target.value }))}
+                onChange={(e) => updateContract({ bid_opening_date: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               />
             </div>
@@ -699,7 +727,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 type="text"
                 required
                 value={contract.procuring_entity}
-                onChange={(e) => setContract(prev => ({ ...prev, procuring_entity: e.target.value }))}
+                onChange={(e) => updateContract({ procuring_entity: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Procuring entity name"
               />
@@ -711,7 +739,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="text"
                 value={contract.contact_person || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, contact_person: e.target.value }))}
+                onChange={(e) => updateContract({ contact_person: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Contact person name"
               />
@@ -723,7 +751,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="text"
                 value={contract.contact_position || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, contact_position: e.target.value }))}
+                onChange={(e) => updateContract({ contact_position: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Contact person position"
               />
@@ -735,7 +763,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="text"
                 value={contract.evaluation_methodology || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, evaluation_methodology: e.target.value }))}
+                onChange={(e) => updateContract({ evaluation_methodology: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="e.g., Technical Compliance Selection"
               />
@@ -752,7 +780,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 <input
                   type="checkbox"
                   checked={contract.requires_registration}
-                  onChange={(e) => setContract(prev => ({ ...prev, requires_registration: e.target.checked }))}
+                  onChange={(e) => updateContract({ requires_registration: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">Registration/Incorporation</span>
@@ -761,7 +789,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 <input
                   type="checkbox"
                   checked={contract.requires_trading_license}
-                  onChange={(e) => setContract(prev => ({ ...prev, requires_trading_license: e.target.checked }))}
+                  onChange={(e) => updateContract({ requires_trading_license: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">Trading License</span>
@@ -770,7 +798,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 <input
                   type="checkbox"
                   checked={contract.requires_tax_clearance}
-                  onChange={(e) => setContract(prev => ({ ...prev, requires_tax_clearance: e.target.checked }))}
+                  onChange={(e) => updateContract({ requires_tax_clearance: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">Tax Clearance Certificate</span>
@@ -781,7 +809,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 <input
                   type="checkbox"
                   checked={contract.requires_nssf_clearance}
-                  onChange={(e) => setContract(prev => ({ ...prev, requires_nssf_clearance: e.target.checked }))}
+                  onChange={(e) => updateContract({ requires_nssf_clearance: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">NSSF Clearance</span>
@@ -790,7 +818,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 <input
                   type="checkbox"
                   checked={contract.requires_manufacturer_auth}
-                  onChange={(e) => setContract(prev => ({ ...prev, requires_manufacturer_auth: e.target.checked }))}
+                  onChange={(e) => updateContract({ requires_manufacturer_auth: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
                 <span className="ml-2 text-sm text-gray-700">Manufacturer's Authorization</span>
@@ -810,7 +838,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="text"
                 value={contract.submission_method || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, submission_method: e.target.value }))}
+                onChange={(e) => updateContract({ submission_method: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="e.g., Online, Physical"
               />
@@ -822,7 +850,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <input
                 type="text"
                 value={contract.submission_format || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, submission_format: e.target.value }))}
+                onChange={(e) => updateContract({ submission_format: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="e.g., Electronic submission"
               />
@@ -870,45 +898,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           </div>
         </div>
 
-        {/* Required Forms */}
-        <div className="bg-white rounded-lg shadow p-6">
-          <h2 className="text-lg font-semibold text-gray-900 mb-4">Required Forms</h2>
-          <div className="space-y-4">
-            <div className="flex space-x-2">
-              <input
-                type="text"
-                value={newForm}
-                onChange={(e) => setNewForm(e.target.value)}
-                placeholder="Add required form"
-                className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
-                onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addForm())}
-              />
-              <button
-                type="button"
-                onClick={addForm}
-                className="px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700"
-              >
-                Add
-              </button>
-            </div>
-            {contract.required_forms && contract.required_forms.length > 0 && (
-              <ul className="space-y-2">
-                {contract.required_forms.map((form, index) => (
-                  <li key={index} className="flex items-center justify-between bg-gray-50 p-2 rounded">
-                    <span className="text-sm">{form}</span>
-                    <button
-                      type="button"
-                      onClick={() => removeForm(index)}
-                      className="text-red-600 hover:text-red-800"
-                    >
-                      Remove
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-        </div>
+
 
         {/* Bid Attachments */}
         <div className="bg-white rounded-lg shadow p-6">
@@ -932,7 +922,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <select
                 required
                 value={contract.publish_status}
-                onChange={(e) => setContract(prev => ({ ...prev, publish_status: e.target.value as 'draft' | 'published' | 'archived' }))}
+                onChange={(e) => updateContract({ publish_status: e.target.value as 'draft' | 'published' | 'archived' })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 <option value="draft">Draft (Admin Only)</option>
@@ -952,7 +942,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <select
                 required
                 value={contract.status}
-                onChange={(e) => setContract(prev => ({ ...prev, status: e.target.value }))}
+                onChange={(e) => updateContract({ status: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {statuses.map((status) => (
@@ -967,7 +957,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               <select
                 required
                 value={contract.current_stage}
-                onChange={(e) => setContract(prev => ({ ...prev, current_stage: e.target.value }))}
+                onChange={(e) => updateContract({ current_stage: e.target.value })}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
               >
                 {stages.map((stage) => (
@@ -993,7 +983,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               </label>
               <textarea
                 value={contract.award_information || ''}
-                onChange={(e) => setContract(prev => ({ ...prev, award_information: e.target.value }))}
+                onChange={(e) => updateContract({ award_information: e.target.value })}
                 rows={3}
                 className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 placeholder="Award details and information"
@@ -1011,7 +1001,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 <input
                   type="number"
                   value={contract.awarded_value || ''}
-                  onChange={(e) => setContract(prev => ({ ...prev, awarded_value: e.target.value ? Number(e.target.value) : undefined }))}
+                  onChange={(e) => updateContract({ awarded_value: e.target.value ? Number(e.target.value) : undefined })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="Actual awarded amount"
                 />
@@ -1023,13 +1013,32 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 <input
                   type="text"
                   value={contract.awarded_to || ''}
-                  onChange={(e) => setContract(prev => ({ ...prev, awarded_to: e.target.value }))}
+                  onChange={(e) => updateContract({ awarded_to: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="Company that won the contract"
                 />
               </div>
             </div>
           )}
+
+          {/* Source Information */}
+          <div className="mt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">
+                Detail URL
+              </label>
+              <input
+                type="url"
+                value={contract.detail_url || ''}
+                onChange={(e) => updateContract({ detail_url: e.target.value })}
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                placeholder="https://egpuganda.go.ug/bid/notice/..."
+              />
+              <p className="text-xs text-gray-500 mt-1">
+                Link to the original contract details on the procurement portal
+              </p>
+            </div>
+          </div>
         </div>
 
         <div className="flex justify-end space-x-4">

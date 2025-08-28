@@ -1,5 +1,6 @@
 "use client";
 
+import React from "react";
 import { 
   ArrowLeft,
   Calendar,
@@ -16,7 +17,8 @@ import {
   Award,
   CheckCircle,
   AlertCircle,
-  Info
+  Info,
+  Globe
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -339,10 +341,10 @@ export default function ContractDetailsPage() {
 
   const getCompetitionLevelText = (level: string) => {
     switch (level) {
-      case 'low': return 'Low Competition';
-      case 'medium': return 'Medium Competition';
-      case 'high': return 'High Competition';
-      case 'very_high': return 'Very High Competition';
+      case 'low': return 'Low';
+      case 'medium': return 'Medium';
+      case 'high': return 'High';
+      case 'very_high': return 'Very High';
       default: return 'Unknown';
     }
   };
@@ -455,12 +457,47 @@ export default function ContractDetailsPage() {
                   </span>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500">Competition Level</label>
+                  <label className="block text-sm font-medium text-gray-500">Est. Level of Competition</label>
                   <span className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCompetitionLevelColor(contract.competition_level)}`}>
                     {getCompetitionLevelText(contract.competition_level)}
                   </span>
                 </div>
               </div>
+            </div>
+
+            {/* Source Section */}
+            <div className="bg-white shadow rounded-lg p-6">
+              <div className="flex items-center justify-between">
+                              <div className="flex items-center space-x-3">
+                <h3 className="text-lg font-medium text-gray-900">Source</h3>
+              </div>
+                {contract.detail_url && (
+                  <a
+                    href={contract.detail_url}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                  >
+                    <span>Open</span>
+                    <svg 
+                      className="ml-2 h-4 w-4" 
+                      fill="none" 
+                      stroke="currentColor" 
+                      viewBox="0 0 24 24"
+                    >
+                      <path 
+                        strokeLinecap="round" 
+                        strokeLinejoin="round" 
+                        strokeWidth={2} 
+                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
+                      />
+                    </svg>
+                  </a>
+                )}
+              </div>
+              {!contract.detail_url && (
+                <p className="text-sm text-gray-500 mt-2">No external source available</p>
+              )}
             </div>
 
             {/* Timeline */}
@@ -573,18 +610,7 @@ export default function ContractDetailsPage() {
                   )}
                 </div>
 
-                <div>
-                  <label className="block text-sm font-medium text-gray-500 mb-2">Required Forms</label>
-                  {contract.required_forms && contract.required_forms.length > 0 ? (
-                    <ul className="list-disc list-inside space-y-1">
-                      {contract.required_forms.map((form, index) => (
-                        <li key={index} className="text-sm text-gray-900 break-words leading-relaxed">{form}</li>
-                      ))}
-                    </ul>
-                  ) : (
-                    <p className="text-sm text-gray-500">No specific forms required</p>
-                  )}
-                </div>
+
               </div>
             </div>
           </div>
@@ -737,60 +763,92 @@ export default function ContractDetailsPage() {
           </div>
         </div>
 
-        {/* Recent Contract Awards */}
+        {/* Past Similar Awardees */}
         <div className="mt-8">
           <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Similar Recent Contracts</h2>
-            <p className="text-sm text-gray-600 mb-4">Recent contracts similar to this one</p>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Past Similar Awardees</h2>
+            <p className="text-sm text-gray-600 mb-4">Companies that have won similar contracts</p>
             {similarContracts.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full">
                   <thead>
                     <tr className="border-b border-gray-200">
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Reference</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
-                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Awarded To</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Awardee</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Reference</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Award Date</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Procuring Entity</th>
                       <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Awarded Value</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Win Rate</th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-gray-200">
                     {similarContracts.map((similarContract) => (
-                      <tr key={similarContract.id} className="hover:bg-gray-50">
-                        <td className="py-3 px-4">
-                          {!similarContract.id.startsWith('demo-') ? (
+                      <React.Fragment key={similarContract.id}>
+                        <tr className="hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            {(similarContract as any).awarded_to ? (
+                              <Link 
+                                href={`/dashboard/awardees/${(similarContract as any).awarded_to?.toLowerCase().replace(/\s+/g, '-')}`}
+                                className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center"
+                              >
+                                <Building className="w-4 h-4 mr-1" />
+                                <div className="truncate" title={(similarContract as any).awarded_to}>
+                                  {(similarContract as any).awarded_to}
+                                </div>
+                              </Link>
+                            ) : (
+                              <span className="text-gray-500">Not specified</span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4">
+                            {!similarContract.id.startsWith('demo-') ? (
+                              <Link 
+                                href={`/dashboard/contracts/${similarContract.id}`}
+                                className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                              >
+                                {similarContract.reference_number || `CON-${similarContract.id.slice(-6)}`}
+                              </Link>
+                            ) : (
+                              <span className="text-gray-500 text-sm">
+                                {similarContract.reference_number || `CON-${similarContract.id.slice(-6)}`}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            {formatDate((similarContract as any).award_date || similarContract.publish_date || '')}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900 max-w-xs">
                             <Link 
-                              href={`/dashboard/contracts/${similarContract.id}`}
-                              className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                              href={`/dashboard/agencies/${similarContract.procuring_entity?.toLowerCase().replace(/\s+/g, '-')}`}
+                              className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center"
                             >
-                              {similarContract.reference_number || `CON-${similarContract.id.slice(-6)}`}
+                              <Globe className="w-4 h-4 mr-1" />
+                              <div className="truncate" title={similarContract.procuring_entity || 'Not specified'}>
+                                {similarContract.procuring_entity || 'Not specified'}
+                              </div>
                             </Link>
-                          ) : (
-                            <span className="text-gray-500 text-sm">
-                              {similarContract.reference_number || `CON-${similarContract.id.slice(-6)}`}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            {(similarContract as any).awarded_value ? 
+                              formatCurrency((similarContract as any).awarded_value, similarContract.currency) :
+                              formatValue(similarContract.estimated_value_min, similarContract.estimated_value_max, similarContract.currency)
+                            }
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                              {(similarContract as any).win_rate || 'N/A'}
                             </span>
-                          )}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-900">
-                          {formatDate(similarContract.publish_date || '')}
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-900 max-w-xs">
-                          <div className="truncate" title={similarContract.title}>
-                            {similarContract.title}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-900 max-w-xs">
-                          <div className="truncate" title={(similarContract as any).awarded_to || 'Not specified'}>
-                            {(similarContract as any).awarded_to || 'Not specified'}
-                          </div>
-                        </td>
-                        <td className="py-3 px-4 text-sm text-gray-900">
-                          {(similarContract as any).awarded_value ? 
-                            formatCurrency((similarContract as any).awarded_value, similarContract.currency) :
-                            formatValue(similarContract.estimated_value_min, similarContract.estimated_value_max, similarContract.currency)
-                          }
-                        </td>
-                      </tr>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colSpan={6} className="px-4 py-2 text-sm text-gray-600 bg-gray-50">
+                            <strong>Contract:</strong> {similarContract.title}
+                            {similarContract.short_description && (
+                              <span className="ml-2">- {similarContract.short_description}</span>
+                            )}
+                          </td>
+                        </tr>
+                      </React.Fragment>
                     ))}
                   </tbody>
                 </table>

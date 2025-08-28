@@ -1,7 +1,6 @@
 'use client'
 
 import { useState, useEffect } from 'react';
-import { supabase } from '@/lib/supabase';
 import { 
   TrendingUp, 
   TrendingDown,
@@ -21,6 +20,8 @@ interface AnalyticsData {
   monthlyGrowth: number;
   topCategories: { category: string; count: number }[];
   recentActivity: any[];
+  trialUsers: number;
+  noSubscription: number;
 }
 
 export default function AdminAnalytics() {
@@ -31,7 +32,9 @@ export default function AdminAnalytics() {
     totalValue: 0,
     monthlyGrowth: 0,
     topCategories: [],
-    recentActivity: []
+    recentActivity: [],
+    trialUsers: 0,
+    noSubscription: 0
   });
   const [loading, setLoading] = useState(true);
 
@@ -43,28 +46,36 @@ export default function AdminAnalytics() {
     try {
       setLoading(true);
 
-      // Fetch all data
-      const [usersResult, contractsResult, subscriptionsResult] = await Promise.all([
-        supabase.from('profiles').select('*'),
-        supabase.from('contracts').select('*'),
-        supabase.from('subscriptions').select('*').eq('status', 'active')
+      // Fetch all data using API endpoints to bypass RLS
+      const [usersResponse, contractsResponse] = await Promise.all([
+        fetch('/api/admin/users'),
+        fetch('/api/contracts')
       ]);
 
-      if (usersResult.error || contractsResult.error || subscriptionsResult.error) {
+      const usersResult = await usersResponse.json();
+      const contractsResult = await contractsResponse.json();
+
+      if (!usersResponse.ok || !contractsResponse.ok) {
         console.error('Error fetching analytics:', { 
           usersError: usersResult.error, 
-          contractsError: contractsResult.error, 
-          subscriptionsError: subscriptionsResult.error 
+          contractsError: contractsResult.error
         });
         return;
       }
 
-      const users = usersResult.data || [];
-      const contracts = contractsResult.data || [];
-      const subscriptions = subscriptionsResult.data || [];
+      const users = usersResult.users || [];
+      const contracts = contractsResult.contracts || [];
 
-      // Calculate metrics
-      const totalValue = contracts.reduce((sum, contract) => sum + (contract.value || 0), 0);
+      // Calculate subscription metrics from profiles table
+      const activeSubscriptions = users.filter(user => user.subscription_status === 'active').length;
+      const trialUsers = users.filter(user => user.subscription_status === 'trial').length;
+      const noSubscription = users.filter(user => user.subscription_status === 'none').length;
+
+      // Calculate total contract value using estimated_value fields
+      const totalValue = contracts.reduce((sum, contract) => {
+        const value = contract.estimated_value_max || contract.estimated_value_min || 0;
+        return sum + value;
+      }, 0);
       
       // Calculate monthly growth (simplified)
       const currentMonth = new Date().getMonth();
@@ -94,12 +105,14 @@ export default function AdminAnalytics() {
 
       setData({
         totalUsers: users.length,
-        activeSubscriptions: subscriptions.length,
+        activeSubscriptions: activeSubscriptions + trialUsers, // Include trial users as active
         totalContracts: contracts.length,
         totalValue,
         monthlyGrowth,
         topCategories,
-        recentActivity
+        recentActivity,
+        trialUsers,
+        noSubscription
       });
     } catch (error) {
       console.error('Error fetching analytics:', error);
@@ -275,14 +288,21 @@ export default function AdminAnalytics() {
                   <div className="w-3 h-3 bg-green-400 rounded-full mr-3"></div>
                   <span className="text-sm font-medium text-gray-900">Active Subscriptions</span>
                 </div>
-                <span className="text-sm text-gray-500">{data.activeSubscriptions}</span>
+                <span className="text-sm text-gray-500">{data.activeSubscriptions - data.trialUsers}</span>
+              </div>
+              <div className="flex items-center justify-between">
+                <div className="flex items-center">
+                  <div className="w-3 h-3 bg-blue-400 rounded-full mr-3"></div>
+                  <span className="text-sm font-medium text-gray-900">Trial Users</span>
+                </div>
+                <span className="text-sm text-gray-500">{data.trialUsers}</span>
               </div>
               <div className="flex items-center justify-between">
                 <div className="flex items-center">
                   <div className="w-3 h-3 bg-gray-400 rounded-full mr-3"></div>
                   <span className="text-sm font-medium text-gray-900">No Subscription</span>
                 </div>
-                <span className="text-sm text-gray-500">{data.totalUsers - data.activeSubscriptions}</span>
+                <span className="text-sm text-gray-500">{data.noSubscription}</span>
               </div>
               <div className="pt-4">
                 <div className="flex items-center justify-between text-sm">
@@ -380,10 +400,10 @@ export default function AdminAnalytics() {
             <div className="ml-5 w-0 flex-1">
               <dl>
                 <dt className="text-sm font-medium opacity-75 truncate">
-                  Platform Health
+                  Trial Users
                 </dt>
                 <dd className="text-lg font-medium">
-                  {data.totalContracts > 0 && data.totalUsers > 0 ? 'Good' : 'Needs Data'}
+                  {data.trialUsers}
                 </dd>
               </dl>
             </div>

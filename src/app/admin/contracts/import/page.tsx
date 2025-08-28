@@ -37,11 +37,12 @@ interface ContractRow {
   submission_method?: string;
   submission_format?: string;
   required_documents?: string[];
-  required_forms?: string[];
+
   status: string;
   current_stage: string;
   award_information?: string;
   publish_status?: 'draft' | 'published' | 'archived';
+  detail_url?: string;
 }
 
 interface ValidationError {
@@ -242,7 +243,7 @@ export default function ImportContracts() {
         submission_method: 'online',
         submission_format: 'electronic submission',
         required_documents: 'Registration/Incorporation,Trading License,Tax Clearance Certificate,NSSF Clearance',
-        required_forms: 'Bid Submission Sheet,Price Schedule,Code of Ethical Conduct',
+    
         status: 'open',
         current_stage: 'published'
       }

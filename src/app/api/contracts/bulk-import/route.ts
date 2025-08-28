@@ -38,7 +38,7 @@ interface ContractData {
   submission_method?: string;
   submission_format?: string;
   required_documents?: string[];
-  required_forms?: string[];
+
   bid_attachments?: string[];
   status: string;
   current_stage: string;
@@ -46,47 +46,49 @@ interface ContractData {
   publish_status: 'draft' | 'published' | 'archived';
   published_at?: string;
   published_by?: string;
+  detail_url?: string;
 }
 
 function processContractData(contract: any): ContractData {
   return {
     reference_number: contract.reference_number?.trim() || '',
     title: contract.title?.trim() || '',
-    short_description: contract.short_description?.trim() || null,
+    short_description: contract.short_description?.trim() || undefined,
     category: contract.category?.trim() || '',
     procurement_method: contract.procurement_method?.trim() || '',
-    estimated_value_min: contract.estimated_value_min ? parseFloat(contract.estimated_value_min) : null,
-    estimated_value_max: contract.estimated_value_max ? parseFloat(contract.estimated_value_max) : null,
+    estimated_value_min: contract.estimated_value_min ? parseFloat(contract.estimated_value_min) : undefined,
+    estimated_value_max: contract.estimated_value_max ? parseFloat(contract.estimated_value_max) : undefined,
     currency: contract.currency?.trim() || 'UGX',
-    bid_fee: contract.bid_fee ? parseFloat(contract.bid_fee) : null,
-    bid_security_amount: contract.bid_security_amount ? parseFloat(contract.bid_security_amount) : null,
-    bid_security_type: contract.bid_security_type?.trim() || null,
+    bid_fee: contract.bid_fee ? parseFloat(contract.bid_fee) : undefined,
+    bid_security_amount: contract.bid_security_amount ? parseFloat(contract.bid_security_amount) : undefined,
+    bid_security_type: contract.bid_security_type?.trim() || undefined,
     margin_of_preference: contract.margin_of_preference === 'true' || contract.margin_of_preference === '1',
     competition_level: (contract.competition_level?.toLowerCase() || 'medium') as 'low' | 'medium' | 'high' | 'very_high',
-    publish_date: contract.publish_date?.trim() || null,
-    pre_bid_meeting_date: contract.pre_bid_meeting_date?.trim() || null,
-    site_visit_date: contract.site_visit_date?.trim() || null,
+    publish_date: contract.publish_date?.trim() || undefined,
+    pre_bid_meeting_date: contract.pre_bid_meeting_date?.trim() || undefined,
+    site_visit_date: contract.site_visit_date?.trim() || undefined,
     submission_deadline: contract.submission_deadline?.trim() || '',
-    bid_opening_date: contract.bid_opening_date?.trim() || null,
+    bid_opening_date: contract.bid_opening_date?.trim() || undefined,
     procuring_entity: contract.procuring_entity?.trim() || '',
-    contact_person: contract.contact_person?.trim() || null,
-    contact_position: contract.contact_position?.trim() || null,
-    evaluation_methodology: contract.evaluation_methodology?.trim() || null,
+    contact_person: contract.contact_person?.trim() || undefined,
+    contact_position: contract.contact_position?.trim() || undefined,
+    evaluation_methodology: contract.evaluation_methodology?.trim() || undefined,
     requires_registration: contract.requires_registration === 'true' || contract.requires_registration === '1',
     requires_trading_license: contract.requires_trading_license === 'true' || contract.requires_trading_license === '1',
     requires_tax_clearance: contract.requires_tax_clearance === 'true' || contract.requires_tax_clearance === '1',
     requires_nssf_clearance: contract.requires_nssf_clearance === 'true' || contract.requires_nssf_clearance === '1',
     requires_manufacturer_auth: contract.requires_manufacturer_auth === 'true' || contract.requires_manufacturer_auth === '1',
-    submission_method: contract.submission_method?.trim() || null,
-    submission_format: contract.submission_format?.trim() || null,
+    submission_method: contract.submission_method?.trim() || undefined,
+    submission_format: contract.submission_format?.trim() || undefined,
     required_documents: contract.required_documents ? contract.required_documents.split(',').map((doc: string) => doc.trim()) : [],
-    required_forms: contract.required_forms ? contract.required_forms.split(',').map((form: string) => form.trim()) : [],
+
     status: (contract.status?.toLowerCase() || 'open') as string,
     current_stage: (contract.current_stage?.toLowerCase() || 'published') as string,
-    award_information: contract.award_information?.trim() || null,
+    award_information: contract.award_information?.trim() || undefined,
     publish_status: (contract.publish_status?.toLowerCase() || 'draft') as 'draft' | 'published' | 'archived',
-    published_at: null, // Will be set when admin publishes
-    published_by: null, // Will be set when admin publishes
+    published_at: undefined, // Will be set when admin publishes
+    published_by: undefined, // Will be set when admin publishes
+    detail_url: contract.detail_url?.trim() || undefined,
     bid_attachments: [] // Empty array for imported contracts
   };
 }
@@ -193,7 +195,8 @@ export async function POST(request: NextRequest) {
 
     // Insert contracts
     console.log('Attempting to insert contracts into database...');
-    console.log('Sample contract data:', processedContracts[0]);
+    console.log('Number of contracts to insert:', processedContracts.length);
+    console.log('Sample contract data:', JSON.stringify(processedContracts[0], null, 2));
     
     const { data: insertedContracts, error: insertError } = await supabase
       .from('contracts')
@@ -226,12 +229,15 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('API error:', error);
+    console.error('Error stack:', error instanceof Error ? error.stack : 'No stack trace');
+    console.error('Error message:', error instanceof Error ? error.message : 'No error message');
     return NextResponse.json(
       { 
         error: 'Internal server error',
         success: 0,
         failed: 0,
-        errors: ['Internal server error']
+        errors: ['Internal server error'],
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );

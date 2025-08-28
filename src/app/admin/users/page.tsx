@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import Link from 'next/link';
-import { supabase } from '@/lib/supabase';
+
 import { 
   Search, 
   Eye, 
@@ -39,7 +39,8 @@ export default function AdminUsers() {
     'active',
     'none',
     'expired',
-    'cancelled'
+    'cancelled',
+    'trial'
   ];
 
   useEffect(() => {
@@ -53,17 +54,16 @@ export default function AdminUsers() {
   const fetchUsers = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
-        .from('profiles')
-        .select('*')
-        .order('created_at', { ascending: false });
+      
+      const response = await fetch('/api/admin/users');
+      const result = await response.json();
 
-      if (error) {
-        console.error('Error fetching users:', error);
+      if (!response.ok) {
+        console.error('Error fetching users:', result.error);
         return;
       }
 
-      setUsers(data || []);
+      setUsers(result.users || []);
     } catch (error) {
       console.error('Error:', error);
     } finally {
@@ -120,6 +120,8 @@ export default function AdminUsers() {
         return 'bg-red-100 text-red-800';
       case 'cancelled':
         return 'bg-yellow-100 text-yellow-800';
+      case 'trial':
+        return 'bg-blue-100 text-blue-800';
       default:
         return 'bg-gray-100 text-gray-800';
     }
@@ -135,6 +137,8 @@ export default function AdminUsers() {
         return <UserX className="h-4 w-4" />;
       case 'cancelled':
         return <UserX className="h-4 w-4" />;
+      case 'trial':
+        return <UserCheck className="h-4 w-4" />;
       default:
         return <UserX className="h-4 w-4" />;
     }
@@ -297,7 +301,7 @@ export default function AdminUsers() {
       </div>
 
       {/* Stats Summary */}
-      <div className="grid grid-cols-1 gap-5 sm:grid-cols-4">
+      <div className="grid grid-cols-1 gap-5 sm:grid-cols-5">
         <div className="bg-white overflow-hidden shadow rounded-lg">
           <div className="p-5">
             <div className="flex items-center">
@@ -351,6 +355,26 @@ export default function AdminUsers() {
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
                     {users.filter(u => u.subscription_status === 'expired').length}
+                  </dd>
+                </dl>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-white overflow-hidden shadow rounded-lg">
+          <div className="p-5">
+            <div className="flex items-center">
+              <div className="flex-shrink-0">
+                <UserCheck className="h-6 w-6 text-blue-400" />
+              </div>
+              <div className="ml-5 w-0 flex-1">
+                <dl>
+                  <dt className="text-sm font-medium text-gray-500 truncate">
+                    Trial
+                  </dt>
+                  <dd className="text-lg font-medium text-gray-900">
+                    {users.filter(u => u.subscription_status === 'trial').length}
                   </dd>
                 </dl>
               </div>
