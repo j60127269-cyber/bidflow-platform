@@ -61,47 +61,60 @@ export interface Contract {
   requires_manufacturer_auth: boolean; // Manufacturer's Authorization Needed?
   
   // Submission details
-  submission_method?: string; // e.g., physical, online, both
+  submission_method?: string
   submission_format?: string; // e.g., sealed envelopes, electronic
   required_documents?: string[]; // Array of required documents & forms
- // Array of mandatory forms to submit
   bid_attachments?: string[]; // Array of bid document URLs or file names
   
-  // 4. STATUS & TRACKING (4 variables)
-  status: 'open' | 'closed' | 'awarded' | 'cancelled';
-  current_stage: string; // published, evaluation, awarded, completed
-  award_information?: string; // Information about award if status is 'awarded'
+  // 4. ENHANCED STATUS & LIFECYCLE TRACKING
+  status: 'draft' | 'open' | 'closed' | 'evaluating' | 'awarded' | 'cancelled' | 'completed';
+  current_stage: 'draft' | 'published' | 'pre_bid_meeting' | 'site_visit' | 'submission_open' | 'submission_closed' | 'evaluation' | 'awarded' | 'contract_signed' | 'in_progress' | 'completed' | 'archived';
   publish_status: 'draft' | 'published' | 'archived'; // Controls client visibility
   published_at?: string; // When the contract was published
   published_by?: string; // Who published the contract
   
-  // 5. SOURCE INFORMATION (1 variable)
-  detail_url?: string; // Link to original procurement portal
+  // 5. BIDDING INTELLIGENCE
+  total_bidders?: number; // Total number of companies that bid
+  total_bids_received?: number; // Total bids actually received
+  shortlisted_bidders?: number; // Number of bidders shortlisted
+  evaluation_start_date?: string; // When evaluation began
+  evaluation_end_date?: string; // When evaluation completed
   
   // 6. AWARD INFORMATION (Enhanced)
   awarded_to?: string; // Company name that won the contract
-  awarded_value?: number; // Final awarded value
+  awarded_value?: number; // Final awarded amount
   award_date?: string; // Date when contract was awarded
   contract_start_date?: string; // Contract start date
   contract_end_date?: string; // Contract end date
   completion_status?: 'on_track' | 'delayed' | 'completed' | 'terminated';
   performance_rating?: number; // Performance rating (1-5)
-  total_bidders?: number; // Total number of bidders
   winning_bid_value?: number; // Value of the winning bid
   technical_score?: number; // Technical evaluation score
   financial_score?: number; // Financial evaluation score
   
   // 7. ENTITY RELATIONSHIPS
-  procuring_entity_id?: string; // FK to procuring_entities table
-  awarded_company_id?: string; // FK to awardees table
+  procuring_entity_id?: string; // Foreign key to procuring_entities table
+  awarded_company_id?: string; // Foreign key to awardees table
   
-  // Metadata
+  // 8. HISTORICAL DATA FIELDS
+  data_source?: string; // 'manual', 'scraper', 'government_csv', 'api'
+  source_file?: string; // Original file name if imported
+  fiscal_year?: string; // Fiscal year for historical data
+  import_date?: string; // When this record was imported
+  detail_url?: string; // Link to original procurement portal
+  
+  // 9. SYSTEM FIELDS
   created_at: string;
   updated_at: string;
   
-  // Recommendation fields (for display purposes)
+  // 10. RECOMMENDATION FIELDS (for display purposes)
   recommendationScore?: number;
-  recommendationReasons?: string[];
+  
+  // 11. NESTED RELATIONSHIPS (for queries)
+  awardees?: { company_name: string; };
+  procuring_entities?: { entity_name: string; };
+  competitor_bids?: CompetitorBid[];
+  contract_performance?: ContractPerformance[];
 }
 
 export interface Bid {
@@ -211,6 +224,7 @@ export interface Awardee {
   company_name: string;
   registration_number?: string;
   business_type?: string;
+  female_owned?: boolean;
   primary_categories?: string[];
   locations?: string[];
   team_size?: number;
@@ -222,6 +236,8 @@ export interface Awardee {
   social_media?: any;
   notes?: string;
   is_active: boolean;
+  data_source?: string;
+  source_file?: string;
   created_at: string;
   updated_at: string;
 }
@@ -229,7 +245,7 @@ export interface Awardee {
 export interface ProcuringEntity {
   id: string;
   entity_name: string;
-  entity_type?: 'ministry' | 'agency' | 'department' | 'parastatal';
+  entity_type?: string; // 'ministry', 'agency', 'department', 'parastatal'
   parent_entity_id?: string;
   contact_person?: string;
   contact_email?: string;
@@ -240,6 +256,8 @@ export interface ProcuringEntity {
   procurement_patterns?: any;
   preferred_suppliers?: string[];
   is_active: boolean;
+  data_source?: string;
+  source_file?: string;
   created_at: string;
   updated_at: string;
 }
@@ -247,15 +265,16 @@ export interface ProcuringEntity {
 export interface CompetitorBid {
   id: string;
   contract_id: string;
-  awardee_id: string;
-  bid_value?: number;
+  awardee_id?: string;
+  bidder_name: string; // Company name that bid
+  bid_value: number;
   currency: string;
-  bid_status?: 'submitted' | 'shortlisted' | 'awarded' | 'rejected';
+  bid_status: 'submitted' | 'shortlisted' | 'awarded' | 'rejected' | 'withdrawn';
   technical_score?: number;
   financial_score?: number;
   total_score?: number;
   ranking?: number;
-  bid_date?: string;
+  bid_date: string;
   notes?: string;
   created_at: string;
   updated_at: string;
@@ -282,7 +301,7 @@ export interface AwardeeAnalysis {
   total_bids: number;
   wins: number;
   win_rate: number;
-  average_bid_value?: number;
+  average_bid_value: number;
   preferred_categories?: string[];
   preferred_procuring_entities?: string[];
   created_at: string;

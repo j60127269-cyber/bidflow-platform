@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Building, Globe, ChevronDown, Share2, Heart, Bell, FileText, DollarSign, Target, Users, ChevronLeft } from "lucide-react";
 import Link from "next/link";
+import { use } from "react";
 
 interface ProcuringEntity {
   id: string;
@@ -21,17 +22,25 @@ interface ProcuringEntity {
 
 interface Contract {
   id: string;
-  contract_reference: string;
+  reference_number: string;
   title: string;
   description?: string;
-  awarded_value: number;
-  awarded_date: string;
-  procuring_entity_id: string;
-  awarded_company_id: string;
+  category?: string;
+  estimated_value_min?: number;
+  estimated_value_max?: number;
+  submission_deadline?: string;
+  awarded_value?: number;
+  awarded_date?: string;
+  procuring_entity: string; // This is the text field
+  procuring_entity_id?: string; // This is the foreign key
+  awarded_company_id?: string;
   status: string;
   created_at: string;
   awardees?: {
     company_name: string;
+  };
+  procuring_entities?: {
+    entity_name: string;
   };
 }
 
@@ -51,28 +60,31 @@ interface Awardee {
   is_active: boolean;
 }
 
-export default function AgencyDetailPage({ params }: { params: { entity: string } }) {
+export default function AgencyDetailPage({ params }: { params: Promise<{ entity: string }> }) {
+  const { entity } = use(params);
   const [agency, setAgency] = useState<ProcuringEntity | null>(null);
   const [contracts, setContracts] = useState<Contract[]>([]);
   const [awardees, setAwardees] = useState<Awardee[]>([]);
   const [loading, setLoading] = useState(true);
   const [activeTab, setActiveTab] = useState("overview");
 
-
-
   useEffect(() => {
     async function fetchData() {
       try {
+        console.log("🔍 Fetching data for entity:", entity);
+        
         // First try to fetch by ID (UUID)
         let { data: agencyData, error: agencyError } = await supabase
           .from("procuring_entities")
           .select("*")
-          .eq("id", params.entity)
+          .eq("id", entity)
           .single();
 
         // If not found by ID, try to fetch by entity name (slug)
         if (agencyError) {
-          const entityName = params.entity.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          const entityName = entity.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+          console.log("🔍 Trying to find by entity name:", entityName);
+          
           const { data, error } = await supabase
             .from("procuring_entities")
             .select("*")
@@ -83,21 +95,59 @@ export default function AgencyDetailPage({ params }: { params: { entity: string 
           agencyData = data;
         }
 
+        console.log("🏢 Found agency:", agencyData);
         setAgency(agencyData);
 
-        // Fetch contracts for this agency
-        const { data: contractsData, error: contractsError } = await supabase
+        // Fetch contracts for this agency - try multiple approaches
+        console.log("📋 Fetching contracts for agency ID:", agencyData.id);
+        
+        // First try: by procuring_entity_id (simplified query)
+        let { data: contractsData, error: contractsError } = await supabase
           .from("contracts")
-          .select(`
-            *,
-            procuring_entities!inner(entity_name),
-            awardees!inner(company_name)
-          `)
-          .eq("procuring_entity_id", agencyData.id)
-          .order("awarded_date", { ascending: false });
+          .select("*")
+          .eq("procuring_entity_id", agencyData.id);
 
-        if (contractsError) throw contractsError;
+        console.log("📋 Contracts by procuring_entity_id:", contractsData?.length || 0, contractsError);
+
+        // If no contracts found, try by procuring_entity name (simplified query)
+        if (!contractsData || contractsData.length === 0) {
+          console.log("🔍 Trying to find contracts by procuring_entity name");
+          const { data: contractsByName, error: contractsByNameError } = await supabase
+            .from("contracts")
+            .select("*")
+            .eq("procuring_entity", agencyData.entity_name);
+
+          console.log("📋 Contracts by procuring_entity name:", contractsByName?.length || 0, contractsByNameError);
+          
+          if (contractsByName && contractsByName.length > 0) {
+            contractsData = contractsByName;
+            contractsError = null;
+          }
+        }
+
+        // If still no contracts, try the ILIKE search that we know works
+        if (!contractsData || contractsData.length === 0) {
+          console.log("🔍 Trying ILIKE search for contracts");
+          
+          const { data: filteredContracts, error: filteredError } = await supabase
+            .from("contracts")
+            .select("*")
+            .ilike("procuring_entity", `%${agencyData.entity_name}%`);
+
+          console.log("📋 Contracts with ILIKE search:", filteredContracts?.length || 0, filteredError);
+          
+          if (filteredContracts && filteredContracts.length > 0) {
+            contractsData = filteredContracts;
+            contractsError = null;
+          }
+        }
+
+        if (contractsError) {
+          console.error("❌ Contracts error:", contractsError);
+        }
+        
         setContracts(contractsData || []);
+        console.log("✅ Final contracts count:", contractsData?.length || 0);
 
         // Fetch top awardees
         const { data: awardeesData, error: awardeesError } = await supabase
@@ -110,14 +160,14 @@ export default function AgencyDetailPage({ params }: { params: { entity: string 
         setAwardees(awardeesData || []);
 
       } catch (error) {
-        console.error("Error fetching data:", error);
+        console.error("❌ Error fetching data:", error);
       } finally {
         setLoading(false);
       }
     }
 
     fetchData();
-  }, [params.entity, supabase]);
+  }, [entity, supabase]);
 
   if (loading) {
     return (
@@ -431,6 +481,91 @@ export default function AgencyDetailPage({ params }: { params: { entity: string 
           </div>
         </section>
 
+        {/* Contract Opportunities Section */}
+        <section id="opportunities" className="card">
+          <div className="card-header">
+            <h2 className="card-title">Contract Opportunities</h2>
+            <p className="text-gray-600">Active and upcoming procurement opportunities</p>
+          </div>
+          <div className="card-body">
+            <div className="overflow-x-auto">
+              <table className="table w-full">
+                <thead>
+                  <tr>
+                    <th>Reference</th>
+                    <th>Title</th>
+                    <th>Category</th>
+                    <th>Estimated Value</th>
+                    <th>Deadline</th>
+                    <th>Status</th>
+                    <th>Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {contracts.filter(c => c.status === 'active' || c.status === 'open').slice(0, 5).map((contract) => (
+                    <tr key={contract.id}>
+                      <td>
+                        <Link
+                          href={`/dashboard/contracts/${contract.id}`}
+                          className="text-blue-600 hover:text-blue-800 font-medium"
+                        >
+                          {contract.reference_number}
+                        </Link>
+                      </td>
+                      <td className="max-w-xs truncate">{contract.title}</td>
+                      <td>
+                        <span className="px-2 py-1 text-xs font-medium bg-blue-100 text-blue-800 rounded-full">
+                          {contract.category || 'General'}
+                        </span>
+                      </td>
+                      <td className="font-medium">
+                        {contract.estimated_value_min && contract.estimated_value_max 
+                          ? `${formatCurrency(contract.estimated_value_min)} - ${formatCurrency(contract.estimated_value_max)}`
+                          : 'Not specified'
+                        }
+                      </td>
+                      <td className="text-gray-600">
+                        {contract.submission_deadline 
+                          ? new Date(contract.submission_deadline).toLocaleDateString()
+                          : 'Not specified'
+                        }
+                      </td>
+                      <td>
+                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
+                          contract.status === "active" 
+                            ? "bg-green-100 text-green-800"
+                            : contract.status === "open"
+                            ? "bg-blue-100 text-blue-800"
+                            : "bg-gray-100 text-gray-800"
+                        }`}>
+                          {contract.status}
+                        </span>
+                      </td>
+                      <td>
+                        <Link
+                          href={`/dashboard/contracts/${contract.id}`}
+                          className="btn btn-sm btn-outline-primary"
+                        >
+                          View Details
+                        </Link>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+              {contracts.filter(c => c.status === 'active' || c.status === 'open').length === 0 && (
+                <div className="text-center py-8">
+                  <div className="text-gray-400 mb-4">
+                    <Target className="w-16 h-16 mx-auto" />
+                  </div>
+                  <h3 className="text-lg font-medium text-gray-900 mb-2">No Active Opportunities</h3>
+                  <p className="text-gray-600">There are currently no active procurement opportunities from this agency.</p>
+                </div>
+              )}
+            </div>
+          </div>
+        </section>
+
         {/* Awardee Rankings Section */}
         <section id="awardees" className="card">
           <div className="card-header">
@@ -519,7 +654,7 @@ export default function AgencyDetailPage({ params }: { params: { entity: string 
                           href={`/dashboard/contracts/${contract.id}`}
                           className="text-blue-600 hover:text-blue-800 font-medium"
                         >
-                          {contract.contract_reference}
+                          {contract.reference_number}
                         </Link>
                       </td>
                       <td className="max-w-xs truncate">{contract.title}</td>
@@ -533,7 +668,7 @@ export default function AgencyDetailPage({ params }: { params: { entity: string 
                       </td>
                       <td className="font-medium">{formatCurrency(contract.awarded_value || 0)}</td>
                       <td className="text-gray-600">
-                        {new Date(contract.awarded_date).toLocaleDateString()}
+                        {new Date(contract.awarded_date || contract.created_at).toLocaleDateString()}
                       </td>
                       <td>
                         <span className={`px-2 py-1 text-xs font-medium rounded-full ${

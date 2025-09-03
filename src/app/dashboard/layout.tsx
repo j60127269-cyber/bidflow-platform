@@ -123,21 +123,29 @@ export default function DashboardLayout({
               >
                 Dashboard
               </Link>
+                            <Link
+                href="/dashboard/recommended"
+                className={`text-sm font-medium transition-colors ${
+                  pathname === '/dashboard/recommended' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Recommended
+              </Link>
               <Link
-                    href="/dashboard/recommended"
-                    className={`text-sm font-medium transition-colors ${
-                      pathname === '/dashboard/recommended' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Recommended
+                href="/dashboard/historical"
+                className={`text-sm font-medium transition-colors ${
+                  pathname === '/dashboard/historical' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
+              >
+                Historical
               </Link>
               <Link
                 href="/dashboard/tracking"
-                    className={`text-sm font-medium transition-colors ${
-                      pathname === '/dashboard/tracking' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                    }`}
+                className={`text-sm font-medium transition-colors ${
+                  pathname === '/dashboard/tracking' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
+                }`}
               >
-                    Tracking
+                Tracking
               </Link>
               <Link
                     href="/dashboard/profile"

@@ -1,0 +1,6 @@
+provider,female_owned,procurement_reference_no,subject_of_procurement,contract_award_date,contract_amt_ugx,status,entity
+ABC Construction Ltd,No,MOWT/2024/001,Construction of Road Infrastructure,2024-01-15,500000000,completed,Ministry of Works and Transport
+XYZ Supplies Co,Yes,MOWT/2024/002,Supply of Construction Materials,2024-02-20,150000000,completed,Ministry of Works and Transport
+Tech Solutions Ltd,No,MOWT/2024/003,IT Equipment and Services,2024-03-10,75000000,completed,Ministry of Works and Transport
+Green Builders Ltd,No,MOWT/2024/004,Bridge Construction Project,2024-04-05,800000000,ongoing,Ministry of Works and Transport
+Women's Enterprise,Yes,MOWT/2024/005,Office Furniture Supply,2024-05-12,45000000,completed,Ministry of Works and Transport

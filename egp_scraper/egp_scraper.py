@@ -90,7 +90,7 @@ class EGPScraper:
             # The API endpoint for bid archives
             api_url = f"{self.base_url}/api/v1/public_bid_archives"
             
-        contracts = []
+            contracts = []
             page = 1
             
             while page <= max_pages:

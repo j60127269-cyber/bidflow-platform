@@ -29,6 +29,7 @@ import { Contract } from "@/types/database";
 import { useAuth } from "@/contexts/AuthContext";
 import TrackingSetupModal from "@/components/TrackingSetupModal";
 import { TrackingPreferencesService } from "@/lib/trackingPreferences";
+import ContractLifecycleTracker from "@/components/ContractLifecycleTracker";
 
 export default function ContractDetailsPage() {
   const params = useParams();
@@ -43,6 +44,8 @@ export default function ContractDetailsPage() {
   const [showTrackingModal, setShowTrackingModal] = useState(false);
   const [similarContracts, setSimilarContracts] = useState<Contract[]>([]);
   const [loadingSimilar, setLoadingSimilar] = useState(false);
+  const [similarActiveOpportunities, setSimilarActiveOpportunities] = useState<Contract[]>([]);
+  const [loadingActiveOpportunities, setLoadingActiveOpportunities] = useState(false);
 
   useEffect(() => {
     fetchContract();
@@ -54,6 +57,7 @@ export default function ContractDetailsPage() {
   useEffect(() => {
     if (contract) {
       fetchSimilarContracts();
+      fetchSimilarActiveOpportunities();
     }
   }, [contract]);
 
@@ -224,6 +228,39 @@ export default function ContractDetailsPage() {
     }
   };
 
+  const fetchSimilarActiveOpportunities = async () => {
+    if (!contract) return;
+    
+    setLoadingActiveOpportunities(true);
+    try {
+      const { data, error } = await supabase
+        .from('contracts')
+        .select('*')
+        .eq('procuring_entity', contract.procuring_entity)
+        .eq('status', 'open')
+        .order('submission_deadline', { ascending: true })
+        .limit(4);
+
+      if (error) {
+        console.error('Error fetching active opportunities:', error);
+        return;
+      }
+
+      // If no real data, show demo content
+      if (!data || data.length === 0) {
+        setSimilarActiveOpportunities(getDemoActiveOpportunities(contract.procuring_entity));
+      } else {
+        setSimilarActiveOpportunities(data);
+      }
+    } catch (error) {
+      console.error('Error fetching active opportunities:', error);
+      // Show demo content on error
+      setSimilarActiveOpportunities(getDemoActiveOpportunities(contract.procuring_entity));
+    } finally {
+      setLoadingActiveOpportunities(false);
+    }
+  };
+
   const getDemoAwards = (procuringEntity: string) => {
     const demoAwards = [
       {
@@ -281,6 +318,65 @@ export default function ContractDetailsPage() {
     ];
     
     return demoAwards as any[];
+  };
+
+  const getDemoActiveOpportunities = (procuringEntity: string) => {
+    const demoActiveOpportunities = [
+      {
+        id: 'demo-active-1',
+        reference_number: 'CON-2024-005',
+        title: 'Supply of Office Furniture and Equipment',
+        estimated_value_min: 35000000,
+        estimated_value_max: 45000000,
+        currency: 'UGX',
+        status: 'open',
+        publish_date: '2024-03-01',
+        submission_deadline: '2024-04-15',
+        procuring_entity: procuringEntity,
+        category: 'supplies'
+      },
+      {
+        id: 'demo-active-2',
+        reference_number: 'CON-2024-006',
+        title: 'Maintenance of Air Conditioning Systems',
+        estimated_value_min: 25000000,
+        estimated_value_max: 30000000,
+        currency: 'UGX',
+        status: 'open',
+        publish_date: '2024-02-28',
+        submission_deadline: '2024-04-10',
+        procuring_entity: procuringEntity,
+        category: 'services'
+      },
+      {
+        id: 'demo-active-3',
+        reference_number: 'CON-2024-007',
+        title: 'Construction of Staff Parking Lot',
+        estimated_value_min: 150000000,
+        estimated_value_max: 180000000,
+        currency: 'UGX',
+        status: 'open',
+        publish_date: '2024-02-25',
+        submission_deadline: '2024-04-20',
+        procuring_entity: procuringEntity,
+        category: 'works'
+      },
+      {
+        id: 'demo-active-4',
+        reference_number: 'CON-2024-008',
+        title: 'Provision of Catering Services for Events',
+        estimated_value_min: 20000000,
+        estimated_value_max: 25000000,
+        currency: 'UGX',
+        status: 'open',
+        publish_date: '2024-02-20',
+        submission_deadline: '2024-04-05',
+        procuring_entity: procuringEntity,
+        category: 'services'
+      }
+    ];
+    
+    return demoActiveOpportunities as any[];
   };
 
   const formatValue = (minValue?: number, maxValue?: number, currency: string = 'UGX') => {
@@ -763,11 +859,10 @@ export default function ContractDetailsPage() {
           </div>
         </div>
 
-        {/* Past Similar Awardees */}
+        {/* Past Similar Awards */}
         <div className="mt-8">
           <div className="bg-white shadow rounded-lg p-6">
-            <h2 className="text-lg font-semibold text-gray-900 mb-4">Past Similar Awardees</h2>
-            <p className="text-sm text-gray-600 mb-4">Companies that have won similar contracts</p>
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Past Similar Awards</h2>
             {similarContracts.length > 0 ? (
               <div className="overflow-x-auto">
                 <table className="min-w-full">
@@ -856,6 +951,100 @@ export default function ContractDetailsPage() {
             ) : (
               <div className="text-center py-8">
                 <p className="text-sm text-gray-500">No similar contracts found</p>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Contract Lifecycle Tracker */}
+        <div className="mt-8">
+          <ContractLifecycleTracker 
+            contract={contract} 
+            isAdmin={false}
+          />
+        </div>
+
+        {/* Similar Active Opportunities */}
+        <div className="mt-8">
+          <div className="bg-white shadow rounded-lg p-6">
+            <h2 className="text-lg font-semibold text-gray-900 mb-4">Similar Active Opportunities</h2>
+            {loadingActiveOpportunities ? (
+              <div className="text-center py-8">
+                <p className="text-sm text-gray-500">Loading active opportunities...</p>
+              </div>
+            ) : similarActiveOpportunities.length > 0 ? (
+              <div className="overflow-x-auto">
+                <table className="min-w-full">
+                  <thead>
+                    <tr className="border-b border-gray-200">
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Contract Reference</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Title</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Estimated Value</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Deadline</th>
+                      <th className="text-left py-3 px-4 text-xs font-medium text-gray-500 uppercase tracking-wider">Status</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-gray-200">
+                    {similarActiveOpportunities.map((opportunity) => (
+                      <React.Fragment key={opportunity.id}>
+                        <tr className="hover:bg-gray-50">
+                          <td className="py-3 px-4">
+                            {!opportunity.id.startsWith('demo-') ? (
+                              <Link 
+                                href={`/dashboard/contracts/${opportunity.id}`}
+                                className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                              >
+                                {opportunity.reference_number || `CON-${opportunity.id.slice(-6)}`}
+                              </Link>
+                            ) : (
+                              <span className="text-gray-500 text-sm">
+                                {opportunity.reference_number || `CON-${opportunity.id.slice(-6)}`}
+                              </span>
+                            )}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900 max-w-xs">
+                            <div className="truncate" title={opportunity.title}>
+                              {opportunity.title}
+                            </div>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                              opportunity.category === 'supplies' ? 'bg-blue-100 text-blue-800' :
+                              opportunity.category === 'services' ? 'bg-green-100 text-green-800' :
+                              'bg-purple-100 text-purple-800'
+                            }`}>
+                              {opportunity.category}
+                            </span>
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            {formatValue(opportunity.estimated_value_min, opportunity.estimated_value_max, opportunity.currency)}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            {formatDate(opportunity.submission_deadline)}
+                          </td>
+                          <td className="py-3 px-4 text-sm text-gray-900">
+                            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-yellow-100 text-yellow-800">
+                              {opportunity.status}
+                            </span>
+                          </td>
+                        </tr>
+                        <tr>
+                          <td colSpan={6} className="px-4 py-2 text-sm text-gray-600 bg-gray-50">
+                            <strong>Procuring Entity:</strong> {opportunity.procuring_entity}
+                            {opportunity.short_description && (
+                              <span className="ml-2">- {opportunity.short_description}</span>
+                            )}
+                          </td>
+                        </tr>
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            ) : (
+              <div className="text-center py-8">
+                <p className="text-sm text-gray-500">No active opportunities found</p>
               </div>
             )}
           </div>

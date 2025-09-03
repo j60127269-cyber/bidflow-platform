@@ -100,7 +100,31 @@ export default function RecommendedPage() {
         return;
       }
 
-      setContracts(contractsData || []);
+      // Filter out historical/awarded contracts that shouldn't appear as active opportunities
+      const currentDate = new Date().toISOString().split('T')[0];
+      const activeContracts = (contractsData || []).filter(contract => {
+        // If it's historical data (has data_source), only show if it's recent and still relevant
+        if (contract.data_source === 'government_csv' || contract.data_source === 'historical') {
+          // For historical data, only show if submission deadline is in the future
+          if (contract.submission_deadline && contract.submission_deadline < currentDate) {
+            return false; // Hide past historical contracts
+          }
+        }
+        
+        // Hide contracts that are already awarded or completed
+        if (contract.status === 'awarded' || contract.status === 'completed') {
+          return false;
+        }
+        
+        // Hide contracts where submission deadline has passed
+        if (contract.submission_deadline && contract.submission_deadline < currentDate) {
+          return false;
+        }
+        
+        return true;
+      });
+
+      setContracts(activeContracts);
 
       // Fetch tracking states for all contracts
       await fetchTrackingStates(user.id, contractsData || []);

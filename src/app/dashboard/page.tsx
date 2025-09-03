@@ -80,6 +80,9 @@ export default function DashboardPage() {
     try {
       setLoading(true);
       
+      // Get current date for filtering
+      const currentDate = new Date().toISOString().split('T')[0];
+      
       const { data, error } = await supabase
         .from('contracts')
         .select('*')
@@ -93,8 +96,31 @@ export default function DashboardPage() {
         return;
       }
 
-      setContracts(data || []);
-      setFilteredContracts(data || []);
+      // Filter out historical/awarded contracts that shouldn't appear as active opportunities
+      const activeContracts = (data || []).filter(contract => {
+        // If it's historical data (has data_source), only show if it's recent and still relevant
+        if (contract.data_source === 'government_csv' || contract.data_source === 'historical') {
+          // For historical data, only show if submission deadline is in the future
+          if (contract.submission_deadline && contract.submission_deadline < currentDate) {
+            return false; // Hide past historical contracts
+          }
+        }
+        
+        // Hide contracts that are already awarded or completed
+        if (contract.status === 'awarded' || contract.status === 'completed') {
+          return false;
+        }
+        
+        // Hide contracts where submission deadline has passed
+        if (contract.submission_deadline && contract.submission_deadline < currentDate) {
+          return false;
+        }
+        
+        return true;
+      });
+
+      setContracts(activeContracts);
+      setFilteredContracts(activeContracts);
     } catch (error) {
       console.error('Error:', error);
       setContracts([]);
