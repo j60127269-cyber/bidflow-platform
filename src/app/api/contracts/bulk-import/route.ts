@@ -327,6 +327,33 @@ export async function POST(request: NextRequest) {
       const insertedCount = insertedContracts?.length || 0;
       console.log('Successfully inserted contracts:', insertedCount);
 
+      // Trigger preference-based notifications for new contracts
+      if (insertedCount > 0 && insertedContracts) {
+        try {
+          // Process notifications asynchronously to avoid blocking the response
+          Promise.all(
+            insertedContracts.map(async (contract) => {
+              try {
+                const response = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/notifications/preference-check`, {
+                  method: 'POST',
+                  headers: { 'Content-Type': 'application/json' },
+                  body: JSON.stringify({ contractId: contract.id })
+                });
+                if (!response.ok) {
+                  console.error(`Failed to trigger notifications for contract ${contract.id}`);
+                }
+              } catch (error) {
+                console.error(`Error triggering notifications for contract ${contract.id}:`, error);
+              }
+            })
+          ).catch(error => {
+            console.error('Error processing preference notifications:', error);
+          });
+        } catch (error) {
+          console.error('Error setting up preference notifications:', error);
+        }
+      }
+
       return NextResponse.json({
         success: insertedCount,
         skipped_existing: skippedExisting.length,

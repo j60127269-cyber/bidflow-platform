@@ -45,16 +45,16 @@ export default function Home() {
             <div className="mb-8">
               <span className="inline-flex items-center px-4 py-2 rounded-full text-sm font-medium bg-blue-100 text-blue-800 mb-4">
                 <Star className="w-4 h-4 mr-2" />
-                Trusted by 500+ Ugandan businesses
+                Trusted by 500+ Premium businesses
               </span>
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
               Win More Contracts with
-              <span className="text-blue-600 block"> Data-Driven Intelligence</span>
+              <span className="text-blue-600 block"> AiData-Driven Intelligence</span>
             </h1>
             <p className="text-lg sm:text-xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               Uganda's premier contract intelligence platform. Track contracts, analyze competition, 
-              and make informed bidding decisions with real-time data and analytics.
+              and make informed bidding decisions with real-time data and ai analytics.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <Link 
@@ -89,7 +89,7 @@ export default function Home() {
             </div>
             
             <div className="mt-8 text-sm text-slate-500">
-              <span className="font-semibold text-blue-600">50,000 UGX</span> per month • No setup fees • 7-day free trial
+              <span className="font-semibold text-blue-600">50,000 UGX</span> per month  • free trial availabel
             </div>
           </div>
         </div>
@@ -100,7 +100,7 @@ export default function Home() {
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="text-center mb-16">
             <h2 className="text-3xl md:text-4xl font-bold text-slate-900 mb-4">
-              Everything You Need to Win Contracts
+              Everything You Need to Win More Contracts
             </h2>
             <p className="text-xl text-slate-600 max-w-2xl mx-auto">
               From contract discovery to bid preparation, we provide the tools and insights 
@@ -171,7 +171,7 @@ export default function Home() {
               <h3 className="text-xl font-semibold text-slate-900 mb-4">Success Tracking</h3>
               <p className="text-slate-600">
                 Monitor your bid success rates, track wins and losses, and 
-                optimize your bidding strategy over time.
+                optimize your bidding strategy over time .
               </p>
             </div>
           </div>
@@ -198,7 +198,7 @@ export default function Home() {
                 ))}
               </div>
               <p className="text-slate-600 mb-6">
-                "BidCloud has transformed how we approach contract bidding. We've increased our win rate by 40% in just 6 months."
+                "BidCloud has transformed how we approach contract bidding. We've increased our win rate by utilising prime historical data to optimize our stratergies."
               </p>
               <div className="flex items-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center mr-4">
@@ -313,7 +313,7 @@ export default function Home() {
                   Start Free Trial
                   <ArrowRight className="w-5 h-5 ml-2 inline" />
                 </Link>
-                <p className="text-sm text-slate-500 mt-4">7-day free trial, no credit card required</p>
+                <p className="text-sm text-slate-500 mt-4">free trial availabel </p>
               </div>
             </div>
           </div>
@@ -327,7 +327,7 @@ export default function Home() {
             Ready to Win More Contracts?
           </h2>
           <p className="text-xl text-blue-100 mb-8 max-w-2xl mx-auto">
-            Join hundreds of Ugandan businesses already using BidCloud to increase their contract win rates.
+            Join thousands of Ugandan businesses already using BidCloud to increase their contract win rates.
           </p>
           <Link 
             href="/register" 

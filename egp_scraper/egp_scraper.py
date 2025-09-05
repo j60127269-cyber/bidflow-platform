@@ -321,7 +321,22 @@ class EGPScraper:
                     if len(bid_security_cells) >= 2:
                         bid_security_value = bid_security_cells[1].get_text().strip()
                         if bid_security_value and bid_security_value != 'BID SECURITY':
-                            details['bid_security_type'] = bid_security_value
+                            # Parse the bid security amount
+                            amount = self._parse_bid_security_amount(bid_security_value)
+                            if amount > 0:
+                                details['bid_security_amount'] = amount
+                                details['bid_security_type'] = "Bank Guarantee or Letter of Credit or cashiers check or bank draft"
+                            else:
+                                details['bid_security_amount'] = 0
+                                details['bid_security_type'] = None
+                        else:
+                            # No bid security required
+                            details['bid_security_amount'] = 0
+                            details['bid_security_type'] = None
+            else:
+                # No bid security row found - no security required
+                details['bid_security_amount'] = 0
+                details['bid_security_type'] = None
             
             # Extract bid validity dates
             validity_elem = soup.find('span', class_='breadcrumb-item', string=re.compile(r'\d+ \w+, \d+ \d+:\d+ - \d+ \w+, \d+ \d+:\d+'))
@@ -603,7 +618,7 @@ class EGPScraper:
                     # Numeric fields (empty for now)
                     'estimated_value_min': None,
                     'estimated_value_max': None,
-                    'bid_security_amount': None,
+                    'bid_security_amount': contract.get('bid_security_amount', 0),
                     'bid_security_type': self._clean_string(contract.get('bid_security_type', '')),
                     
                     # Date fields (empty for now)
@@ -614,7 +629,7 @@ class EGPScraper:
                 
                 transformed_contracts.append(transformed)
             
-        except Exception as e:
+            except Exception as e:
                 error_msg = f"Contract {i+1}: Error transforming data - {str(e)}"
                 errors.append(error_msg)
                 logger.error(error_msg)
@@ -688,6 +703,25 @@ class EGPScraper:
             fee_match = re.search(r'[\d,]+\.?\d*', fee_clean)
             if fee_match:
                 return float(fee_match.group().replace(',', ''))
+            return 0.0
+        except:
+            return 0.0
+
+    def _parse_bid_security_amount(self, security_text: str) -> float:
+        """Parse bid security amount from text like 'UGX 33,254,000.00/='"""
+        if not security_text:
+            return 0.0
+        
+        try:
+            # Remove common prefixes and suffixes
+            clean_text = security_text.replace('UGX', '').replace('USD', '').replace('$', '')
+            clean_text = clean_text.replace('/', '').replace('=', '').replace(',', '').strip()
+            
+            # Extract numeric value using regex
+            amount_match = re.search(r'[\d]+\.?\d*', clean_text)
+            if amount_match:
+                return float(amount_match.group())
+            
             return 0.0
         except:
             return 0.0

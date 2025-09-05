@@ -279,7 +279,7 @@ export default function OnboardingPreferences() {
                   className="flex items-center text-blue-600 hover:text-blue-700 mb-4"
                 >
                   <Plus className="w-4 h-4 mr-2" />
-                  Add your own product/service
+                  Click here to Add your own product/service
                 </button>
               )}
 

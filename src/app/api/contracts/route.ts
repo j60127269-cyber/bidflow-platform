@@ -31,6 +31,22 @@ export async function POST(request: NextRequest) {
       );
     }
 
+    // Trigger preference-based notifications for the new contract
+    if (data) {
+      try {
+        // Process notification asynchronously to avoid blocking the response
+        fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/notifications/preference-check`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ contractId: data.id })
+        }).catch(error => {
+          console.error('Error triggering preference notifications:', error);
+        });
+      } catch (error) {
+        console.error('Error setting up preference notifications:', error);
+      }
+    }
+
     return NextResponse.json({ success: true, data });
   } catch (error) {
     console.error('API error:', error);

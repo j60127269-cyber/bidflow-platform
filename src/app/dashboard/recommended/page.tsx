@@ -71,22 +71,32 @@ export default function RecommendedPage() {
         .single();
 
       if (profileError) {
-        console.log('No profile found, using demo profile');
-        // Use default profile for demo
+        console.log('No profile found, using default profile');
+        // Use default profile if no preferences set
         setUserProfile({
           id: user.id,
-          company_name: "Demo Company",
-          business_type: "Technology",
-          experience_years: 5,
-          preferred_categories: ["Information Technology", "Construction"],
-
+          company_name: "Your Company",
+          business_type: "General",
+          experience_years: 3,
+          preferred_categories: ["All Categories"],
           max_contract_value: 1000000000,
-          min_contract_value: 50000000,
-          certifications: ["ISO 9001", "CMMI Level 3"],
-          team_size: 25
+          min_contract_value: 0,
+          certifications: [],
+          team_size: 1
         });
       } else {
-        setUserProfile(profileData);
+        // Use actual user preferences from onboarding
+        setUserProfile({
+          id: profileData.id,
+          company_name: profileData.company_name || "Your Company",
+          business_type: profileData.business_type || "General",
+          experience_years: profileData.experience_years || 3,
+          preferred_categories: profileData.preferred_categories || ["All Categories"],
+          max_contract_value: profileData.max_contract_value || 1000000000,
+          min_contract_value: profileData.min_contract_value || 0,
+          certifications: profileData.certifications || [],
+          team_size: profileData.team_size || 1
+        });
       }
 
       // Fetch all contracts
@@ -221,34 +231,59 @@ export default function RecommendedPage() {
 
     let filtered = contracts.map(contract => {
       let score = 0;
-             const reasons: string[] = [];
+      const reasons: string[] = [];
 
-      // Category match (40% weight)
-      if (userProfile.preferred_categories && userProfile.preferred_categories.includes(contract.category)) {
-        score += 40;
-        reasons.push(`Matches your preferred category: ${contract.category}`);
+      // Category match (50% weight) - Enhanced to handle multiple preferred categories
+      if (userProfile.preferred_categories && userProfile.preferred_categories.length > 0) {
+        const categoryMatch = userProfile.preferred_categories.some(prefCategory => {
+          // Handle "All Categories" preference
+          if (prefCategory === "All Categories") return true;
+          // Direct category match
+          if (prefCategory === contract.category) return true;
+          // Partial match for broader categories
+          return contract.category.toLowerCase().includes(prefCategory.toLowerCase()) ||
+                 prefCategory.toLowerCase().includes(contract.category.toLowerCase());
+        });
+        
+        if (categoryMatch) {
+          score += 50;
+          reasons.push(`Matches your preferred industry: ${contract.category}`);
+        }
       }
 
-      // Value range match (45% weight - increased since we removed location)
+      // Value range match (30% weight)
       const contractValue = contract.estimated_value_min || contract.estimated_value_max || 0;
       if (contractValue >= userProfile.min_contract_value && 
           contractValue <= userProfile.max_contract_value) {
-        score += 20;
+        score += 30;
         reasons.push(`Contract value fits your range: ${formatValue(contractValue)}`);
+      } else if (contractValue > 0) {
+        // Partial credit for contracts close to user's range
+        const rangeDiff = Math.min(
+          Math.abs(contractValue - userProfile.min_contract_value),
+          Math.abs(contractValue - userProfile.max_contract_value)
+        );
+        const rangeSize = userProfile.max_contract_value - userProfile.min_contract_value;
+        if (rangeSize > 0 && rangeDiff < rangeSize * 0.5) {
+          score += 15;
+          reasons.push(`Contract value close to your range: ${formatValue(contractValue)}`);
+        }
       }
 
-      // Experience level match (15% weight) - using required_documents and required_forms
-      const allRequirements = [
-        ...(contract.required_documents || []),
-
-        contract.evaluation_methodology || ''
-      ].join(' ').toLowerCase();
-      
-      const experienceMatch = allRequirements.includes(`${userProfile.experience_years} years`) ||
-                             allRequirements.includes('experience');
-      if (experienceMatch) {
-        score += 15;
-        reasons.push(`Experience requirements match your profile`);
+      // Business type match (20% weight) - Match with contract requirements
+      if (userProfile.business_type && userProfile.business_type !== "General") {
+        const allText = [
+          contract.title,
+          contract.short_description,
+          contract.evaluation_methodology,
+          ...(contract.required_documents || [])
+        ].join(' ').toLowerCase();
+        
+        const businessTypeMatch = allText.includes(userProfile.business_type.toLowerCase());
+        if (businessTypeMatch) {
+          score += 20;
+          reasons.push(`Matches your business type: ${userProfile.business_type}`);
+        }
       }
 
       return {
@@ -396,11 +431,13 @@ export default function RecommendedPage() {
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
-          <button className="flex items-center justify-center px-3 py-2 text-slate-600 hover:text-slate-900 transition-colors text-sm">
+          <Link 
+            href="/onboarding/preferences"
+            className="flex items-center justify-center px-3 py-2 text-slate-600 hover:text-slate-900 transition-colors text-sm"
+          >
             <Settings className="w-4 h-4 mr-2" />
             Update Preferences
-          </button>
-
+          </Link>
         </div>
       </div>
 
@@ -421,6 +458,15 @@ export default function RecommendedPage() {
                 <span className="flex items-center">
                   <DollarSign className="w-4 h-4 mr-1" />
                   {formatValue(userProfile.min_contract_value)} - {formatValue(userProfile.max_contract_value)}
+                </span>
+
+                <span className="flex items-center">
+                  <Target className="w-4 h-4 mr-1" />
+                  {userProfile.preferred_categories.length > 0 
+                    ? userProfile.preferred_categories.slice(0, 2).join(", ") + 
+                      (userProfile.preferred_categories.length > 2 ? "..." : "")
+                    : "All Categories"
+                  }
                 </span>
               </div>
             </div>
