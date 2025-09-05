@@ -2,37 +2,10 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
-import { ArrowRight, ArrowLeft, Bell, Mail, MessageCircle, CheckCircle } from "lucide-react";
+import { ArrowRight, ArrowLeft, Mail, MessageCircle } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
-import { onboardingService } from "@/lib/onboardingService";
 
-const notificationTypes = [
-  {
-    id: "new_contracts",
-    title: "New Contract Alerts",
-    description: "Get notified when new contracts matching your criteria are posted",
-    icon: Bell
-  },
-  {
-    id: "deadline_reminders",
-    title: "Deadline Reminders",
-    description: "Receive reminders before contract submission deadlines",
-    icon: Bell
-  },
-  {
-    id: "competition_updates",
-    title: "Competition Updates",
-    description: "Stay informed about competitor activity and market trends",
-    icon: Bell
-  },
-  {
-    id: "success_stories",
-    title: "Success Stories",
-    description: "Learn from other businesses winning contracts in your industry",
-    icon: Bell
-  }
-];
 
 const notificationFrequencies = [
   { label: "Real-time", value: "real-time", description: "Get notified immediately" },
@@ -47,17 +20,9 @@ export default function OnboardingNotifications() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [whatsappNotifications, setWhatsappNotifications] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
-  const [selectedTypes, setSelectedTypes] = useState<string[]>(["new_contracts", "deadline_reminders"]);
   const [frequency, setFrequency] = useState("real-time");
   const [loading, setLoading] = useState(false);
 
-  const handleNotificationTypeToggle = (typeId: string) => {
-    setSelectedTypes(prev => 
-      prev.includes(typeId) 
-        ? prev.filter(t => t !== typeId)
-        : [...prev, typeId]
-    );
-  };
 
   const handleContinue = async () => {
     if (whatsappNotifications && !whatsappNumber.trim()) {
@@ -244,42 +209,6 @@ export default function OnboardingNotifications() {
               )}
             </div>
 
-            {/* Notification Types */}
-            <div className="mb-8">
-              <h2 className="text-xl font-semibold text-slate-900 mb-4">
-                What would you like to be notified about?
-              </h2>
-              
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {notificationTypes.map((type) => (
-                  <div
-                    key={type.id}
-                    className={`p-4 border rounded-lg cursor-pointer transition-colors ${
-                      selectedTypes.includes(type.id)
-                        ? 'border-blue-500 bg-blue-50'
-                        : 'border-slate-200 hover:border-slate-300'
-                    }`}
-                    onClick={() => handleNotificationTypeToggle(type.id)}
-                  >
-                    <div className="flex items-start">
-                      <div className={`w-6 h-6 rounded-full flex items-center justify-center mr-3 mt-0.5 ${
-                        selectedTypes.includes(type.id)
-                          ? 'bg-blue-600 text-white'
-                          : 'border-2 border-slate-300'
-                      }`}>
-                        {selectedTypes.includes(type.id) && (
-                          <CheckCircle className="w-4 h-4" />
-                        )}
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-slate-900 mb-1">{type.title}</h3>
-                        <p className="text-sm text-slate-600">{type.description}</p>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-            </div>
 
             {/* Notification Frequency */}
             <div>
