@@ -1,144 +1,180 @@
-# Uganda eGP Portal Scraper
+# EGP Uganda Portal Scraper
 
-A Python scraper for the Uganda Electronic Government Procurement (eGP) portal that extracts bid notices and exports them to CSV format for import into the BidFlow platform.
+A Python scraper for extracting procurement contracts from the EGP Uganda portal, with enhanced CSV export capabilities for BidFlow platform compatibility.
 
-## 🎯 Features
+## Features
 
-- **Automated Login** - Uses provided credentials to access the portal
-- **Multi-Category Scraping** - Scrapes Works, Supplies, Consultancy, and Non-Consultancy services
-- **Detailed Data Extraction** - Extracts contract details including values, deadlines, and entities
-- **CSV Export** - Exports data in format compatible with BidFlow import
-- **Rate Limiting** - Respectful scraping with delays between requests
-- **Error Handling** - Robust error handling and logging
+- **Automatic Login**: Handles authentication to the EGP portal
+- **Contract Extraction**: Scrapes bid notices and contract details
+- **Data Cleaning**: Automatically cleans and validates contract data
+- **CSV Export**: Exports data in BidFlow-compatible format
+- **Line Ending Fixes**: Automatically fixes Windows/Unix line ending issues
+- **Compatibility Testing**: Tests CSV files for web app import compatibility
+- **Import Reports**: Generates detailed import reports
 
-## 📋 Prerequisites
+## Installation
 
-- Python 3.7+
-- pip (Python package installer)
+```bash
+pip install -r requirements.txt
+```
 
-## 🚀 Installation
-
-1. **Clone or download the scraper files**
-2. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-## 🔧 Configuration
-
-The scraper is pre-configured with your credentials:
-- **Email:** sebunyaronaldoo@gmail.com
-- **Password:** zHE-YZNc%5S8EFD
-
-## 📖 Usage
+## Usage
 
 ### Basic Usage
+
+Run the scraper to fetch contracts and export them:
+
 ```bash
 python egp_scraper.py
 ```
 
-### Custom Usage
+This will:
+- Login to the EGP portal
+- Scrape bid notices and contract details
+- Export a web app ready CSV file
+- Test CSV compatibility
+- Generate an import report
+
+### Programmatic Usage (For Agents)
+
 ```python
 from egp_scraper import EGPScraper
 
 # Initialize scraper
-scraper = EGPScraper("your_email@example.com", "your_password")
+scraper = EGPScraper(email="your_email", password="your_password")
 
 # Login
 if scraper.login():
-    # Scrape all categories
-    contracts = scraper.get_bid_notices(category="all", max_pages=5)
+    # Get contracts
+    contracts = scraper.get_bid_notices_from_page(include_details=True)
     
-    # Or scrape specific category
-    # contracts = scraper.get_bid_notices(category="works", max_pages=3)
+    # Export for web app (automatically fixes line endings)
+    csv_file = scraper.export_to_csv_webapp_ready(contracts)
     
-    # Export to CSV
-    filename = scraper.export_to_csv(contracts)
-    print(f"Exported to: {filename}")
+    # Test compatibility
+    is_compatible = scraper.test_csv_compatibility(csv_file)
+    
+    # Create import report
+    report_file = scraper.create_import_report(csv_file, contracts)
 ```
 
-## 📊 Output Format
+## CSV Compatibility Features
 
-The scraper exports a CSV file with the following columns:
+The scraper automatically ensures CSV files are compatible with the BidFlow platform:
 
-| Column | Description | Example |
-|--------|-------------|---------|
-| reference_number | Contract reference ID | EGP-288161550 |
-| title | Contract title | Supply and delivery of One Station Wagon Motor Vehicle |
-| category | Contract category | Supplies |
-| publish_date | Publication date | 2025-09-10 |
-| procuring_entity | Government entity | Ministry of Health |
-| estimated_value_min | Minimum estimated value | 50000000 |
-| estimated_value_max | Maximum estimated value | 75000000 |
-| currency | Currency code | UGX |
-| submission_deadline | Bid submission deadline | 2025-10-15 |
-| procurement_method | Procurement method | Open Domestic Bidding |
-| status | Contract status | Open |
-| competition_level | Competition level | medium |
-| short_description | Contract description | Brief description of the contract |
-| link | Original contract URL | https://egpuganda.go.ug/index/288161550%5Fegp |
+### ✅ Automatic Line Ending Fixes
+- Converts Windows line endings (CRLF) to Unix line endings (LF)
+- Removes carriage returns (CR) that cause parsing issues
+- Ensures consistent line endings across all platforms
 
-## 🔄 Import to BidFlow
+### ✅ Data Cleaning
+- Removes hidden characters and formatting issues
+- Normalizes whitespace
+- Handles NaN values and empty fields
+- Validates required fields
 
-1. **Run the scraper** to generate CSV file
-2. **Go to BidFlow Admin** → Contracts → Import
-3. **Upload the generated CSV file**
-4. **Review and confirm** the import
+### ✅ Web App Optimization
+- Matches BidFlow import requirements exactly
+- Includes all required fields
+- Proper data types and formats
+- UTF-8 encoding
 
-## ⚙️ Configuration Options
+### ✅ Quality Assurance
+- Automatic compatibility testing
+- Validation of exported data
+- Detailed import reports
+- Error logging and reporting
 
-### Categories Available
-- `"all"` - All categories
-- `"works"` - Construction works
-- `"supplies"` - Goods and supplies
-- `"consultancy"` - Consultancy services
-- `"non-consultancy"` - Non-consultancy services
+## Output Files
 
-### Rate Limiting
-The scraper includes a 2-second delay between requests to be respectful to the server. You can adjust this in the code if needed.
+When you run the scraper, it creates:
 
-## 🛠️ Troubleshooting
+1. **CSV File**: `egp_contracts_webapp_ready_YYYYMMDD_HHMMSS.csv`
+   - Ready for immediate import into BidFlow platform
+   - All line ending issues automatically fixed
+   - Data cleaned and validated
+
+2. **Import Report**: `egp_contracts_webapp_ready_YYYYMMDD_HHMMSS_import_report.txt`
+   - Detailed information about the export
+   - Import instructions
+   - Troubleshooting tips
+
+## API Methods
+
+### Core Methods
+
+- `login()` - Authenticate with the EGP portal
+- `get_bid_notices_from_page()` - Scrape bid notices
+- `export_to_csv_webapp_ready()` - Export optimized CSV for web app
+- `test_csv_compatibility()` - Test CSV compatibility
+- `create_import_report()` - Generate import report
+
+### Data Processing
+
+- `transform_for_webapp()` - Transform raw data to web app format
+- `_clean_string()` - Clean string values
+- `_clean_date()` - Clean and format dates
+- `_extract_category_from_title()` - Extract category from title
+
+## Troubleshooting
 
 ### Common Issues
 
-1. **Login Failed**
-   - Check credentials are correct
-   - Verify the portal is accessible
-   - Check for CAPTCHA requirements
+1. **Line Ending Problems**
+   - The scraper automatically fixes line endings during export
+   - All exported files use Unix line endings (LF)
 
-2. **No Data Found**
-   - The portal structure may have changed
-   - Check if the selectors need updating
-   - Verify the category parameter
+2. **Import Validation Errors**
+   - Ensure you're using the latest version of the platform
+   - Check that the CSV file wasn't modified after export
+   - Verify the file encoding is UTF-8
 
-3. **CSV Export Issues**
-   - Ensure you have write permissions in the directory
-   - Check if pandas is properly installed
+3. **CSV Parsing Issues**
+   - Use `test_csv_compatibility()` to test files
+   - Check the import report for detailed information
 
-### Debug Mode
-Enable debug logging by modifying the logging level in the script:
-```python
-logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
-```
+### Getting Help
 
-## 📝 Notes
+- Check the console output for detailed error messages
+- Review the generated import report for troubleshooting tips
+- Use the `test_csv_compatibility()` method to verify files
 
-- **Respectful Scraping**: The scraper includes delays to avoid overwhelming the server
-- **Data Quality**: Some fields may be empty if not available on the portal
-- **Updates**: The portal structure may change, requiring selector updates
-- **Legal**: Ensure you have permission to scrape the portal data
+## Technical Details
 
-## 🔄 Maintenance
+### Line Ending Handling
+- **Input**: Handles any line ending format (CR, LF, CRLF)
+- **Processing**: Normalizes to Unix line endings (LF) during export
+- **Output**: Ensures consistent LF line endings for maximum compatibility
 
-The scraper may need updates if:
-- The portal HTML structure changes
-- New fields are added to contracts
-- Login process changes
-- Rate limiting requirements change
+### Data Validation
+- Required fields: `reference_number`, `title`, `procuring_entity`
+- Automatic cleaning of string values
+- Handling of missing or invalid data
+- Error reporting for problematic records
 
-## 📞 Support
+### Export Process
+1. Transform raw data to web app format
+2. Clean and validate all fields
+3. Export with proper line endings
+4. Verify compatibility
+5. Generate import report
+
+## Best Practices
+
+1. **Always use the web app ready export** for BidFlow platform imports
+2. **Test CSV compatibility** before attempting imports
+3. **Keep original files** as backups
+4. **Review import reports** for any warnings or issues
+5. **Use programmatic methods** for automated workflows
+
+## Support
 
 For issues or questions:
-1. Check the troubleshooting section
-2. Review the logs for error messages
-3. Verify the portal is accessible manually
+1. Check the console output for error messages
+2. Review the generated import report
+3. Test CSV compatibility using the test method
+4. Ensure you're using the latest version of the scraper
+
+---
+
+**Note**: This scraper is designed specifically for compatibility with the BidFlow platform. All exported CSV files are automatically optimized for successful imports without validation errors. The scraper is optimized for both manual use and programmatic integration with agents or automated systems.

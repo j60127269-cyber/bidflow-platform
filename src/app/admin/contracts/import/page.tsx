@@ -129,6 +129,20 @@ export default function ImportContracts() {
       skipEmptyLines: true,
       complete: (results: any) => {
         const contracts = results.data as ContractRow[];
+        console.log('🔍 CSV parsing complete');
+        console.log('Total rows parsed:', contracts.length);
+        
+        // Debug specific rows
+        if (contracts.length >= 41) {
+          console.log('🔍 Row 41 data:');
+          console.log('  Raw reference_number:', JSON.stringify(contracts[40]?.reference_number));
+          console.log('  Type:', typeof contracts[40]?.reference_number);
+          console.log('  Length:', contracts[40]?.reference_number?.length);
+          console.log('  After trim:', contracts[40]?.reference_number?.trim());
+          console.log('  Is empty after trim:', contracts[40]?.reference_number?.trim() === '');
+          console.log('  Full row:', JSON.stringify(contracts[40], null, 2));
+        }
+        
         setParsedData(contracts);
         setHasUnsavedChanges(true);
         validateData(contracts);
@@ -145,6 +159,15 @@ export default function ImportContracts() {
     
     contracts.forEach((contract, index) => {
       const rowNumber = index + 2; // +2 because of 0-based index and header row
+      
+      // Debug specific rows
+      if (index === 40) { // Row 41 (0-indexed)
+        console.log('🔍 Validating Row 41:');
+        console.log('  Raw reference_number:', JSON.stringify(contract.reference_number));
+        console.log('  After trim:', contract.reference_number?.trim());
+        console.log('  Is empty after trim:', contract.reference_number?.trim() === '');
+        console.log('  Validation check:', !contract.reference_number?.trim());
+      }
       
       // Required fields validation
       if (!contract.reference_number?.trim()) {
@@ -172,6 +195,10 @@ export default function ImportContracts() {
       }
     });
     
+    console.log('🔍 Validation complete');
+    console.log('Total errors:', errors.length);
+    console.log('Errors:', errors);
+    
     setValidationErrors(errors);
     setIsValid(errors.length === 0);
   };
@@ -185,6 +212,15 @@ export default function ImportContracts() {
     setImporting(true);
     
     try {
+      // Debug: Log the data being sent
+      console.log('🔍 Sending data to API:');
+      console.log('Total contracts:', parsedData.length);
+      if (parsedData.length >= 41) {
+        console.log('🔍 Row 41 data being sent:');
+        console.log('  reference_number:', JSON.stringify(parsedData[40]?.reference_number));
+        console.log('  Full row:', JSON.stringify(parsedData[40], null, 2));
+      }
+      
       const response = await fetch('/api/contracts/bulk-import', {
         method: 'POST',
         headers: {
@@ -469,24 +505,24 @@ export default function ImportContracts() {
               >
                 Cancel
               </button>
-              <button
-                onClick={handleImport}
+                <button
+                  onClick={handleImport}
                 disabled={!isValid || importing || parsedData.length === 0}
                 className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {importing ? (
-                  <>
+                >
+                  {importing ? (
+                    <>
                     <Loader2 className="h-4 w-4 mr-2 animate-spin" />
-                    Importing...
-                  </>
-                ) : (
-                  <>
+                      Importing...
+                    </>
+                  ) : (
+                    <>
                     <Upload className="h-4 w-4 mr-2" />
-                    Import Contracts
-                  </>
-                )}
-              </button>
-            </div>
+                      Import Contracts
+                    </>
+                  )}
+                </button>
+              </div>
           </div>
         </div>
       </div>

@@ -802,7 +802,7 @@ export default function ContractDetailsPage() {
                         <div className="flex items-center space-x-3 min-w-0 flex-1">
                           <FileText className="h-5 w-5 text-blue-500 flex-shrink-0" />
                           <div className="min-w-0 flex-1">
-                            <p className="text-sm font-medium text-gray-900 break-words">{file.name}</p>
+                            <p className="text-sm font-medium text-gray-900 break-words">{`File ${index + 1}`}</p>
                             {file.size > 0 && (
                               <p className="text-xs text-gray-500">
                                 {Math.round(file.size / 1024)} KB
@@ -895,46 +895,46 @@ export default function ContractDetailsPage() {
                               <span className="text-gray-500">Not specified</span>
                             )}
                           </td>
-                          <td className="py-3 px-4">
-                            {!similarContract.id.startsWith('demo-') ? (
-                              <Link 
-                                href={`/dashboard/contracts/${similarContract.id}`}
-                                className="text-blue-600 hover:text-blue-800 font-medium text-sm"
-                              >
-                                {similarContract.reference_number || `CON-${similarContract.id.slice(-6)}`}
-                              </Link>
-                            ) : (
-                              <span className="text-gray-500 text-sm">
-                                {similarContract.reference_number || `CON-${similarContract.id.slice(-6)}`}
-                              </span>
-                            )}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-900">
+                        <td className="py-3 px-4">
+                          {!similarContract.id.startsWith('demo-') ? (
+                            <Link 
+                              href={`/dashboard/contracts/${similarContract.id}`}
+                              className="text-blue-600 hover:text-blue-800 font-medium text-sm"
+                            >
+                              {similarContract.reference_number || `CON-${similarContract.id.slice(-6)}`}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-500 text-sm">
+                              {similarContract.reference_number || `CON-${similarContract.id.slice(-6)}`}
+                            </span>
+                          )}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-900">
                             {formatDate((similarContract as any).award_date || similarContract.publish_date || '')}
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-900 max-w-xs">
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-900 max-w-xs">
                             <Link 
                               href={`/dashboard/agencies/${similarContract.procuring_entity?.toLowerCase().replace(/\s+/g, '-')}`}
                               className="text-blue-600 hover:text-blue-800 font-medium text-sm flex items-center"
                             >
                               <Globe className="w-4 h-4 mr-1" />
-                              <div className="truncate" title={similarContract.procuring_entity || 'Not specified'}>
-                                {similarContract.procuring_entity || 'Not specified'}
-                              </div>
+                          <div className="truncate" title={similarContract.procuring_entity || 'Not specified'}>
+                            {similarContract.procuring_entity || 'Not specified'}
+                          </div>
                             </Link>
-                          </td>
-                          <td className="py-3 px-4 text-sm text-gray-900">
-                            {(similarContract as any).awarded_value ? 
-                              formatCurrency((similarContract as any).awarded_value, similarContract.currency) :
-                              formatValue(similarContract.estimated_value_min, similarContract.estimated_value_max, similarContract.currency)
-                            }
-                          </td>
+                        </td>
+                        <td className="py-3 px-4 text-sm text-gray-900">
+                          {(similarContract as any).awarded_value ? 
+                            formatCurrency((similarContract as any).awarded_value, similarContract.currency) :
+                            formatValue(similarContract.estimated_value_min, similarContract.estimated_value_max, similarContract.currency)
+                          }
+                        </td>
                           <td className="py-3 px-4 text-sm text-gray-900">
                             <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                               {(similarContract as any).win_rate || 'N/A'}
                             </span>
                           </td>
-                        </tr>
+                      </tr>
                         <tr>
                           <td colSpan={6} className="px-4 py-2 text-sm text-gray-600 bg-gray-50">
                             <strong>Contract:</strong> {similarContract.title}

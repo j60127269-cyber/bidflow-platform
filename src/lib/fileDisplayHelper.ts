@@ -25,7 +25,7 @@ export function parseBidAttachments(attachments: any[]): DisplayFile[] {
       };
     }
 
-    // If it's a JSON string, try to parse it
+    // If it's a string, it may be a JSON-encoded object OR a plain URL/path.
     if (typeof attachment === 'string') {
       try {
         const parsed = JSON.parse(attachment);
@@ -37,10 +37,11 @@ export function parseBidAttachments(attachments: any[]): DisplayFile[] {
           path: parsed.path || ''
         };
       } catch (error) {
-        // If it's just a file path, construct a basic object
+        // Treat the raw string as the URL; use the filename for the label
+        const filename = attachment.split('/').pop() || 'Unknown file';
         return {
-          name: attachment.split('/').pop() || 'Unknown file',
-          url: '', // We'll need to construct this from the path
+          name: filename,
+          url: attachment,
           size: 0,
           type: 'application/octet-stream',
           path: attachment

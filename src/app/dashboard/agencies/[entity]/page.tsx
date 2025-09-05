@@ -203,6 +203,28 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
     }).format(amount);
   };
 
+  // Compact currency formatter for table display (e.g., 35.0M UGX)
+  const formatCurrencyCompact = (value?: number) => {
+    if (!value) return "N/A";
+    if (value >= 1000000000) {
+      return `${(value / 1000000000).toFixed(1)}B UGX`;
+    } else if (value >= 1000000) {
+      return `${(value / 1000000).toFixed(1)}M UGX`;
+    } else if (value >= 1000) {
+      return `${(value / 1000).toFixed(1)}K UGX`;
+    }
+    return `${value.toLocaleString()} UGX`;
+  };
+
+  const formatDateLong = (dateString?: string) => {
+    if (!dateString) return "Not specified";
+    return new Date(dateString).toLocaleDateString("en-US", {
+      year: "numeric",
+      month: "long",
+      day: "numeric",
+    });
+  };
+
   const scrollToSection = (sectionId: string) => {
     setActiveTab(sectionId);
     const element = document.getElementById(sectionId);
@@ -379,16 +401,6 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
               <span className="ml-2 px-2 py-0.5 text-xs bg-gray-100 text-gray-600 rounded-full">
                 {awardees.length}
               </span>
-            </button>
-            <button
-              onClick={() => scrollToSection("people")}
-              className={`px-4 py-3 text-sm font-medium whitespace-nowrap border-b-2 transition-colors ${
-                activeTab === "people"
-                  ? "border-blue-500 text-blue-600"
-                  : "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300"
-              }`}
-            >
-              People
             </button>
           </div>
         </div>
@@ -638,68 +650,67 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
               <table className="table w-full">
                 <thead>
                   <tr>
+                    <th>Awardee</th>
                     <th>Contract Reference</th>
-                    <th>Title</th>
-                    <th>Awarded To</th>
-                    <th>Value</th>
-                    <th>Date</th>
-                    <th>Status</th>
+                    <th>Award Date</th>
+                    <th>Procuring Entity</th>
+                    <th>Awarded Value</th>
+                    <th>Win Rate</th>
                   </tr>
                 </thead>
                 <tbody>
                   {contracts.slice(0, 10).map((contract) => (
-                    <tr key={contract.id}>
-                      <td>
-                        <Link
-                          href={`/dashboard/contracts/${contract.id}`}
-                          className="text-blue-600 hover:text-blue-800 font-medium"
-                        >
-                          {contract.reference_number}
-                        </Link>
-                      </td>
-                      <td className="max-w-xs truncate">{contract.title}</td>
-                      <td>
-                        <Link
-                          href={`/dashboard/awardees/${contract.awarded_company_id}`}
-                          className="text-blue-600 hover:text-blue-800"
-                        >
-                          {contract.awardees?.company_name}
-                        </Link>
-                      </td>
-                      <td className="font-medium">{formatCurrency(contract.awarded_value || 0)}</td>
-                      <td className="text-gray-600">
-                        {new Date(contract.awarded_date || contract.created_at).toLocaleDateString()}
-                      </td>
-                      <td>
-                        <span className={`px-2 py-1 text-xs font-medium rounded-full ${
-                          contract.status === "active" 
-                            ? "bg-green-100 text-green-800"
-                            : "bg-gray-100 text-gray-800"
-                        }`}>
-                          {contract.status}
-                        </span>
-                      </td>
-                    </tr>
+                    <>
+                      <tr key={contract.id}>
+                        <td>
+                          {contract.awarded_company_id ? (
+                            <Link
+                              href={`/dashboard/awardees/${contract.awarded_company_id}`}
+                              className="text-blue-600 hover:text-blue-800 font-medium"
+                            >
+                              {contract.awardees?.company_name || "View Awardee"}
+                            </Link>
+                          ) : (
+                            <span className="text-gray-500">Not specified</span>
+                          )}
+                        </td>
+                        <td>
+                          <Link
+                            href={`/dashboard/contracts/${contract.id}`}
+                            className="text-blue-600 hover:text-blue-800 font-medium"
+                          >
+                            {contract.reference_number}
+                          </Link>
+                        </td>
+                        <td className="text-gray-900">
+                          {formatDateLong(contract.awarded_date || contract.created_at)}
+                        </td>
+                        <td className="max-w-xs">
+                          <Link
+                            href={`/dashboard/agencies/${contract.procuring_entity?.toLowerCase().replace(/\s+/g, '-')}`}
+                            className="text-blue-600 hover:text-blue-800 font-medium"
+                          >
+                            <span className="truncate inline-block" title={contract.procuring_entity}>
+                              {contract.procuring_entity}
+                            </span>
+                          </Link>
+                        </td>
+                        <td className="font-medium">
+                          {formatCurrencyCompact(contract.awarded_value)}
+                        </td>
+                        <td>
+                          <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">N/A</span>
+                        </td>
+                      </tr>
+                      <tr>
+                        <td colSpan={6} className="px-4 py-2 text-sm text-gray-600 bg-gray-50">
+                          <strong>Contract:</strong> {contract.title}
+                        </td>
+                      </tr>
+                    </>
                   ))}
                 </tbody>
               </table>
-            </div>
-          </div>
-        </section>
-
-        {/* People Section */}
-        <section id="people" className="card">
-          <div className="card-header">
-            <h2 className="card-title">Key Contracting Officers</h2>
-            <p className="text-gray-600">Most active contracting officers</p>
-          </div>
-          <div className="card-body">
-            <div className="text-center py-12">
-              <div className="text-gray-400 mb-4">
-                <Users className="w-16 h-16 mx-auto" />
-              </div>
-              <h3 className="text-lg font-medium text-gray-900 mb-2">People Data Coming Soon</h3>
-              <p className="text-gray-600">Contracting officer information will be available here.</p>
             </div>
           </div>
         </section>
