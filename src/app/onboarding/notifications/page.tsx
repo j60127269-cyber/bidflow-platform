@@ -75,16 +75,94 @@ export default function OnboardingNotifications() {
   };
 
   const formatWhatsAppNumber = (value: string) => {
-    // Remove all non-digits
-    const digits = value.replace(/\D/g, '');
+    // Remove all non-digits and plus signs
+    const digits = value.replace(/[^\d+]/g, '');
     
-    // Format as Uganda number (+256)
-    if (digits.startsWith('256')) {
+    // If it already starts with +, return as is
+    if (digits.startsWith('+')) {
+      return digits;
+    }
+    
+    // If it starts with a country code, add +
+    if (digits.length > 0 && !digits.startsWith('0')) {
       return `+${digits}`;
-    } else if (digits.startsWith('0')) {
+    }
+    
+    // Handle local numbers (starting with 0) - try to detect country
+    if (digits.startsWith('0')) {
+      // Common country codes for local numbers
+      const countryCodes = {
+        '256': '256', // Uganda
+        '254': '254', // Kenya
+        '255': '255', // Tanzania
+        '250': '250', // Rwanda
+        '257': '257', // Burundi
+        '211': '211', // South Sudan
+        '1': '1',     // US/Canada
+        '44': '44',   // UK
+        '33': '33',   // France
+        '49': '49',   // Germany
+        '86': '86',   // China
+        '91': '91',   // India
+        '234': '234', // Nigeria
+        '27': '27',   // South Africa
+        '20': '20',   // Egypt
+        '212': '212', // Morocco
+        '213': '213', // Algeria
+        '216': '216', // Tunisia
+        '218': '218', // Libya
+        '220': '220', // Gambia
+        '221': '221', // Senegal
+        '222': '222', // Mauritania
+        '223': '223', // Mali
+        '224': '224', // Guinea
+        '225': '225', // Ivory Coast
+        '226': '226', // Burkina Faso
+        '227': '227', // Niger
+        '228': '228', // Togo
+        '229': '229', // Benin
+        '230': '230', // Mauritius
+        '231': '231', // Liberia
+        '232': '232', // Sierra Leone
+        '233': '233', // Ghana
+        '235': '235', // Chad
+        '236': '236', // Central African Republic
+        '237': '237', // Cameroon
+        '238': '238', // Cape Verde
+        '239': '239', // São Tomé and Príncipe
+        '240': '240', // Equatorial Guinea
+        '241': '241', // Gabon
+        '242': '242', // Republic of the Congo
+        '243': '243', // Democratic Republic of the Congo
+        '244': '244', // Angola
+        '245': '245', // Guinea-Bissau
+        '246': '246', // British Indian Ocean Territory
+        '248': '248', // Seychelles
+        '249': '249', // Sudan
+        '251': '251', // Ethiopia
+        '252': '252', // Somalia
+        '253': '253', // Djibouti
+        '258': '258', // Mozambique
+        '260': '260', // Zambia
+        '261': '261', // Madagascar
+        '262': '262', // Réunion
+        '263': '263', // Zimbabwe
+        '264': '264', // Namibia
+        '265': '265', // Malawi
+        '266': '266', // Lesotho
+        '267': '267', // Botswana
+        '268': '268', // Eswatini
+        '269': '269', // Comoros
+        '290': '290', // Saint Helena
+        '291': '291', // Eritrea
+        '297': '297', // Aruba
+        '298': '298', // Faroe Islands
+        '299': '299', // Greenland
+      };
+      
+      // For now, default to Uganda (+256) for local numbers
+      // In a real app, you might want to detect the user's country
       return `+256${digits.slice(1)}`;
-    } else if (digits.length > 0) {
-      return `+256${digits}`;
     }
     
     return digits;
@@ -206,7 +284,7 @@ export default function OnboardingNotifications() {
                     type="tel"
                     value={whatsappNumber}
                     onChange={(e) => setWhatsappNumber(formatWhatsAppNumber(e.target.value))}
-                    placeholder="Enter your phone number"
+                    placeholder="Enter your WhatsApp number (e.g., +1234567890)"
                     className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                   />
                 </div>
