@@ -699,7 +699,7 @@ export default function DashboardPage() {
                 </div>
                 <button
                   onClick={handleUpgrade}
-                  className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors"
+                  className="bg-green-600 hover:bg-green-700 text-white px-6 py-2 rounded-lg text-sm font-medium transition-colors"
                 >
                   Upgrade Now
             </button>
