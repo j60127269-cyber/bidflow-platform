@@ -183,20 +183,20 @@ export default function NotificationsPage() {
             <Bell className="h-12 w-12 text-slate-400 mx-auto mb-4" />
             <h3 className="text-lg font-medium text-slate-900 mb-2">No notifications</h3>
             <p className="text-slate-600">You're all caught up! We'll notify you when new contracts match your preferences.</p>
-          </div>
+        </div>
         ) : (
-          <div className="divide-y divide-slate-200">
-            {notifications.map((notification) => (
-              <div
-                key={notification.id}
+        <div className="divide-y divide-slate-200">
+          {notifications.map((notification) => (
+            <div 
+              key={notification.id} 
                 className={`p-6 hover:bg-slate-50 transition-colors ${
                   !notification.read ? 'bg-blue-50/50' : ''
                 }`}
-              >
+            >
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0">
-                    {getNotificationIcon(notification.type)}
-                  </div>
+                  {getNotificationIcon(notification.type)}
+                </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
                       <h3 className={`text-sm font-medium ${
@@ -204,16 +204,16 @@ export default function NotificationsPage() {
                       }`}>
                         {notification.title}
                       </h3>
-                      <div className="flex items-center space-x-2">
+                    <div className="flex items-center space-x-2">
                         <span className="text-xs text-slate-500 flex items-center">
                           <Clock className="w-3 h-3 mr-1" />
                           {formatTime(notification.created_at)}
                         </span>
-                        {!notification.read && (
+                      {!notification.read && (
                           <div className="w-2 h-2 bg-blue-600 rounded-full"></div>
-                        )}
-                      </div>
+                      )}
                     </div>
+                  </div>
                     <p className="mt-1 text-sm text-slate-600">
                       {notification.message}
                     </p>
@@ -225,11 +225,11 @@ export default function NotificationsPage() {
                         Mark as read
                       </button>
                     )}
-                  </div>
                 </div>
               </div>
-            ))}
-          </div>
+            </div>
+          ))}
+        </div>
         )}
       </div>
     </div>

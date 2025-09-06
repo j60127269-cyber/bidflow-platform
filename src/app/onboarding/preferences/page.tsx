@@ -140,18 +140,18 @@ export default function OnboardingPreferences() {
     }
 
     const rangeValues = ranges.map(range => {
-      switch (range) {
-        case 'small':
-          return { min: 0, max: 1000000 };
-        case 'medium':
-          return { min: 1000000, max: 10000000 };
-        case 'large':
-          return { min: 10000000, max: 100000000 };
-        case 'enterprise':
-          return { min: 100000000, max: 999999999999 };
-        default:
-          return { min: 0, max: 1000000 };
-      }
+    switch (range) {
+      case 'small':
+        return { min: 0, max: 1000000 };
+      case 'medium':
+        return { min: 1000000, max: 10000000 };
+      case 'large':
+        return { min: 10000000, max: 100000000 };
+      case 'enterprise':
+        return { min: 100000000, max: 999999999999 };
+      default:
+        return { min: 0, max: 1000000 };
+    }
     });
 
     // Calculate overall min and max from all selected ranges

@@ -1,12 +1,11 @@
 -- Add notification preference columns to profiles table
 -- Run this script to add notification settings to user profiles
 
--- Add notification preference columns
-ALTER TABLE profiles 
-ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN DEFAULT true,
-ADD COLUMN IF NOT EXISTS whatsapp_notifications BOOLEAN DEFAULT false,
-ADD COLUMN IF NOT EXISTS whatsapp_number TEXT,
-ADD COLUMN IF NOT EXISTS notification_frequency TEXT DEFAULT 'real-time';
+-- Add notification preference columns one by one
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS email_notifications BOOLEAN DEFAULT true;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS whatsapp_notifications BOOLEAN DEFAULT false;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS whatsapp_number TEXT;
+ALTER TABLE profiles ADD COLUMN IF NOT EXISTS notification_frequency TEXT DEFAULT 'real-time';
 
 -- Add check constraint for notification frequency (drop first if exists)
 DO $$ 
@@ -34,8 +33,16 @@ BEGIN
 END $$;
 
 -- Add index for notification preferences
-CREATE INDEX IF NOT EXISTS idx_profiles_notification_prefs 
-ON profiles(email_notifications, whatsapp_notifications, notification_frequency);
+DO $$ 
+BEGIN
+    IF NOT EXISTS (
+        SELECT 1 FROM pg_indexes 
+        WHERE indexname = 'idx_profiles_notification_prefs'
+    ) THEN
+        CREATE INDEX idx_profiles_notification_prefs 
+        ON profiles(email_notifications, whatsapp_notifications, notification_frequency);
+    END IF;
+END $$;
 
 -- Update existing profiles with default values
 UPDATE profiles 

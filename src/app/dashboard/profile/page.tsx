@@ -39,7 +39,8 @@ export default function ProfilePage() {
     experience_years: '',
     preferred_categories: [] as string[],
     min_contract_value: '',
-    max_contract_value: ''
+    max_contract_value: '',
+    whatsapp_number: ''
   });
 
   useEffect(() => {
@@ -121,7 +122,8 @@ export default function ProfilePage() {
             experience_years: newProfile.experience_years?.toString() || '',
             preferred_categories: newProfile.preferred_categories || [],
             min_contract_value: newProfile.min_contract_value?.toString() || '',
-            max_contract_value: newProfile.max_contract_value?.toString() || ''
+            max_contract_value: newProfile.max_contract_value?.toString() || '',
+            whatsapp_number: newProfile.whatsapp_number || ''
           });
         } else {
           console.error('Error fetching profile:', error);
@@ -138,7 +140,8 @@ export default function ProfilePage() {
           experience_years: data.experience_years?.toString() || '',
           preferred_categories: data.preferred_categories || [],
           min_contract_value: data.min_contract_value?.toString() || '',
-          max_contract_value: data.max_contract_value?.toString() || ''
+          max_contract_value: data.max_contract_value?.toString() || '',
+          whatsapp_number: data.whatsapp_number || ''
         });
       }
     } catch (error) {
@@ -174,6 +177,7 @@ export default function ProfilePage() {
           preferred_categories: formData.preferred_categories,
           min_contract_value: parseInt(formData.min_contract_value) || 0,
           max_contract_value: parseInt(formData.max_contract_value) || 0,
+          whatsapp_number: formData.whatsapp_number,
           updated_at: new Date().toISOString()
         })
         .eq('id', user.id);
@@ -214,7 +218,8 @@ export default function ProfilePage() {
         experience_years: profile.experience_years?.toString() || '',
         preferred_categories: profile.preferred_categories || [],
         min_contract_value: profile.min_contract_value?.toString() || '',
-        max_contract_value: profile.max_contract_value?.toString() || ''
+        max_contract_value: profile.max_contract_value?.toString() || '',
+        whatsapp_number: profile.whatsapp_number || ''
       });
     }
     setEditing(false);
@@ -370,6 +375,29 @@ export default function ProfilePage() {
                       <Briefcase className="h-4 w-4 text-gray-400 mr-2" />
                       <span className="text-gray-900">
                         {profile?.experience_years ? `${profile.experience_years} years` : 'Not specified'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* WhatsApp Number */}
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                    WhatsApp Number
+                  </label>
+                  {editing ? (
+                    <input
+                      type="tel"
+                      value={formData.whatsapp_number}
+                      onChange={(e) => setFormData(prev => ({ ...prev, whatsapp_number: e.target.value }))}
+                      className="w-full p-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-blue-500"
+                      placeholder="Enter WhatsApp number (e.g., +256700000000)"
+                    />
+                  ) : (
+                    <div className="flex items-center p-3 bg-gray-50 rounded-lg border border-gray-200">
+                      <Phone className="h-4 w-4 text-gray-400 mr-2" />
+                      <span className="text-gray-900">
+                        {profile?.whatsapp_number || 'Not specified'}
                       </span>
                     </div>
                   )}

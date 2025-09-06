@@ -231,7 +231,7 @@ export default function RecommendedPage() {
 
     let filtered = contracts.map(contract => {
       let score = 0;
-      const reasons: string[] = [];
+             const reasons: string[] = [];
 
       // Category match (50% weight) - Enhanced to handle multiple preferred categories
       if (userProfile.preferred_categories && userProfile.preferred_categories.length > 0) {
@@ -277,8 +277,8 @@ export default function RecommendedPage() {
           contract.short_description,
           contract.evaluation_methodology,
           ...(contract.required_documents || [])
-        ].join(' ').toLowerCase();
-        
+      ].join(' ').toLowerCase();
+      
         const businessTypeMatch = allText.includes(userProfile.business_type.toLowerCase());
         if (businessTypeMatch) {
           score += 20;

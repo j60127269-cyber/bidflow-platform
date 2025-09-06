@@ -212,9 +212,6 @@ export default function OnboardingNotifications() {
                       className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
                     />
                   </div>
-                  <p className="text-xs text-slate-500 mt-1">
-                    We'll send you a test message to verify your number
-                  </p>
                 </div>
               )}
             </div>
