@@ -7,6 +7,10 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 
 
+const notificationFrequencies = [
+  { label: "Real-time", value: "real-time", description: "Get notified immediately" },
+  { label: "Daily Digest", value: "daily", description: "Once per day summary" }
+];
 
 export default function OnboardingNotifications() {
   const router = useRouter();
@@ -15,6 +19,7 @@ export default function OnboardingNotifications() {
   const [emailNotifications, setEmailNotifications] = useState(true);
   const [whatsappNotifications, setWhatsappNotifications] = useState(false);
   const [whatsappNumber, setWhatsappNumber] = useState("");
+  const [frequency, setFrequency] = useState("real-time");
   const [loading, setLoading] = useState(false);
 
 
@@ -204,6 +209,29 @@ export default function OnboardingNotifications() {
             </div>
 
 
+            {/* Notification Frequency */}
+            <div>
+              <h2 className="text-xl font-semibold text-slate-900 mb-4">
+                How often would you like to receive notifications?
+              </h2>
+              
+               <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                {notificationFrequencies.map((freq) => (
+                  <button
+                    key={freq.value}
+                    onClick={() => setFrequency(freq.value)}
+                    className={`p-4 rounded-lg border text-left transition-colors ${
+                      frequency === freq.value
+                        ? 'border-blue-500 bg-blue-50 text-blue-700'
+                        : 'border-slate-200 hover:border-slate-300'
+                    }`}
+                  >
+                    <div className="font-medium">{freq.label}</div>
+                    <div className="text-sm opacity-75">{freq.description}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
           </div>
 
           {/* Navigation */}
