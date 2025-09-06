@@ -16,6 +16,11 @@ export interface Profile {
   subscription_status?: 'none' | 'active' | 'cancelled' | 'expired';
   subscription_id?: string;
   role?: 'user' | 'admin' | 'super_admin';
+  // Notification preferences
+  email_notifications?: boolean;
+  whatsapp_notifications?: boolean;
+  whatsapp_number?: string;
+  notification_frequency?: 'real-time' | 'daily';
   created_at: string;
   updated_at: string;
 }

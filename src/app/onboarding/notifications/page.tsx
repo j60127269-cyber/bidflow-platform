@@ -32,12 +32,22 @@ export default function OnboardingNotifications() {
     setLoading(true);
     
     try {
+      // Log the notification preferences being saved
+      console.log('Saving notification preferences:', {
+        email_notifications: emailNotifications,
+        whatsapp_notifications: whatsappNotifications,
+        whatsapp_number: whatsappNumber,
+        notification_frequency: frequency
+      });
+
       // Save notification preferences to Supabase
       const { error } = await supabase
         .from('profiles')
         .update({
-          // Store notification preferences in metadata or create separate table
-          // For now, we'll store basic notification settings
+          email_notifications: emailNotifications,
+          whatsapp_notifications: whatsappNotifications,
+          whatsapp_number: whatsappNotifications ? whatsappNumber : null,
+          notification_frequency: frequency,
           updated_at: new Date().toISOString()
         })
         .eq('id', user?.id);
@@ -49,6 +59,7 @@ export default function OnboardingNotifications() {
         return;
       }
 
+      console.log('Notification preferences saved successfully!');
       // Navigate to next step
       router.push('/onboarding/subscription');
     } catch (error) {
