@@ -202,16 +202,13 @@ export default function OnboardingNotifications() {
                   <label className="block text-sm font-medium text-slate-700 mb-2">
                     WhatsApp Number
                   </label>
-                  <div className="flex items-center">
-                    <span className="text-slate-500 mr-2">+256</span>
-                    <input
-                      type="tel"
-                      value={whatsappNumber}
-                      onChange={(e) => setWhatsappNumber(formatWhatsAppNumber(e.target.value))}
-                      placeholder="Enter your phone number"
-                      className="flex-1 px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
-                    />
-                  </div>
+                  <input
+                    type="tel"
+                    value={whatsappNumber}
+                    onChange={(e) => setWhatsappNumber(formatWhatsAppNumber(e.target.value))}
+                    placeholder="Enter your phone number"
+                    className="w-full px-3 py-2 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 focus:border-green-500"
+                  />
                 </div>
               )}
             </div>
