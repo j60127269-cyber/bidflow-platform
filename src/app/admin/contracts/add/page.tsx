@@ -11,6 +11,7 @@ import {
 } from 'lucide-react';
 import FileUpload from '@/components/FileUpload';
 import { UploadedFile } from '@/lib/storageService';
+import { CANONICAL_CATEGORIES } from '@/lib/categories';
 
 interface ContractForm {
   // 1. BASIC TENDER INFORMATION (19 variables)
@@ -238,13 +239,7 @@ export default function AddContract() {
     }
   };
 
-  const categories = [
-    'supplies',
-    'services',
-    'works',
-    'consultancy',
-    'other'
-  ];
+  const categories = CANONICAL_CATEGORIES;
 
   const procurementMethods = [
     'open domestic bidding',

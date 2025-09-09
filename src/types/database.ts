@@ -108,14 +108,20 @@ export interface Contract {
   import_date?: string; // When this record was imported
   detail_url?: string; // Link to original procurement portal
   
-  // 9. SYSTEM FIELDS
+  // 9. AI PROCESSING FIELDS
+  ai_summary_short?: string; // AI-generated short description
+  ai_category?: string; // AI-suggested category classification
+  ai_processing_status?: 'pending' | 'processing' | 'completed' | 'failed';
+  ai_processed_at?: string; // Timestamp when AI processing was completed
+  
+  // 10. SYSTEM FIELDS
   created_at: string;
   updated_at: string;
   
-  // 10. RECOMMENDATION FIELDS (for display purposes)
+  // 11. RECOMMENDATION FIELDS (for display purposes)
   recommendationScore?: number;
   
-  // 11. NESTED RELATIONSHIPS (for queries)
+  // 12. NESTED RELATIONSHIPS (for queries)
   awardees?: { company_name: string; };
   procuring_entities?: { entity_name: string; };
   competitor_bids?: CompetitorBid[];

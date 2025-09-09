@@ -6,6 +6,7 @@ import { supabase } from '@/lib/supabase';
 import { ArrowLeft, Save, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { use } from 'react';
+import { CANONICAL_CATEGORIES } from '@/lib/categories';
 import FileUpload from '@/components/FileUpload';
 import { UploadedFile } from '@/lib/storageService';
 
@@ -53,21 +54,7 @@ interface ContractForm {
   detail_url?: string;
 }
 
-const categories = [
-  'Construction & Engineering',
-  'Information Technology',
-  'Logistics & Transportation',
-  'Healthcare & Medical',
-  'Education & Training',
-  'Agriculture & Farming',
-  'Manufacturing',
-  'Financial Services',
-  'Real Estate',
-  'Energy & Utilities',
-  'Tourism & Hospitality',
-  'Media & Communications',
-  'Other'
-];
+const categories = CANONICAL_CATEGORIES;
 
 const procurementMethods = [
   'Open Domestic Bidding',

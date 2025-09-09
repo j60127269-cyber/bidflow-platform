@@ -6,22 +6,9 @@ import { ArrowRight, ArrowLeft, Plus, X } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/lib/supabase";
 import { onboardingService } from "@/lib/onboardingService";
+import { CANONICAL_CATEGORIES } from "@/lib/categories";
 
-const industries = [
-  "Construction & Engineering",
-  "Information Technology",
-  "Logistics & Transportation", 
-  "Healthcare & Medical",
-  "Education & Training",
-  "Agriculture & Farming",
-  "Manufacturing",
-  "Financial Services",
-  "Real Estate",
-  "Energy & Utilities",
-  "Tourism & Hospitality",
-  "Media & Communications",
-  "Other"
-];
+const industries = CANONICAL_CATEGORIES;
 
 const contractRanges = [
   { label: "Small (Under 1M UGX)", value: "small" },
