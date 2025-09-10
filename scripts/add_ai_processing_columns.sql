@@ -81,3 +81,4 @@ CREATE TRIGGER trigger_update_ai_processing_status
 -- Grant necessary permissions
 GRANT SELECT, UPDATE ON contracts TO authenticated;
 GRANT USAGE ON SCHEMA public TO authenticated;
+

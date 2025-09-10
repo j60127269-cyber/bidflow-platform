@@ -1,19 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/utils/supabase/server';
-import { z } from 'zod';
-
-// Validation schema for the request
-const ProcessContractSchema = z.object({
-  contractId: z.string().uuid(),
-  attachmentUrls: z.array(z.string().url()).optional(),
-});
+import { supabase } from '@/lib/supabase';
 
 export async function POST(
   request: NextRequest,
   { params }: { params: { contractId: string } }
 ) {
   try {
-    const supabase = createClient();
+    // Using the existing Supabase client
     
     // Validate the contract ID
     const { contractId } = params;
@@ -53,16 +46,6 @@ export async function POST(
       );
     }
 
-    // Get attachment URLs from the contract
-    const attachmentUrls = contract.attachments || [];
-    
-    if (attachmentUrls.length === 0) {
-      return NextResponse.json(
-        { error: 'No attachments found for processing' },
-        { status: 400 }
-      );
-    }
-
     // For now, return the contract data that n8n can process
     // The actual AI processing will happen in the n8n workflow
     return NextResponse.json({
@@ -72,7 +55,6 @@ export async function POST(
         title: contract.title,
         description: contract.description,
         category: contract.category,
-        attachmentUrls: attachmentUrls,
         currentStage: contract.current_stage,
         status: contract.status
       },
@@ -94,7 +76,7 @@ export async function GET(
   { params }: { params: { contractId: string } }
 ) {
   try {
-    const supabase = createClient();
+    // Using the existing Supabase client
     const { contractId } = params;
 
     const { data: contract, error } = await supabase
@@ -123,4 +105,3 @@ export async function GET(
     );
   }
 }
-

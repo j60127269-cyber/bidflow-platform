@@ -50,7 +50,7 @@ export default function Home() {
             </div>
             <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-slate-900 mb-6 leading-tight">
               Win More Contracts with
-              <span className="text-blue-600 block"> AiData-Driven Intelligence</span>
+              <span className="text-blue-600 block"> Ai Data Driven Intelligence</span>
             </h1>
             <p className="text-lg sm:text-xl text-slate-600 mb-8 max-w-3xl mx-auto leading-relaxed">
               Uganda's premier contract intelligence platform. Track contracts, analyze competition, 

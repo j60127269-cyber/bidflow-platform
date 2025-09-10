@@ -3,10 +3,10 @@ import { supabase } from '@/lib/supabase';
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse the request body
     const body = await request.json();
+    console.log('Received body:', body);
     
-    const { contractId, aiSummaryShort, aiCategory, processingStatus, errorMessage } = body;
+    const { contractId, aiSummaryShort, aiCategory, processingStatus } = body;
 
     // Update the contract with AI processing results
     const updateData: any = {
@@ -25,11 +25,7 @@ export async function POST(request: NextRequest) {
       updateData.ai_processed_at = new Date().toISOString();
     }
 
-    // Add error message if processing failed
-    if (processingStatus === 'failed' && errorMessage) {
-      updateData.ai_processing_status = 'failed';
-      // You could also store the error message in a separate field if needed
-    }
+    console.log('Updating with data:', updateData);
 
     const { data: updatedContract, error } = await supabase
       .from('contracts')
@@ -41,7 +37,7 @@ export async function POST(request: NextRequest) {
     if (error) {
       console.error('Error updating contract:', error);
       return NextResponse.json(
-        { error: 'Failed to update contract' },
+        { error: 'Failed to update contract', details: error.message },
         { status: 500 }
       );
     }
@@ -61,42 +57,3 @@ export async function POST(request: NextRequest) {
   }
 }
 
-// GET endpoint to check AI processing status
-export async function GET(request: NextRequest) {
-  try {
-    const { searchParams } = new URL(request.url);
-    const contractId = searchParams.get('contractId');
-
-    if (!contractId) {
-      return NextResponse.json(
-        { error: 'Contract ID is required' },
-        { status: 400 }
-      );
-    }
-
-    const { data: contract, error } = await supabase
-      .from('contracts')
-      .select('id, title, ai_summary_short, ai_category, ai_processing_status, ai_processed_at')
-      .eq('id', contractId)
-      .single();
-
-    if (error || !contract) {
-      return NextResponse.json(
-        { error: 'Contract not found' },
-        { status: 404 }
-      );
-    }
-
-    return NextResponse.json({
-      contract,
-      hasAiProcessing: !!(contract.ai_summary_short || contract.ai_category)
-    });
-
-  } catch (error) {
-    console.error('Error fetching AI processing status:', error);
-    return NextResponse.json(
-      { error: 'Internal server error' },
-      { status: 500 }
-    );
-  }
-}
