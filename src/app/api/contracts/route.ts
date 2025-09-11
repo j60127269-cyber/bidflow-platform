@@ -42,8 +42,24 @@ export async function POST(request: NextRequest) {
         }).catch(error => {
           console.error('Error triggering preference notifications:', error);
         });
+
+        // Trigger AI processing webhook for the new contract
+        if (process.env.N8N_WEBHOOK_URL) {
+          fetch(process.env.N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': process.env.N8N_WEBHOOK_AUTH || ''
+            },
+            body: JSON.stringify({
+              contractIds: [data.id]
+            })
+          }).catch(error => {
+            console.error('Error triggering AI processing webhook:', error);
+          });
+        }
       } catch (error) {
-        console.error('Error setting up preference notifications:', error);
+        console.error('Error setting up notifications and AI processing:', error);
       }
     }
 

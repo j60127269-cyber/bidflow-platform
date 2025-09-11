@@ -1,0 +1,317 @@
+{
+  "name": "AI Contract Processing Workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "/ai/import-finished",
+        "authentication": "headerAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [-400, 0],
+      "id": "webhook-trigger",
+      "name": "Webhook Trigger",
+      "webhookId": "ai-processing-webhook",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "RMlELUKe3MeOEZlT",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "options": {
+          "reset": false
+        }
+      },
+      "type": "n8n-nodes-base.splitInBatches",
+      "typeVersion": 3,
+      "position": [-200, 0],
+      "id": "split-batches",
+      "name": "Process Contracts in Batches"
+    },
+    {
+      "parameters": {
+        "method": "GET",
+        "url": "=https://bidcloud.org/api/ai/process/{{ $json.contractId }}",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [0, 0],
+      "id": "get-contract-data",
+      "name": "Get Contract Data",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "RMlELUKe3MeOEZlT",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict"
+          },
+          "conditions": [
+            {
+              "id": "condition-1",
+              "leftValue": "={{ $json.contract.hasAiProcessing }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equal"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2,
+      "position": [200, 0],
+      "id": "check-if-processed",
+      "name": "Already Processed?"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://api.groq.com/openai/v1/chat/completions",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "Authorization",
+              "value": "Bearer YOUR_GROQ_API_KEY"
+            },
+            {
+              "name": "Content-Type",
+              "value": "application/json"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "model",
+              "value": "llama-3.1-70b-versatile"
+            },
+            {
+              "name": "messages",
+              "value": "=[{\"role\": \"system\", \"content\": \"You are an expert contract analyst. Analyze the provided contract information and generate a concise summary (max 200 words) and categorize it into one of these categories: construction, supplies, services, it, other. Return your response as JSON with 'summary' and 'category' fields.\"}, {\"role\": \"user\", \"content\": \"Contract Title: {{ $json.contract.title }}\\nContract Description: {{ $json.contract.description || 'No description available' }}\\nCurrent Category: {{ $json.contract.category }}\\nCurrent Stage: {{ $json.contract.currentStage }}\\nStatus: {{ $json.contract.status }}\"}]"
+            },
+            {
+              "name": "temperature",
+              "value": 0.3
+            },
+            {
+              "name": "max_tokens",
+              "value": 500
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, -100],
+      "id": "groq-ai-processing",
+      "name": "Groq AI Processing",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "groq-api-key",
+          "name": "Groq API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Parse the AI response and prepare update data\nconst aiResponse = JSON.parse($input.first().json.choices[0].message.content);\n\n// Extract contract ID from the original request\nconst contractId = $('Get Contract Data').first().json.contract.id;\n\nreturn {\n  contractId: contractId,\n  aiSummaryShort: aiResponse.summary,\n  aiCategory: aiResponse.category,\n  processingStatus: 'completed'\n};"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [600, -100],
+      "id": "parse-ai-response",
+      "name": "Parse AI Response"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bidcloud.org/api/ai/update-contract",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contractId",
+              "value": "={{ $json.contractId }}"
+            },
+            {
+              "name": "aiSummaryShort",
+              "value": "={{ $json.aiSummaryShort }}"
+            },
+            {
+              "name": "aiCategory",
+              "value": "={{ $json.aiCategory }}"
+            },
+            {
+              "name": "processingStatus",
+              "value": "={{ $json.processingStatus }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [800, -100],
+      "id": "update-contract",
+      "name": "Update Contract with AI Results",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "RMlELUKe3MeOEZlT",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://bidcloud.org/api/ai/update-contract",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "contractId",
+              "value": "={{ $json.contract.id }}"
+            },
+            {
+              "name": "processingStatus",
+              "value": "failed"
+            },
+            {
+              "name": "errorMessage",
+              "value": "Contract already processed or processing failed"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [400, 100],
+      "id": "skip-processing",
+      "name": "Skip Processing",
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "RMlELUKe3MeOEZlT",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook Trigger": {
+      "main": [
+        [
+          {
+            "node": "Process Contracts in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Process Contracts in Batches": {
+      "main": [
+        [
+          {
+            "node": "Get Contract Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Process Contracts in Batches",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Get Contract Data": {
+      "main": [
+        [
+          {
+            "node": "Already Processed?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Already Processed?": {
+      "main": [
+        [
+          {
+            "node": "Groq AI Processing",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Skip Processing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Groq AI Processing": {
+      "main": [
+        [
+          {
+            "node": "Parse AI Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse AI Response": {
+      "main": [
+        [
+          {
+            "node": "Update Contract with AI Results",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "meta": {
+    "templateCredsSetupCompleted": true
+  }
+}

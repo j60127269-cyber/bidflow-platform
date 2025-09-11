@@ -1,12 +1,23 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { supabase } from '@/lib/supabase';
+import { z } from 'zod';
+
+// Validation schema for AI processing results
+const UpdateContractSchema = z.object({
+  contractId: z.string().uuid(),
+  aiSummaryShort: z.string().optional(),
+  aiCategory: z.string().optional(),
+  processingStatus: z.enum(['processing', 'completed', 'failed']),
+  errorMessage: z.string().optional(),
+});
 
 export async function POST(request: NextRequest) {
   try {
-    // Parse the request body
+    // Parse and validate the request body
     const body = await request.json();
+    const validatedData = UpdateContractSchema.parse(body);
     
-    const { contractId, aiSummaryShort, aiCategory, processingStatus, errorMessage } = body;
+    const { contractId, aiSummaryShort, aiCategory, processingStatus, errorMessage } = validatedData;
 
     // Update the contract with AI processing results
     const updateData: any = {
@@ -54,8 +65,16 @@ export async function POST(request: NextRequest) {
 
   } catch (error) {
     console.error('Error in AI update endpoint:', error);
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: 'Invalid request data', details: error.errors },
+        { status: 400 }
+      );
+    }
+
     return NextResponse.json(
-      { error: 'Internal server error', details: error.message },
+      { error: 'Internal server error' },
       { status: 500 }
     );
   }

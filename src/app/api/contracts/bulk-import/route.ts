@@ -354,6 +354,34 @@ export async function POST(request: NextRequest) {
         }
       }
 
+      // Trigger AI processing webhook for newly inserted contracts
+      if (insertedCount > 0 && process.env.N8N_WEBHOOK_URL) {
+        try {
+          const contractIds = insertedContracts.map(c => c.id);
+          console.log(`Triggering AI processing for ${contractIds.length} contracts`);
+          
+          const webhookResponse = await fetch(process.env.N8N_WEBHOOK_URL, {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+              'Authorization': process.env.N8N_WEBHOOK_AUTH || ''
+            },
+            body: JSON.stringify({
+              contractIds: contractIds
+            })
+          });
+
+          if (webhookResponse.ok) {
+            console.log('AI processing webhook triggered successfully');
+          } else {
+            console.error('Failed to trigger AI processing webhook:', webhookResponse.status);
+          }
+        } catch (webhookError) {
+          console.error('Error triggering AI processing webhook:', webhookError);
+          // Don't fail the import if webhook fails
+        }
+      }
+
       return NextResponse.json({
         success: insertedCount,
         skipped_existing: skippedExisting.length,

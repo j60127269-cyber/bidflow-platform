@@ -3,13 +3,13 @@ import { supabase } from '@/lib/supabase';
 
 export async function POST(
   request: NextRequest,
-  { params }: { params: { contractId: string } }
+  { params }: { params: Promise<{ contractId: string }> }
 ) {
   try {
     // Using the existing Supabase client
     
     // Validate the contract ID
-    const { contractId } = params;
+    const { contractId } = await params;
     if (!contractId || typeof contractId !== 'string') {
       return NextResponse.json(
         { error: 'Invalid contract ID' },
@@ -73,11 +73,11 @@ export async function POST(
 // GET endpoint to check contract status
 export async function GET(
   request: NextRequest,
-  { params }: { params: { contractId: string } }
+  { params }: { params: Promise<{ contractId: string }> }
 ) {
   try {
     // Using the existing Supabase client
-    const { contractId } = params;
+    const { contractId } = await params;
 
     const { data: contract, error } = await supabase
       .from('contracts')

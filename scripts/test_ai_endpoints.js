@@ -77,4 +77,3 @@ node -e "require('./scripts/test_ai_endpoints.js').testAiEndpoints('YOUR_CONTRAC
 
 // Export the function for testing
 module.exports = { testAiEndpoints };
-
