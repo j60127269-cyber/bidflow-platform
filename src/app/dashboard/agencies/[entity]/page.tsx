@@ -71,76 +71,70 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
   useEffect(() => {
     async function fetchData() {
       try {
+        setLoading(true);
         console.log("🔍 Fetching data for entity:", entity);
         
-        // First try to fetch by ID (UUID)
-        let { data: agencyData, error: agencyError } = await supabase
+        // Convert slug back to readable entity name
+        const entityName = entity.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+        console.log("🔍 Looking for entity name:", entityName);
+        
+        let agencyData = null;
+        
+        // First try to fetch from procuring_entities table
+        const { data: procuringEntityData, error: procuringEntityError } = await supabase
           .from("procuring_entities")
           .select("*")
-          .eq("id", entity)
+          .ilike("entity_name", `%${entityName}%`)
           .single();
 
-        // If not found by ID, try to fetch by entity name (slug)
-        if (agencyError) {
-          const entityName = entity.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
-          console.log("🔍 Trying to find by entity name:", entityName);
+        if (procuringEntityData && !procuringEntityError) {
+          agencyData = procuringEntityData;
+          console.log("🏢 Found agency in procuring_entities:", agencyData);
+        } else {
+          // If not found in procuring_entities, create a mock agency from contracts data
+          console.log("🔍 Not found in procuring_entities, creating from contracts data");
           
-          const { data, error } = await supabase
-            .from("procuring_entities")
+          // Get contracts for this entity to create agency info
+          const { data: contractsForEntity, error: contractsError } = await supabase
+            .from("contracts")
             .select("*")
-            .ilike("entity_name", entityName)
-            .single();
-          
-          if (error) throw error;
-          agencyData = data;
+            .ilike("procuring_entity", `%${entityName}%`)
+            .limit(1);
+
+          if (contractsForEntity && contractsForEntity.length > 0) {
+            const firstContract = contractsForEntity[0];
+            agencyData = {
+              id: `mock-${entity}`,
+              entity_name: firstContract.procuring_entity,
+              entity_type: "Government Agency",
+              contact_person: firstContract.contact_person || null,
+              contact_email: firstContract.contact_person ? `${firstContract.contact_person.toLowerCase().replace(/\s+/g, '.')}@gov.ug` : null,
+              website: null,
+              address: null,
+              description: `Procuring entity responsible for ${firstContract.procuring_entity}`,
+              created_at: firstContract.created_at,
+              updated_at: firstContract.updated_at
+            };
+            console.log("🏢 Created mock agency:", agencyData);
+          }
         }
 
-        console.log("🏢 Found agency:", agencyData);
+        if (!agencyData) {
+          console.error("❌ Could not find or create agency data");
+          setLoading(false);
+          return;
+        }
+
         setAgency(agencyData);
 
-        // Fetch contracts for this agency - try multiple approaches
-        console.log("📋 Fetching contracts for agency ID:", agencyData.id);
+        // Fetch contracts for this agency
+        console.log("📋 Fetching contracts for agency:", agencyData.entity_name);
         
-        // First try: by procuring_entity_id (simplified query)
-        let { data: contractsData, error: contractsError } = await supabase
+        const { data: contractsData, error: contractsError } = await supabase
           .from("contracts")
           .select("*")
-          .eq("procuring_entity_id", agencyData.id);
-
-        console.log("📋 Contracts by procuring_entity_id:", contractsData?.length || 0, contractsError);
-
-        // If no contracts found, try by procuring_entity name (simplified query)
-        if (!contractsData || contractsData.length === 0) {
-          console.log("🔍 Trying to find contracts by procuring_entity name");
-          const { data: contractsByName, error: contractsByNameError } = await supabase
-            .from("contracts")
-            .select("*")
-            .eq("procuring_entity", agencyData.entity_name);
-
-          console.log("📋 Contracts by procuring_entity name:", contractsByName?.length || 0, contractsByNameError);
-          
-          if (contractsByName && contractsByName.length > 0) {
-            contractsData = contractsByName;
-            contractsError = null;
-          }
-        }
-
-        // If still no contracts, try the ILIKE search that we know works
-        if (!contractsData || contractsData.length === 0) {
-          console.log("🔍 Trying ILIKE search for contracts");
-          
-          const { data: filteredContracts, error: filteredError } = await supabase
-            .from("contracts")
-            .select("*")
-            .ilike("procuring_entity", `%${agencyData.entity_name}%`);
-
-          console.log("📋 Contracts with ILIKE search:", filteredContracts?.length || 0, filteredError);
-          
-          if (filteredContracts && filteredContracts.length > 0) {
-            contractsData = filteredContracts;
-            contractsError = null;
-          }
-        }
+          .ilike("procuring_entity", `%${agencyData.entity_name}%`)
+          .order("created_at", { ascending: false });
 
         if (contractsError) {
           console.error("❌ Contracts error:", contractsError);
@@ -149,14 +143,16 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
         setContracts(contractsData || []);
         console.log("✅ Final contracts count:", contractsData?.length || 0);
 
-        // Fetch top awardees
+        // Fetch top awardees (limit to avoid performance issues)
         const { data: awardeesData, error: awardeesError } = await supabase
           .from("awardees")
           .select("*")
           .eq("is_active", true)
           .limit(10);
 
-        if (awardeesError) throw awardeesError;
+        if (awardeesError) {
+          console.error("❌ Awardees error:", awardeesError);
+        }
         setAwardees(awardeesData || []);
 
       } catch (error) {
@@ -166,23 +162,45 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
       }
     }
 
-    fetchData();
-  }, [entity, supabase]);
+    if (entity) {
+      fetchData();
+    }
+  }, [entity]);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="animate-spin rounded-full h-32 w-32 border-b-2 border-blue-600"></div>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex flex-col items-center justify-center min-h-[400px]">
+            <div className="animate-spin rounded-full h-16 w-16 border-b-2 border-blue-600 mb-4"></div>
+            <h2 className="text-xl font-semibold text-gray-900 mb-2">Loading Agency Information</h2>
+            <p className="text-gray-600">Fetching data for {entity.replace(/-/g, ' ')}...</p>
+          </div>
+        </div>
       </div>
     );
   }
 
   if (!agency) {
     return (
-      <div className="container mx-auto px-4 py-8">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold text-gray-900 mb-4">Agency Not Found</h1>
-          <p className="text-gray-600">The requested agency could not be found.</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="text-center">
+            <div className="mx-auto flex items-center justify-center h-12 w-12 rounded-full bg-red-100 mb-4">
+              <Building className="h-6 w-6 text-red-600" />
+            </div>
+            <h1 className="text-2xl font-bold text-gray-900 mb-4">Agency Not Found</h1>
+            <p className="text-gray-600 mb-6">
+              The agency "{entity.replace(/-/g, ' ')}" could not be found in our database.
+            </p>
+            <Link
+              href="/dashboard"
+              className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700"
+            >
+              <ChevronLeft className="w-4 h-4 mr-2" />
+              Back to Dashboard
+            </Link>
+          </div>
         </div>
       </div>
     );
