@@ -160,7 +160,7 @@ export default function SubscriptionPage() {
             {features.map((feature, index) => (
               <div key={index} className="flex items-center">
                 <CheckCircle className="w-4 h-4 text-green-600 mr-3 flex-shrink-0" />
-                <span className="text-sm text-slate-700">{feature}</span>
+                <span className="text-sm text-slate-800 font-medium">{feature}</span>
               </div>
             ))}
           </div>

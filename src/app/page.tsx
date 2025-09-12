@@ -1,7 +1,10 @@
 import Link from "next/link";
-import { Search, TrendingUp, Bell, BarChart3, Users, Award, CheckCircle, Star, ArrowRight } from "lucide-react";
+import { Search, TrendingUp, Bell, BarChart3, Users, Award, CheckCircle, Star, ArrowRight, Menu, X } from "lucide-react";
+import { useState } from "react";
 
 export default function Home() {
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
       {/* Navigation */}
@@ -28,15 +31,50 @@ export default function Home() {
             </div>
             {/* Mobile menu button */}
             <div className="md:hidden">
-              <button className="text-slate-600 hover:text-blue-600">
-                <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 6h16M4 12h16M4 18h16" />
-                </svg>
+              <button 
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="text-slate-600 hover:text-blue-600 p-2 rounded-md"
+                aria-label="Toggle mobile menu"
+              >
+                {mobileMenuOpen ? (
+                  <X className="w-6 h-6" />
+                ) : (
+                  <Menu className="w-6 h-6" />
+                )}
               </button>
             </div>
           </div>
         </div>
       </nav>
+
+      {/* Mobile menu */}
+      {mobileMenuOpen && (
+        <div className="md:hidden bg-white border-b border-slate-200 shadow-lg">
+          <div className="px-2 pt-2 pb-3 space-y-1">
+            <a 
+              href="#features" 
+              className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Features
+            </a>
+            <a 
+              href="#pricing" 
+              className="block px-3 py-2 rounded-md text-base font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Pricing
+            </a>
+            <Link 
+              href="/login" 
+              className="block px-3 py-2 rounded-md text-base font-medium bg-blue-600 text-white hover:bg-blue-700 transition-colors"
+              onClick={() => setMobileMenuOpen(false)}
+            >
+              Sign In
+            </Link>
+          </div>
+        </div>
+      )}
 
       {/* Hero Section */}
       <section className="relative overflow-hidden">
@@ -206,7 +244,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="font-semibold text-slate-900">John Kato</div>
-                  <div className="text-sm text-slate-500">Construction Manager, Kampala Builders</div>
+                  <div className="text-sm text-slate-600">Construction Manager, Kampala Builders</div>
                 </div>
               </div>
             </div>
@@ -226,7 +264,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="font-semibold text-slate-900">Sarah Muwonge</div>
-                  <div className="text-sm text-slate-500">CEO, Tech Solutions Uganda</div>
+                  <div className="text-sm text-slate-600">CEO, Tech Solutions Uganda</div>
                 </div>
               </div>
             </div>
@@ -246,7 +284,7 @@ export default function Home() {
                 </div>
                 <div>
                   <div className="font-semibold text-slate-900">David Nalukenge</div>
-                  <div className="text-sm text-slate-500">Procurement Director, Uganda Logistics</div>
+                  <div className="text-sm text-slate-600">Procurement Director, Uganda Logistics</div>
                 </div>
               </div>
             </div>
@@ -283,27 +321,27 @@ export default function Home() {
                 <ul className="text-left space-y-4 mb-8">
                   <li className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                    Unlimited contract searches
+                    <span className="text-slate-800 font-medium">Unlimited contract searches</span>
                   </li>
                   <li className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                    Advanced analytics & insights
+                    <span className="text-slate-800 font-medium">Advanced analytics & insights</span>
                   </li>
                   <li className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                    Real-time notifications
+                    <span className="text-slate-800 font-medium">Real-time notifications</span>
                   </li>
                   <li className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                    Team collaboration tools
+                    <span className="text-slate-800 font-medium">Team collaboration tools</span>
                   </li>
                   <li className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                    Mobile money & card payments
+                    <span className="text-slate-800 font-medium">Mobile money & card payments</span>
           </li>
                   <li className="flex items-center">
                     <CheckCircle className="w-5 h-5 text-green-600 mr-3" />
-                    Priority customer support
+                    <span className="text-slate-800 font-medium">Priority customer support</span>
           </li>
                 </ul>
                 <Link 
@@ -313,7 +351,7 @@ export default function Home() {
                   Start Free Trial
                   <ArrowRight className="w-5 h-5 ml-2 inline" />
                 </Link>
-                <p className="text-sm text-slate-500 mt-4">free trial availabel </p>
+                <p className="text-sm text-slate-600 mt-4">7-day free trial, no credit card required</p>
               </div>
             </div>
           </div>

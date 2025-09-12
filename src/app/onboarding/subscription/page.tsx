@@ -259,7 +259,7 @@ export default function OnboardingSubscription() {
               {features.map((feature, index) => (
                 <div key={index} className="flex items-center">
                   <CheckCircle className="w-5 h-5 text-green-600 mr-3 flex-shrink-0" />
-                  <span className="text-slate-700">{feature}</span>
+                  <span className="text-slate-800 font-medium">{feature}</span>
                 </div>
               ))}
             </div>
