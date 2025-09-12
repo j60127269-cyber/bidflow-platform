@@ -128,11 +128,19 @@ export default function AddContract() {
 
   const addDocument = () => {
     if (newDocument.trim()) {
-      setFormData(prev => ({
-        ...prev,
-        required_documents: [...prev.required_documents, newDocument.trim()]
-      }));
-      setNewDocument('');
+      // Split by comma and filter out empty strings
+      const documents = newDocument
+        .split(',')
+        .map(doc => doc.trim())
+        .filter(doc => doc.length > 0);
+      
+      if (documents.length > 0) {
+        setFormData(prev => ({
+          ...prev,
+          required_documents: [...prev.required_documents, ...documents]
+        }));
+        setNewDocument('');
+      }
     }
   };
 
@@ -773,6 +781,14 @@ export default function AddContract() {
                   <label className="block text-sm font-medium text-gray-700 mb-2">
                     Required Documents
                   </label>
+                  <div className="mb-3">
+                    <p className="text-sm text-gray-600">
+                      💡 <strong>Tip:</strong> You can add multiple documents at once by separating them with commas
+                    </p>
+                    <p className="text-xs text-gray-500 mt-1">
+                      Example: "Company Registration Certificate, Tax Clearance Certificate, Technical Proposal"
+                    </p>
+                  </div>
                   <div className="space-y-2">
                     {formData.required_documents.map((doc, index) => (
                       <div key={index} className="flex items-center space-x-2">
@@ -793,7 +809,7 @@ export default function AddContract() {
                         type="text"
                         value={newDocument}
                         onChange={(e) => setNewDocument(e.target.value)}
-                        placeholder="Add required document"
+                        placeholder="Add required document(s) - separate multiple with commas"
                         className="flex-1 px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                         onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addDocument())}
                       />

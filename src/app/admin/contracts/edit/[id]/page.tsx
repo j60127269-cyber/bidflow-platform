@@ -152,11 +152,19 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
 
   const addDocument = () => {
     if (newDocument.trim()) {
-      setContractWithTracking(prev => ({
-        ...prev,
-        required_documents: [...(prev.required_documents || []), newDocument.trim()]
-      }));
-      setNewDocument('');
+      // Split by comma and filter out empty strings
+      const documents = newDocument
+        .split(',')
+        .map(doc => doc.trim())
+        .filter(doc => doc.length > 0);
+      
+      if (documents.length > 0) {
+        setContractWithTracking(prev => ({
+          ...prev,
+          required_documents: [...(prev.required_documents || []), ...documents]
+        }));
+        setNewDocument('');
+      }
     }
   };
 
@@ -849,12 +857,20 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
         <div className="bg-white rounded-lg shadow p-6">
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Required Documents</h2>
           <div className="space-y-4">
+            <div className="mb-2">
+              <p className="text-sm text-gray-600">
+                💡 <strong>Tip:</strong> You can add multiple documents at once by separating them with commas
+              </p>
+              <p className="text-xs text-gray-500 mt-1">
+                Example: "Company Registration Certificate, Tax Clearance Certificate, Technical Proposal"
+              </p>
+            </div>
             <div className="flex space-x-2">
               <input
                 type="text"
                 value={newDocument}
                 onChange={(e) => setNewDocument(e.target.value)}
-                placeholder="Add required document"
+                placeholder="Add required document(s) - separate multiple with commas"
                 className="flex-1 px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 onKeyPress={(e) => e.key === 'Enter' && (e.preventDefault(), addDocument())}
               />
