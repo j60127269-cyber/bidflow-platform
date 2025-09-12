@@ -90,7 +90,7 @@ class EGPScraper:
                 f"{self.base_url}/api/v1/public_bid_archives"  # Fallback to archives
             ]
             
-        contracts = []
+            contracts = []
             page = 1
             
             # Try each endpoint until we find one that works
@@ -752,8 +752,8 @@ class EGPScraper:
     def export_to_csv(self, contracts: List[Dict], filename: str = None, for_webapp: bool = False) -> str:
         """Export contracts to CSV file with proper line endings for web app compatibility"""
         try:
-        if not filename:
-            timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
+            if not filename:
+                timestamp = datetime.now().strftime('%Y%m%d_%H%M%S')
                 filename = f'egp_contracts_import_{timestamp}.csv'
         
             # Transform data if exporting for web app

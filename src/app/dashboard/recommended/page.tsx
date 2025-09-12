@@ -21,6 +21,7 @@ import Link from "next/link";
 import { supabase } from "@/lib/supabase";
 import { Contract } from "@/types/database";
 import { TrackingPreferencesService } from "@/lib/trackingPreferences";
+import { formatContractDescription, CARD_STYLES } from "@/lib/textUtils";
 
 interface UserProfile {
   id: string;
@@ -570,9 +571,9 @@ export default function RecommendedPage() {
              const reasons = (contract as { recommendationReasons: string[] }).recommendationReasons || [];
             
             return (
-                             <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200">
+                             <div key={contract.id} className={CARD_STYLES.container}>
 
-                <div className="p-6">
+                <div className={CARD_STYLES.content}>
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1 pr-4">
@@ -589,10 +590,16 @@ export default function RecommendedPage() {
                     </span>
                   </div>
 
-                  {/* Description */}
-                  <p className="text-sm text-slate-600 mb-4">
-                    {contract.short_description || contract.evaluation_methodology || 'No description available'}
-                  </p>
+                  {/* Description - Fixed height with 7 lines */}
+                  <div className={CARD_STYLES.description} style={{
+                    display: '-webkit-box',
+                    WebkitLineClamp: 7,
+                    WebkitBoxOrient: 'vertical',
+                    overflow: 'hidden',
+                    lineHeight: '1.4'
+                  }}>
+                    {formatContractDescription(contract.short_description || contract.evaluation_methodology)}
+                  </div>
 
                   
 
@@ -625,7 +632,7 @@ export default function RecommendedPage() {
                   </div>
 
                                      {/* Actions */}
-                   <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-slate-200 space-y-3 sm:space-y-0">
+                   <div className={CARD_STYLES.actions}>
                      <div className="flex flex-wrap items-center gap-2">
                        <Link
                          href={`/dashboard/contracts/${contract.id}`}

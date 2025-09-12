@@ -24,6 +24,7 @@ import { Contract } from "@/types/database";
 import { TrackingPreferencesService } from "@/lib/trackingPreferences";
 import TruncatedText from "@/components/TruncatedText";
 import { CANONICAL_CATEGORIES } from "@/lib/categories";
+import { formatContractDescription, CARD_STYLES } from "@/lib/textUtils";
 
 export default function DashboardPage() {
   const { user } = useAuth();
@@ -471,10 +472,10 @@ export default function DashboardPage() {
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
                       {getDisplayContracts().map((contract, index) => (
-              <div key={contract.id} className="bg-white rounded-lg shadow border border-slate-200 relative">
+              <div key={contract.id} className={CARD_STYLES.container}>
 
                 
-                <div className="p-6">
+                <div className={CARD_STYLES.content}>
                   {/* Header */}
                   <div className="flex items-start justify-between mb-4">
                     <div className="flex-1">
@@ -499,10 +500,16 @@ export default function DashboardPage() {
                     </div>
                   </div>
 
-                {/* Description */}
-                <p className="text-sm text-slate-600 mb-4">
-                  {contract.short_description || contract.evaluation_methodology || 'No description available'}
-                </p>
+                {/* Description - Fixed height with 7 lines */}
+                <div className={CARD_STYLES.description} style={{
+                  display: '-webkit-box',
+                  WebkitLineClamp: 7,
+                  WebkitBoxOrient: 'vertical',
+                  overflow: 'hidden',
+                  lineHeight: '1.4'
+                }}>
+                  {formatContractDescription(contract.short_description || contract.evaluation_methodology)}
+                </div>
 
                 {/* Details */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
@@ -533,7 +540,7 @@ export default function DashboardPage() {
         </div>
 
                                  {/* Actions */}
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between pt-4 border-t border-slate-200 space-y-3 sm:space-y-0">
+                <div className={CARD_STYLES.actions}>
                                        <div className="flex flex-wrap items-center gap-2">
                      <Link
                        href={`/dashboard/contracts/${contract.id}`}
