@@ -85,12 +85,35 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
         
         let agencyData = null;
         
-        // First try to fetch from procuring_entities table
-        const { data: procuringEntityData, error: procuringEntityError } = await supabase
-          .from("procuring_entities")
-          .select("*")
-          .ilike("entity_name", `%${entityName}%`)
-          .single();
+        // First try to fetch from procuring_entities table with flexible search
+        // Try multiple variations of the entity name
+        const searchVariations = [
+          entityName, // Original conversion
+          entityName.replace(/\bAnd\b/g, '&'), // Try with & instead of And
+          entityName.replace(/\bEnvironment\b/g, 'Environments'), // Try plural
+          entity.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase()).replace(/\bAnd\b/g, '&'), // Direct with &
+        ];
+        
+        let procuringEntityData = null;
+        let procuringEntityError = null;
+        
+        // Try each variation until we find a match
+        for (const variation of searchVariations) {
+          console.log("🔍 Trying variation:", variation);
+          const { data, error } = await supabase
+            .from("procuring_entities")
+            .select("*")
+            .ilike("entity_name", `%${variation}%`)
+            .single();
+            
+          if (data && !error) {
+            procuringEntityData = data;
+            procuringEntityError = null;
+            console.log("✅ Found agency with variation:", variation);
+            break;
+          }
+          procuringEntityError = error;
+        }
 
         if (procuringEntityData && !procuringEntityError) {
           agencyData = procuringEntityData;
@@ -100,11 +123,26 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
           console.log("🔍 Not found in procuring_entities, creating proper agency from contracts data");
           
           // Get contracts for this entity to create agency info
-          const { data: contractsForEntity, error: contractsError } = await supabase
-            .from("contracts")
-            .select("*")
-            .ilike("procuring_entity", `%${entityName}%`)
-            .limit(1);
+          // Try multiple variations for contract search too
+          let contractsForEntity = null;
+          let contractsError = null;
+          
+          for (const variation of searchVariations) {
+            console.log("🔍 Searching contracts with variation:", variation);
+            const { data, error } = await supabase
+              .from("contracts")
+              .select("*")
+              .ilike("procuring_entity", `%${variation}%`)
+              .limit(1);
+              
+            if (data && data.length > 0 && !error) {
+              contractsForEntity = data;
+              contractsError = null;
+              console.log("✅ Found contracts with variation:", variation);
+              break;
+            }
+            contractsError = error;
+          }
 
           if (contractsForEntity && contractsForEntity.length > 0) {
             const firstContract = contractsForEntity[0];
