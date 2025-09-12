@@ -74,6 +74,11 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
         setLoading(true);
         console.log("🔍 Fetching data for entity:", entity);
         
+        // PROPER DATA FLOW:
+        // 1. First: Find/create agency in procuring_entities table
+        // 2. Then: Fetch contracts linked via procuring_entity_id foreign key
+        // 3. This ensures proper relational data structure
+        
         // Convert slug back to readable entity name
         const entityName = entity.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
         console.log("🔍 Looking for entity name:", entityName);
@@ -91,8 +96,8 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
           agencyData = procuringEntityData;
           console.log("🏢 Found agency in procuring_entities:", agencyData);
         } else {
-          // If not found in procuring_entities, create a mock agency from contracts data
-          console.log("🔍 Not found in procuring_entities, creating from contracts data");
+          // If not found in procuring_entities, create a proper agency from contracts data
+          console.log("🔍 Not found in procuring_entities, creating proper agency from contracts data");
           
           // Get contracts for this entity to create agency info
           const { data: contractsForEntity, error: contractsError } = await supabase
@@ -103,19 +108,41 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
 
           if (contractsForEntity && contractsForEntity.length > 0) {
             const firstContract = contractsForEntity[0];
-            agencyData = {
-              id: `mock-${entity}`,
-              entity_name: firstContract.procuring_entity,
-              entity_type: "Government Agency",
-              contact_person: firstContract.contact_person || null,
-              contact_email: firstContract.contact_person ? `${firstContract.contact_person.toLowerCase().replace(/\s+/g, '.')}@gov.ug` : null,
-              website: null,
-              address: null,
-              description: `Procuring entity responsible for ${firstContract.procuring_entity}`,
-              created_at: firstContract.created_at,
-              updated_at: firstContract.updated_at
-            };
-            console.log("🏢 Created mock agency:", agencyData);
+            
+            // Create a proper agency in the procuring_entities table
+            const { data: newAgency, error: createError } = await supabase
+              .from("procuring_entities")
+              .insert({
+                entity_name: firstContract.procuring_entity,
+                entity_type: "Government Agency",
+                contact_person: firstContract.contact_person || null,
+                contact_email: firstContract.contact_person ? `${firstContract.contact_person.toLowerCase().replace(/\s+/g, '.')}@gov.ug` : null,
+                website: null,
+                address: null,
+                description: `Procuring entity responsible for ${firstContract.procuring_entity}`
+              })
+              .select()
+              .single();
+
+            if (createError) {
+              console.error("❌ Error creating agency:", createError);
+              // Fallback to mock data if creation fails
+              agencyData = {
+                id: `mock-${entity}`,
+                entity_name: firstContract.procuring_entity,
+                entity_type: "Government Agency",
+                contact_person: firstContract.contact_person || null,
+                contact_email: firstContract.contact_person ? `${firstContract.contact_person.toLowerCase().replace(/\s+/g, '.')}@gov.ug` : null,
+                website: null,
+                address: null,
+                description: `Procuring entity responsible for ${firstContract.procuring_entity}`,
+                created_at: firstContract.created_at,
+                updated_at: firstContract.updated_at
+              };
+            } else {
+              agencyData = newAgency;
+              console.log("🏢 Created new agency in database:", agencyData);
+            }
           }
         }
 
@@ -127,13 +154,13 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
 
         setAgency(agencyData);
 
-        // Fetch contracts for this agency
-        console.log("📋 Fetching contracts for agency:", agencyData.entity_name);
+        // Fetch contracts for this agency using proper foreign key relationship
+        console.log("📋 Fetching contracts for agency ID:", agencyData.id);
         
         const { data: contractsData, error: contractsError } = await supabase
           .from("contracts")
           .select("*")
-          .ilike("procuring_entity", `%${agencyData.entity_name}%`)
+          .eq("procuring_entity_id", agencyData.id)
           .order("created_at", { ascending: false });
 
         if (contractsError) {
