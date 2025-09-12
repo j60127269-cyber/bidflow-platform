@@ -478,32 +478,56 @@ export default function ContractDetailsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       {/* Header */}
-      <div className="bg-white shadow">
+      <div className="bg-white border-b border-gray-200">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between py-4 sm:py-0 sm:h-16 gap-4">
-            <div className="flex items-start sm:items-center space-x-4 min-w-0 flex-1">
+          <div className="py-6">
+            {/* Breadcrumb */}
+            <div className="mb-4">
               <Link
                 href="/dashboard"
-                className="inline-flex items-center text-sm text-gray-500 hover:text-gray-700 flex-shrink-0"
+                className="inline-flex items-center text-sm text-gray-500 hover:text-blue-600 transition-colors"
               >
                 <ArrowLeft className="w-4 h-4 mr-1" />
-                <span className="hidden sm:inline">Back to Dashboard</span>
-                <span className="sm:hidden">Back</span>
+                Back to Dashboard
               </Link>
-              <div className="min-w-0 flex-1">
-                <h1 className="text-lg sm:text-xl font-semibold text-gray-900 break-words leading-tight">
+            </div>
+            
+            {/* Title and Actions */}
+            <div className="flex flex-col lg:flex-row lg:items-start lg:justify-between gap-6">
+              <div className="flex-1 min-w-0">
+                {/* Category Badge */}
+                <div className="mb-3">
+                  <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                    {contract.category}
+                  </span>
+                </div>
+                
+                {/* Contract Title */}
+                <h1 className="text-2xl lg:text-3xl font-bold text-gray-900 leading-tight mb-3">
                   {contract.title}
                 </h1>
-                <p className="text-sm text-gray-500 break-all mt-1">
-                  Reference: {contract.reference_number || 'Not specified'}
-                </p>
+                
+                {/* Reference Number */}
+                <div className="flex items-center text-gray-600">
+                  <FileText className="w-4 h-4 mr-2" />
+                  <span className="text-sm font-medium">Reference:</span>
+                  <span className="text-sm ml-1 font-mono bg-gray-100 px-2 py-1 rounded">
+                    {contract.reference_number || 'Not specified'}
+                  </span>
+                </div>
               </div>
-            </div>
-            <div className="flex items-center space-x-2 sm:space-x-3 flex-shrink-0">
-              <button className="inline-flex items-center px-2 sm:px-3 py-2 border border-gray-300 rounded-md shadow-sm text-xs sm:text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 transition-colors">
-                <Share2 className="w-4 h-4 mr-1 sm:mr-2" />
-                <span className="hidden sm:inline">Share</span>
-              </button>
+              
+              {/* Action Buttons */}
+              <div className="flex items-center space-x-3 flex-shrink-0">
+                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+                  <Share2 className="w-4 h-4 mr-2" />
+                  Share
+                </button>
+                <button className="inline-flex items-center px-4 py-2 border border-transparent rounded-lg shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+                  <Target className="w-4 h-4 mr-2" />
+                  {isTracking ? 'Tracking' : 'Track Contract'}
+                </button>
+              </div>
             </div>
           </div>
         </div>
@@ -514,36 +538,33 @@ export default function ContractDetailsPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
           {/* Main Content */}
           <div className="lg:col-span-2 space-y-6">
-            {/* Basic Information */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Contract Details</h2>
+            {/* Contract Overview */}
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center">
+                    <FileText className="w-4 h-4 text-blue-600" />
+                  </div>
+                </div>
+                <h2 className="ml-3 text-xl font-semibold text-gray-900">Contract Overview</h2>
+              </div>
               
               {/* Short Description */}
               {contract.short_description && (
-                <div className="mb-4">
-                  <label className="block text-sm font-medium text-gray-500">Description</label>
-                  <p className="mt-1 text-sm text-gray-900 break-words leading-relaxed">{contract.short_description}</p>
+                <div className="mb-6 p-4 bg-gray-50 rounded-lg">
+                  <h3 className="text-sm font-medium text-gray-900 mb-2">Description</h3>
+                  <p className="text-gray-700 leading-relaxed">{contract.short_description}</p>
                 </div>
               )}
               
-              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-500">Category</label>
-                  <p className="mt-1 text-sm text-gray-900 capitalize">{contract.category}</p>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Procurement Method</label>
+                  <p className="text-gray-900 font-medium">{contract.procurement_method}</p>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500">Procurement Method</label>
-                  <p className="mt-1 text-sm text-gray-900">{contract.procurement_method}</p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Estimated Value</label>
-                  <p className="mt-1 text-sm text-gray-900">
-                    {formatValue(contract.estimated_value_min, contract.estimated_value_max, contract.currency)}
-                  </p>
-                </div>
-                <div>
-                  <label className="block text-sm font-medium text-gray-500">Status</label>
-                  <span className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Status</label>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${
                     contract.status === 'open' ? 'bg-green-100 text-green-800' :
                     contract.status === 'closed' ? 'bg-red-100 text-red-800' :
                     contract.status === 'awarded' ? 'bg-blue-100 text-blue-800' :
@@ -553,8 +574,14 @@ export default function ContractDetailsPage() {
                   </span>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-500">Est. Level of Competition</label>
-                  <span className={`mt-1 inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getCompetitionLevelColor(contract.competition_level)}`}>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Estimated Value</label>
+                  <p className="text-gray-900 font-medium">
+                    {formatValue(contract.estimated_value_min, contract.estimated_value_max, contract.currency)}
+                  </p>
+                </div>
+                <div>
+                  <label className="block text-sm font-medium text-gray-500 mb-1">Competition Level</label>
+                  <span className={`inline-flex items-center px-3 py-1 rounded-full text-sm font-medium ${getCompetitionLevelColor(contract.competition_level)}`}>
                     {getCompetitionLevelText(contract.competition_level)}
                   </span>
                 </div>
@@ -562,43 +589,49 @@ export default function ContractDetailsPage() {
             </div>
 
             {/* Source Section */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <div className="flex items-center justify-between">
-                              <div className="flex items-center space-x-3">
-                <h3 className="text-lg font-medium text-gray-900">Source</h3>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center mb-4">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-green-100 rounded-lg flex items-center justify-center">
+                    <Globe className="w-4 h-4 text-green-600" />
+                  </div>
+                </div>
+                <h3 className="ml-3 text-xl font-semibold text-gray-900">Source Information</h3>
               </div>
-                {contract.detail_url && (
+              
+              {contract.detail_url ? (
+                <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
+                  <div>
+                    <p className="text-sm font-medium text-gray-900">Original Source</p>
+                    <p className="text-sm text-gray-600">View the original tender notice</p>
+                  </div>
                   <a
                     href={contract.detail_url}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                    className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-lg shadow-sm text-white bg-green-600 hover:bg-green-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-green-500 transition-all duration-200"
                   >
-                    <span>Open</span>
-                    <svg 
-                      className="ml-2 h-4 w-4" 
-                      fill="none" 
-                      stroke="currentColor" 
-                      viewBox="0 0 24 24"
-                    >
-                      <path 
-                        strokeLinecap="round" 
-                        strokeLinejoin="round" 
-                        strokeWidth={2} 
-                        d="M10 6H6a2 2 0 00-2 2v10a2 2 0 002 2h10a2 2 0 002-2v-4M14 4h6m0 0v6m0-6L10 14" 
-                      />
-                    </svg>
+                    <span>View Original</span>
+                    <Globe className="ml-2 h-4 w-4" />
                   </a>
-                )}
-              </div>
-              {!contract.detail_url && (
-                <p className="text-sm text-gray-500 mt-2">No external source available</p>
+                </div>
+              ) : (
+                <div className="p-4 bg-gray-50 rounded-lg">
+                  <p className="text-sm text-gray-500">No external source link available</p>
+                </div>
               )}
             </div>
 
             {/* Timeline */}
-            <div className="bg-white shadow rounded-lg p-6">
-              <h2 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h2>
+            <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6">
+              <div className="flex items-center mb-6">
+                <div className="flex-shrink-0">
+                  <div className="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center">
+                    <Calendar className="w-4 h-4 text-purple-600" />
+                  </div>
+                </div>
+                <h3 className="ml-3 text-xl font-semibold text-gray-900">Timeline</h3>
+              </div>
               <div className="space-y-4">
                 {contract.publish_date && (
                   <div className="flex items-center">
