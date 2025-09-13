@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import React, { useEffect, useState } from "react";
 import { supabase } from "@/lib/supabase";
 import { Building, Globe, ChevronDown, Share2, Heart, Bell, FileText, DollarSign, Target, Users, ChevronLeft } from "lucide-react";
 import Link from "next/link";
@@ -743,8 +743,8 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
                 </thead>
                 <tbody>
                   {contracts.slice(0, 10).map((contract) => (
-                    <>
-                      <tr key={contract.id}>
+                    <React.Fragment key={contract.id}>
+                      <tr>
                         <td>
                           {contract.awarded_company_id ? (
                             <Link
@@ -790,7 +790,7 @@ export default function AgencyDetailPage({ params }: { params: Promise<{ entity:
                           <strong>Contract:</strong> {contract.title}
                         </td>
                       </tr>
-                    </>
+                    </React.Fragment>
                   ))}
                 </tbody>
               </table>
