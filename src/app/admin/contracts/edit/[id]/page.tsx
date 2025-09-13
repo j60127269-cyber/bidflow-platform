@@ -48,6 +48,7 @@ interface ContractForm {
   award_information?: string;
   awarded_value?: number;
   awarded_to?: string;
+  award_date?: string;
   publish_status: 'draft' | 'published' | 'archived';
   published_at?: string;
   published_by?: string;
@@ -121,6 +122,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     award_information: '',
     awarded_value: undefined,
     awarded_to: '',
+    award_date: '',
          publish_status: 'draft',
      published_at: '',
      published_by: '',
@@ -276,6 +278,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           award_information: data.award_information || '',
           awarded_value: data.awarded_value || undefined,
           awarded_to: data.awarded_to || '',
+          award_date: data.award_date || '',
                      publish_status: data.publish_status || 'draft',
            published_at: data.published_at ? new Date(data.published_at).toISOString().split('T')[0] : '',
            published_by: data.published_by || '',
@@ -364,6 +367,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       if (contract.award_information) updateData.award_information = contract.award_information;
        if (contract.awarded_value) updateData.awarded_value = contract.awarded_value;
        if (contract.awarded_to) updateData.awarded_to = contract.awarded_to;
+       if (contract.award_date) updateData.award_date = contract.award_date;
        if (contract.detail_url) updateData.detail_url = contract.detail_url;
 
       // Add boolean fields
@@ -996,7 +1000,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
 
           {/* Awarded Fields */}
           {contract.status === 'Awarded' && (
-            <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-1">
                   Awarded Value
@@ -1019,6 +1023,17 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                   onChange={(e) => updateContract({ awarded_to: e.target.value })}
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                   placeholder="Company that won the contract"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-1">
+                  Award Date
+                </label>
+                <input
+                  type="date"
+                  value={contract.award_date || ''}
+                  onChange={(e) => updateContract({ award_date: e.target.value })}
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
                 />
               </div>
             </div>
