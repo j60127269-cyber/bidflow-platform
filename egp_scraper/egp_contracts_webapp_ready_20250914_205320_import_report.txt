@@ -2,10 +2,10 @@
 BIDFLOW PLATFORM IMPORT REPORT
 ============================================================
 
-Generated: 2025-09-11 10:27:05
+Generated: 2025-09-14 20:53:20
 Source: EGP Uganda Portal Scraper
-CSV File: egp_contracts_webapp_ready_20250911_102705.csv
-Total Contracts: 12
+CSV File: egp_contracts_webapp_ready_20250914_205320.csv
+Total Contracts: 14
 
 IMPORT STATUS: ✅ READY FOR IMPORT
 
@@ -19,7 +19,7 @@ COMPATIBILITY FEATURES:
 IMPORT INSTRUCTIONS:
 1. Go to your BidFlow platform admin panel
 2. Navigate to Contracts > Import
-3. Upload the CSV file: egp_contracts_webapp_ready_20250911_102705.csv
+3. Upload the CSV file: egp_contracts_webapp_ready_20250914_205320.csv
 4. The import should complete without validation errors
 5. All contracts will be imported successfully
 
