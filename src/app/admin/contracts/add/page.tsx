@@ -126,9 +126,6 @@ export default function AddContract() {
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
-    } else if (type === 'number' && name === 'awarded_value') {
-      // Handle number input for awarded_value
-      setFormData(prev => ({ ...prev, [name]: value ? Number(value) : undefined }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
