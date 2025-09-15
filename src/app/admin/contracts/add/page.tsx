@@ -56,6 +56,11 @@ interface ContractForm {
   status: string;
   current_stage: string;
   award_information: string;
+  
+  // 5. AWARD INFORMATION (3 variables)
+  awarded_value?: number;
+  awarded_to?: string;
+  award_date?: string;
 }
 
 export default function AddContract() {
@@ -102,7 +107,12 @@ export default function AddContract() {
     // Status & Tracking
     status: 'open',
     current_stage: 'published',
-    award_information: ''
+    award_information: '',
+    
+    // Award Information
+    awarded_value: undefined,
+    awarded_to: '',
+    award_date: ''
   });
 
   const [loading, setLoading] = useState(false);
@@ -116,6 +126,9 @@ export default function AddContract() {
     if (type === 'checkbox') {
       const checked = (e.target as HTMLInputElement).checked;
       setFormData(prev => ({ ...prev, [name]: checked }));
+    } else if (type === 'number' && name === 'awarded_value') {
+      // Handle number input for awarded_value
+      setFormData(prev => ({ ...prev, [name]: value ? Number(value) : undefined }));
     } else {
       setFormData(prev => ({ ...prev, [name]: value }));
     }
@@ -218,7 +231,10 @@ export default function AddContract() {
         evaluation_methodology: formData.evaluation_methodology || null,
         submission_method: formData.submission_method || null,
         submission_format: formData.submission_format || null,
-        award_information: formData.award_information || null
+        award_information: formData.award_information || null,
+        awarded_value: formData.awarded_value || null,
+        awarded_to: formData.awarded_to || null,
+        award_date: formData.award_date || null
       };
 
       const response = await fetch('/api/contracts', {
@@ -897,6 +913,55 @@ export default function AddContract() {
                     className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
                   />
                 </div>
+
+                {/* Award Details - Show when status is 'awarded' */}
+                {formData.status === 'awarded' && (
+                  <>
+                    <div>
+                      <label htmlFor="awarded_value" className="block text-sm font-medium text-gray-700 mb-2">
+                        Awarded Value
+                      </label>
+                      <input
+                        type="number"
+                        id="awarded_value"
+                        name="awarded_value"
+                        value={formData.awarded_value || ''}
+                        onChange={handleInputChange}
+                        placeholder="Actual awarded amount"
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="awarded_to" className="block text-sm font-medium text-gray-700 mb-2">
+                        Awarded To
+                      </label>
+                      <input
+                        type="text"
+                        id="awarded_to"
+                        name="awarded_to"
+                        value={formData.awarded_to}
+                        onChange={handleInputChange}
+                        placeholder="Company that won the contract"
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    </div>
+
+                    <div>
+                      <label htmlFor="award_date" className="block text-sm font-medium text-gray-700 mb-2">
+                        Award Date
+                      </label>
+                      <input
+                        type="date"
+                        id="award_date"
+                        name="award_date"
+                        value={formData.award_date}
+                        onChange={handleInputChange}
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      />
+                    </div>
+                  </>
+                )}
               </div>
             </div>
 
