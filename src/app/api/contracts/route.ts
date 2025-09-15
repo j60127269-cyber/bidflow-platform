@@ -11,15 +11,32 @@ export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
     
+    // Sanitize payload: convert empty strings to null to avoid numeric/date cast errors
+    const sanitizeInput = (value: any): any => {
+      if (value === '') return null;
+      if (typeof value === 'string' && value.trim() === '') return null;
+      if (Array.isArray(value)) return value.map(sanitizeInput);
+      if (value && typeof value === 'object') {
+        const sanitizedObject: Record<string, any> = {};
+        for (const [key, val] of Object.entries(value)) {
+          sanitizedObject[key] = sanitizeInput(val);
+        }
+        return sanitizedObject;
+      }
+      return value;
+    };
+    
     // Process bid_attachments to store file objects as JSON strings
     const processedBody = {
       ...body,
       bid_attachments: body.bid_attachments ? body.bid_attachments.map((file: any) => JSON.stringify(file)) : []
     };
+
+    const sanitizedBody = sanitizeInput(processedBody);
     
     const { data, error } = await supabase
       .from('contracts')
-      .insert(processedBody)
+      .insert(sanitizedBody)
       .select()
       .single();
 
