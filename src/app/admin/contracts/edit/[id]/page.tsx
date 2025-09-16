@@ -316,6 +316,59 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     try {
       setSaving(true);
       
+      const normalizeStatus = (value: string): string => {
+        const v = (value || '').toLowerCase();
+        // Map UI labels to DB enum values
+        switch (v) {
+          case 'open':
+            return 'open';
+          case 'closed':
+            return 'closed';
+          case 'awarded':
+            return 'awarded';
+          case 'cancelled':
+            return 'cancelled';
+          case 'completed':
+            return 'completed';
+          case 'evaluating':
+            return 'evaluating';
+          case 'draft':
+            return 'draft';
+          default:
+            return v;
+        }
+      };
+
+      const normalizeStage = (value: string): string => {
+        const v = (value || '').toLowerCase();
+        // Map UI labels to DB enum values
+        switch (v) {
+          case 'published':
+            return 'published';
+          case 'pre-bid meeting':
+          case 'pre bid meeting':
+            return 'pre_bid_meeting';
+          case 'site visit':
+            return 'site_visit';
+          case 'submission':
+            return 'submission_open';
+          case 'evaluation':
+            return 'evaluation';
+          case 'award':
+            return 'awarded';
+          case 'contract signed':
+            return 'contract_signed';
+          case 'in progress':
+            return 'in_progress';
+          case 'completed':
+            return 'completed';
+          case 'archived':
+            return 'archived';
+          default:
+            return v;
+        }
+      };
+      
       // Check if we need to update published_at and published_by
       const originalData = await supabase
         .from('contracts')
@@ -337,8 +390,8 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
         currency: contract.currency,
         submission_deadline: contract.submission_deadline,
         procuring_entity: contract.procuring_entity,
-        status: contract.status,
-        current_stage: contract.current_stage,
+        status: normalizeStatus(contract.status),
+        current_stage: normalizeStage(contract.current_stage),
         publish_status: contract.publish_status,
         updated_at: new Date().toISOString()
       };
@@ -389,6 +442,8 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       }
 
       console.log('Updating contract with data:', updateData);
+      console.log('Original status:', contract.status, '-> normalized:', normalizeStatus(contract.status));
+      console.log('Original current_stage:', contract.current_stage, '-> normalized:', normalizeStage(contract.current_stage));
 
       const { error } = await supabase
         .from('contracts')
