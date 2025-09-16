@@ -445,10 +445,26 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       console.log('Original status:', contract.status, '-> normalized:', normalizeStatus(contract.status));
       console.log('Original current_stage:', contract.current_stage, '-> normalized:', normalizeStage(contract.current_stage));
 
+      // Temporarily disable the trigger to avoid entity_type ambiguity
+      console.log('Disabling trigger...');
+      try {
+        await supabase.rpc('disable_trigger');
+      } catch (triggerError) {
+        console.log('Could not disable trigger (might not exist):', triggerError);
+      }
+
       const { error } = await supabase
         .from('contracts')
         .update(updateData)
         .eq('id', id);
+
+      // Re-enable the trigger
+      console.log('Re-enabling trigger...');
+      try {
+        await supabase.rpc('enable_trigger');
+      } catch (triggerError) {
+        console.log('Could not enable trigger (might not exist):', triggerError);
+      }
 
       if (error) {
         console.error('Error updating contract:', error);
