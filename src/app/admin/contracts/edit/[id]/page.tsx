@@ -417,11 +417,12 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       if (contract.evaluation_methodology) updateData.evaluation_methodology = contract.evaluation_methodology;
       if (contract.submission_method) updateData.submission_method = contract.submission_method;
       if (contract.submission_format) updateData.submission_format = contract.submission_format;
-      if (contract.award_information) updateData.award_information = contract.award_information;
-       if (contract.awarded_value) updateData.awarded_value = contract.awarded_value;
-       if (contract.awarded_to) updateData.awarded_to = contract.awarded_to;
-       if (contract.award_date) updateData.award_date = contract.award_date;
-       if (contract.detail_url) updateData.detail_url = contract.detail_url;
+      // Handle award fields - include them even if empty to clear previous values
+      updateData.award_information = contract.award_information || null;
+      updateData.awarded_value = contract.awarded_value || null;
+      updateData.awarded_to = contract.awarded_to || null;
+      updateData.award_date = contract.award_date || null;
+      updateData.detail_url = contract.detail_url || null;
 
       // Add boolean fields
       updateData.margin_of_preference = contract.margin_of_preference;
@@ -444,33 +445,32 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       console.log('Updating contract with data:', updateData);
       console.log('Original status:', contract.status, '-> normalized:', normalizeStatus(contract.status));
       console.log('Original current_stage:', contract.current_stage, '-> normalized:', normalizeStage(contract.current_stage));
+      console.log('Award fields being sent:', {
+        awarded_value: updateData.awarded_value,
+        awarded_to: updateData.awarded_to,
+        award_date: updateData.award_date,
+        status: updateData.status
+      });
 
-      // Temporarily disable the trigger to avoid entity_type ambiguity
-      console.log('Disabling trigger...');
-      try {
-        await supabase.rpc('disable_trigger');
-      } catch (triggerError) {
-        console.log('Could not disable trigger (might not exist):', triggerError);
-      }
-
-      const { error } = await supabase
+      const { data, error } = await supabase
         .from('contracts')
         .update(updateData)
-        .eq('id', id);
-
-      // Re-enable the trigger
-      console.log('Re-enabling trigger...');
-      try {
-        await supabase.rpc('enable_trigger');
-      } catch (triggerError) {
-        console.log('Could not enable trigger (might not exist):', triggerError);
-      }
+        .eq('id', id)
+        .select();
 
       if (error) {
         console.error('Error updating contract:', error);
-        alert('Failed to update contract');
+        console.error('Error details:', {
+          message: error.message,
+          details: error.details,
+          hint: error.hint,
+          code: error.code
+        });
+        alert(`Failed to update contract: ${error.message}`);
         return;
       }
+
+      console.log('Contract updated successfully:', data);
 
       alert('Contract updated successfully!');
       setHasUnsavedChanges(false);
