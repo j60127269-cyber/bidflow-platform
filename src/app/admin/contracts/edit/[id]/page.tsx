@@ -9,6 +9,8 @@ import { use } from 'react';
 import { CANONICAL_CATEGORIES } from '@/lib/categories';
 import FileUpload from '@/components/FileUpload';
 import { UploadedFile } from '@/lib/storageService';
+import BidderList from '@/components/BidderList';
+import { ContractBidder } from '@/types/bidder-types';
 
 interface ContractForm {
   reference_number: string;
@@ -84,6 +86,8 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [bidders, setBidders] = useState<ContractBidder[]>([]);
+  const [loadingBidders, setLoadingBidders] = useState(false);
   const [contract, setContract] = useState<ContractForm>({
     reference_number: '',
     title: '',
@@ -293,9 +297,27 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     }
   }, [id]);
 
+  const fetchBidders = useCallback(async () => {
+    try {
+      setLoadingBidders(true);
+      const response = await fetch(`/api/contracts/${id}/bidders`);
+      if (response.ok) {
+        const data = await response.json();
+        setBidders(data.bidders || []);
+      } else {
+        console.error('Failed to fetch bidders');
+      }
+    } catch (error) {
+      console.error('Error fetching bidders:', error);
+    } finally {
+      setLoadingBidders(false);
+    }
+  }, [id]);
+
   useEffect(() => {
     fetchContract();
-  }, [fetchContract]);
+    fetchBidders();
+  }, [fetchContract, fetchBidders]);
 
   // Warn user about unsaved changes when leaving the page
   useEffect(() => {
@@ -1109,6 +1131,15 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               </div>
             </div>
           )}
+
+          {/* Bidder Management */}
+          <div className="mt-8">
+            <BidderList 
+              contractId={id} 
+              bidders={bidders} 
+              onBidderUpdate={fetchBidders}
+            />
+          </div>
 
           {/* Source Information */}
           <div className="mt-4">
