@@ -196,7 +196,7 @@ export default function DashboardLayout({
 
             {/* Upgrade Prompt */}
             {showUpgradePrompt && (
-              <div className="bg-green-50 border-b border-green-200 px-4 py-3">
+              <div className="bg-green-50 border-b border-green-200 px-4 py-3 lg:ml-80">
                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
                   <div className="flex items-start sm:items-center min-w-0 flex-1">
                     <AlertCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" />
