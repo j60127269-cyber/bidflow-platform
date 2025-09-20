@@ -314,6 +314,50 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     }
   }, [id]);
 
+  const createWinnerBidder = async () => {
+    try {
+      // Check if winner already exists
+      const existingWinner = bidders.find(bidder => bidder.is_winner);
+      if (existingWinner) {
+        console.log('Winner bidder already exists, skipping creation');
+        return;
+      }
+
+      const winnerBidderData = {
+        company_name: contract.awarded_to,
+        bid_amount: contract.awarded_value?.toString(),
+        rank: '1',
+        bid_status: 'awarded',
+        preliminary_evaluation: 'compliant',
+        detailed_evaluation: 'responsive',
+        financial_evaluation: 'passed',
+        is_winner: true,
+        is_runner_up: false,
+        evaluation_date: contract.award_date || new Date().toISOString().split('T')[0],
+        notes: 'Automatically created from award information'
+      };
+
+      const response = await fetch(`/api/contracts/${id}/bidders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(winnerBidderData),
+      });
+
+      if (response.ok) {
+        console.log('Winner bidder created successfully');
+        // Refresh the bidders list
+        fetchBidders();
+      } else {
+        const error = await response.json();
+        console.error('Failed to create winner bidder:', error);
+      }
+    } catch (error) {
+      console.error('Error creating winner bidder:', error);
+    }
+  };
+
   useEffect(() => {
     fetchContract();
     fetchBidders();
@@ -492,7 +536,15 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
         return;
       }
 
-      console.log('Contract updated successfully:', data);
+          console.log('Contract updated successfully:', data);
+
+          // If contract status is changed to "awarded" and we have award information,
+          // automatically create a winner bidder entry
+          if (normalizeStatus(contract.status) === 'awarded' && 
+              contract.awarded_to && 
+              contract.awarded_value) {
+            await createWinnerBidder();
+      }
 
       alert('Contract updated successfully!');
       setHasUnsavedChanges(false);
@@ -563,7 +615,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Tender Information</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-gray-900 mb-1">
                 Reference Number *
               </label>
               <input
@@ -571,12 +623,12 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 required
                 value={contract.reference_number}
                 onChange={(e) => updateContract({ reference_number: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="e.g., URSB/SUPLS/2025-2026/00011"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Title *
               </label>
               <input
@@ -584,31 +636,31 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 required
                 value={contract.title}
                 onChange={(e) => updateContract({ title: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="Contract title"
               />
             </div>
             <div className="md:col-span-2">
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Short Description
               </label>
               <textarea
                 value={contract.short_description || ''}
                 onChange={(e) => updateContract({ short_description: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="Brief description of the contract"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Category *
               </label>
               <select
                 required
                 value={contract.category}
                 onChange={(e) => updateContract({ category: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               >
                 <option value="">Select category</option>
                 {categories.map((category) => (
@@ -617,14 +669,14 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Procurement Method *
               </label>
               <select
                 required
                 value={contract.procurement_method}
                 onChange={(e) => updateContract({ procurement_method: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               >
                 <option value="">Select method</option>
                 {procurementMethods.map((method) => (
@@ -640,38 +692,38 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Financial Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Estimated Value Min
               </label>
               <input
                 type="number"
                 value={contract.estimated_value_min || ''}
                 onChange={(e) => updateContract({ estimated_value_min: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="Minimum value"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Estimated Value Max
               </label>
               <input
                 type="number"
                 value={contract.estimated_value_max || ''}
                 onChange={(e) => updateContract({ estimated_value_max: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="Maximum value"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Currency *
               </label>
               <select
                 required
                 value={contract.currency}
                 onChange={(e) => updateContract({ currency: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               >
                 <option value="UGX">UGX</option>
                 <option value="USD">USD</option>
@@ -680,38 +732,38 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Bid Fee
               </label>
               <input
                 type="number"
                 value={contract.bid_fee || ''}
                 onChange={(e) => updateContract({ bid_fee: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="Bid fee amount"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Bid Security Amount
               </label>
               <input
                 type="number"
                 value={contract.bid_security_amount || ''}
                 onChange={(e) => updateContract({ bid_security_amount: e.target.value ? Number(e.target.value) : undefined })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="Security amount"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Bid Security Type
               </label>
               <input
                 type="text"
                 value={contract.bid_security_type || ''}
                 onChange={(e) => updateContract({ bid_security_type: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="e.g., Bank Guarantee"
               />
             </div>
@@ -723,18 +775,18 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                   onChange={(e) => updateContract({ margin_of_preference: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">Margin of Preference Applicable</span>
+                <span className="ml-2 text-sm text-gray-900">Margin of Preference Applicable</span>
               </label>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Competition Level *
               </label>
               <select
                 required
                 value={contract.competition_level}
                 onChange={(e) => updateContract({ competition_level: e.target.value as 'low' | 'medium' | 'high' | 'very_high' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               >
                 {competitionLevels.map((level) => (
                   <option key={level.value} value={level.value}>{level.label}</option>
@@ -749,40 +801,40 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Timeline</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Publish Date
               </label>
               <input
                 type="date"
                 value={contract.publish_date || ''}
                 onChange={(e) => updateContract({ publish_date: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Pre-bid Meeting Date
               </label>
               <input
                 type="date"
                 value={contract.pre_bid_meeting_date || ''}
                 onChange={(e) => updateContract({ pre_bid_meeting_date: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Site Visit Date
               </label>
               <input
                 type="date"
                 value={contract.site_visit_date || ''}
                 onChange={(e) => updateContract({ site_visit_date: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Submission Deadline *
               </label>
               <input
@@ -790,18 +842,18 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 required
                 value={contract.submission_deadline}
                 onChange={(e) => updateContract({ submission_deadline: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Bid Opening Date
               </label>
               <input
                 type="date"
                 value={contract.bid_opening_date || ''}
                 onChange={(e) => updateContract({ bid_opening_date: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               />
             </div>
           </div>
@@ -812,7 +864,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Procuring Entity</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Entity Name *
               </label>
               <input
@@ -820,43 +872,43 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 required
                 value={contract.procuring_entity}
                 onChange={(e) => updateContract({ procuring_entity: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="Procuring entity name"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Contact Person
               </label>
               <input
                 type="text"
                 value={contract.contact_person || ''}
                 onChange={(e) => updateContract({ contact_person: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="Contact person name"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Contact Position
               </label>
               <input
                 type="text"
                 value={contract.contact_position || ''}
                 onChange={(e) => updateContract({ contact_position: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="Contact person position"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Evaluation Methodology
               </label>
               <input
                 type="text"
                 value={contract.evaluation_methodology || ''}
                 onChange={(e) => updateContract({ evaluation_methodology: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="e.g., Technical Compliance Selection"
               />
             </div>
@@ -875,7 +927,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                   onChange={(e) => updateContract({ requires_registration: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">Registration/Incorporation</span>
+                <span className="ml-2 text-sm text-gray-900">Registration/Incorporation</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -884,7 +936,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                   onChange={(e) => updateContract({ requires_trading_license: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">Trading License</span>
+                <span className="ml-2 text-sm text-gray-900">Trading License</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -893,7 +945,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                   onChange={(e) => updateContract({ requires_tax_clearance: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">Tax Clearance Certificate</span>
+                <span className="ml-2 text-sm text-gray-900">Tax Clearance Certificate</span>
               </label>
             </div>
             <div className="space-y-3">
@@ -904,7 +956,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                   onChange={(e) => updateContract({ requires_nssf_clearance: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">NSSF Clearance</span>
+                <span className="ml-2 text-sm text-gray-900">NSSF Clearance</span>
               </label>
               <label className="flex items-center">
                 <input
@@ -913,7 +965,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                   onChange={(e) => updateContract({ requires_manufacturer_auth: e.target.checked })}
                   className="rounded border-gray-300 text-blue-600 focus:ring-blue-500"
                 />
-                <span className="ml-2 text-sm text-gray-700">Manufacturer's Authorization</span>
+                <span className="ml-2 text-sm text-gray-900">Manufacturer's Authorization</span>
               </label>
             </div>
           </div>
@@ -924,26 +976,26 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Submission Details</h2>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Submission Method
               </label>
               <input
                 type="text"
                 value={contract.submission_method || ''}
                 onChange={(e) => updateContract({ submission_method: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="e.g., Online, Physical"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Submission Format
               </label>
               <input
                 type="text"
                 value={contract.submission_format || ''}
                 onChange={(e) => updateContract({ submission_format: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="e.g., Electronic submission"
               />
             </div>
@@ -1016,14 +1068,14 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           <h2 className="text-lg font-semibold text-gray-900 mb-4">Status & Visibility</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Publish Status *
               </label>
               <select
                 required
                 value={contract.publish_status}
                 onChange={(e) => updateContract({ publish_status: e.target.value as 'draft' | 'published' | 'archived' })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               >
                 <option value="draft">Draft (Admin Only)</option>
                 <option value="published">Published (Visible to Clients)</option>
@@ -1036,14 +1088,14 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               </p>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Status *
               </label>
               <select
                 required
                 value={contract.status}
                 onChange={(e) => updateContract({ status: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               >
                 {statuses.map((status) => (
                   <option key={status} value={status}>{status}</option>
@@ -1051,14 +1103,14 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               </select>
             </div>
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Current Stage *
               </label>
               <select
                 required
                 value={contract.current_stage}
                 onChange={(e) => updateContract({ current_stage: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
               >
                 {stages.map((stage) => (
                   <option key={stage} value={stage}>{stage}</option>
@@ -1078,14 +1130,14 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
 
           <div className="mt-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Award Information
               </label>
               <textarea
                 value={contract.award_information || ''}
                 onChange={(e) => updateContract({ award_information: e.target.value })}
                 rows={3}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="Award details and information"
               />
             </div>
@@ -1095,38 +1147,38 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           {contract.status === 'Awarded' && (
             <div className="mt-4 grid grid-cols-1 md:grid-cols-3 gap-4">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Awarded Value
                 </label>
                 <input
                   type="number"
                   value={contract.awarded_value || ''}
                   onChange={(e) => updateContract({ awarded_value: e.target.value ? Number(e.target.value) : undefined })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                   placeholder="Actual awarded amount"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Awarded To
                 </label>
                 <input
                   type="text"
                   value={contract.awarded_to || ''}
                   onChange={(e) => updateContract({ awarded_to: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                   placeholder="Company that won the contract"
                 />
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-1">
+                <label className="block text-sm font-medium text-gray-900 mb-1">
                   Award Date
                 </label>
                 <input
                   type="date"
                   value={contract.award_date || ''}
                   onChange={(e) => updateContract({ award_date: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 />
               </div>
             </div>
@@ -1134,6 +1186,14 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
 
           {/* Bidder Management */}
           <div className="mt-8">
+            {contract.status === 'awarded' && contract.awarded_to && (
+              <div className="mb-4 p-3 bg-blue-50 border border-blue-200 rounded-md">
+                <p className="text-sm text-blue-800">
+                  💡 <strong>Tip:</strong> When you save this contract with "Awarded" status, 
+                  a winner bidder entry will be automatically created from the award information above.
+                </p>
+              </div>
+            )}
             <BidderList 
               contractId={id} 
               bidders={bidders} 
@@ -1144,14 +1204,14 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           {/* Source Information */}
           <div className="mt-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Detail URL
               </label>
               <input
                 type="url"
                 value={contract.detail_url || ''}
                 onChange={(e) => updateContract({ detail_url: e.target.value })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
                 placeholder="https://egpuganda.go.ug/bid/notice/..."
               />
               <p className="text-xs text-gray-500 mt-1">
@@ -1173,7 +1233,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 router.push('/admin/contracts');
               }
             }}
-            className="px-6 py-2 border border-gray-300 text-gray-700 rounded-md hover:bg-gray-50"
+            className="px-6 py-2 border border-gray-300 text-gray-900 rounded-md hover:bg-gray-50"
           >
             Cancel
           </button>

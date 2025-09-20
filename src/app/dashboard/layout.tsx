@@ -17,15 +17,14 @@ import {
   Menu,
   X,
   Home,
-  FileText,
   Target,
-  Calendar,
-  Bookmark,
-  ChevronDown,
   User,
   Star,
   CreditCard,
-  AlertCircle
+  AlertCircle,
+  Building,
+  Trophy,
+  List
 } from "lucide-react";
 import { useState, useEffect } from "react";
 
@@ -37,10 +36,11 @@ export default function DashboardLayout({
   const { user, signOut } = useAuth();
   const router = useRouter();
   const pathname = usePathname();
-  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [sidebarOpen, setSidebarOpen] = useState(false);
   const [userMenuOpen, setUserMenuOpen] = useState(false);
   const [subscriptionStatus, setSubscriptionStatus] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  
 
   useEffect(() => {
     const checkSubscriptionStatus = async () => {
@@ -76,13 +76,6 @@ export default function DashboardLayout({
       .slice(0, 2);
   };
 
-  const navigation = [
-    { name: 'Dashboard', href: '/dashboard', icon: Home, current: pathname === '/dashboard' },
-    { name: 'Recommended', href: '/dashboard/recommended', icon: Star, current: pathname === '/dashboard/recommended' },
-    { name: 'My Bids', href: '/dashboard/tracking', icon: Target, current: pathname.startsWith('/dashboard/tracking') },
-    { name: 'Analytics', href: '/dashboard/analytics', icon: BarChart3, current: pathname.startsWith('/dashboard/analytics') },
-    { name: 'Subscription', href: '/dashboard/subscription', icon: CreditCard, current: pathname === '/dashboard/subscription' },
-  ];
 
   // Show upgrade prompt if user doesn't have active subscription
   const showUpgradePrompt = subscriptionStatus &&
@@ -102,93 +95,73 @@ export default function DashboardLayout({
 
   return (
     <ProtectedRoute>
-      <div className="min-h-screen bg-slate-50">
-        {/* Header */}
-        <header className="bg-white shadow-sm border-b border-slate-200">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-            <div className="flex items-center justify-between h-16">
-              {/* Logo and primary navigation */}
+      <div className="min-h-screen bg-gray-50">
+        {/* Top Header Bar */}
+        <header className="bg-white shadow-sm border-b border-gray-200">
+          <div className="flex items-center justify-between h-16 px-4">
+            {/* Left Side - Logo */}
               <div className="flex items-center">
-            <Link href="/dashboard" className="flex items-center">
-              <h1 className="text-xl font-bold text-blue-600">BidCloud</h1>
-            </Link>
+              <button
+                onClick={() => setSidebarOpen(true)}
+                className="lg:hidden p-2 text-gray-600 hover:text-gray-800 mr-2"
+              >
+                <Menu className="h-6 w-6" />
+              </button>
+              <Link href="/dashboard" className="flex items-center">
+                <h1 className="text-xl font-bold text-gray-800">BIDFLOW</h1>
+              </Link>
+            </div>
 
-                {/* Desktop navigation */}
-                <nav className="hidden md:flex space-x-8 ml-8">
-              <Link
-                href="/dashboard"
-                    className={`text-sm font-medium transition-colors ${
-                      pathname === '/dashboard' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                    }`}
-              >
-                Dashboard
-              </Link>
-                            <Link
-                href="/dashboard/recommended"
-                className={`text-sm font-medium transition-colors ${
-                  pathname === '/dashboard/recommended' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Recommended
-              </Link>
-              <Link
-                href="/dashboard/historical"
-                className={`text-sm font-medium transition-colors ${
-                  pathname === '/dashboard/historical' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Historical
-              </Link>
-              <Link
-                href="/dashboard/tracking"
-                className={`text-sm font-medium transition-colors ${
-                  pathname === '/dashboard/tracking' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                }`}
-              >
-                Tracking
-              </Link>
-              <Link
-                    href="/dashboard/profile"
-                    className={`text-sm font-medium transition-colors ${
-                      pathname === '/dashboard/profile' ? 'text-blue-600' : 'text-gray-500 hover:text-gray-700'
-                    }`}
-                  >
-                    Profile
-              </Link>
-                </nav>
+            {/* Middle - Search */}
+            <div className="flex-1 max-w-md mx-8">
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <Search className="h-4 w-4 text-gray-400" />
+                </div>
+                <input
+                  type="text"
+                  placeholder="Search by Name or ID"
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                />
+              </div>
               </div>
 
-              {/* Right side - Search, notifications, user menu */}
+            {/* Right Side - Actions */}
               <div className="flex items-center space-x-4">
-                {/* Notifications */}
-                <button className="relative p-2 text-slate-400 hover:text-slate-600 transition-colors">
-                  <Bell className="h-5 w-5" />
-                  <span className="absolute top-0 right-0 block h-2 w-2 rounded-full bg-red-400"></span>
+              {/* Chat */}
+              <button className="flex items-center space-x-2 text-gray-600 hover:text-gray-800">
+                <div className="w-6 h-6 bg-gray-200 rounded-full flex items-center justify-center">
+                  <span className="text-xs">💬</span>
+                </div>
+                <span className="text-sm">Off</span>
+              </button>
+
+              {/* Settings */}
+              <button className="p-2 text-gray-600 hover:text-gray-800">
+                <Settings className="h-5 w-5" />
+              </button>
+
+              {/* Subscribe Button */}
+              <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium">
+                Subscribe
+                <span className="ml-2 text-xs bg-purple-500 px-2 py-1 rounded-full">
+                  6 Days Left
+                </span>
                 </button>
 
-                {/* User menu */}
+              {/* User Menu */}
                 <div className="relative">
                   <button
                     onClick={() => setUserMenuOpen(!userMenuOpen)}
-                    className="flex items-center space-x-3 p-2 rounded-lg hover:bg-slate-100 transition-colors"
+                  className="flex items-center space-x-2 p-2 rounded-lg hover:bg-gray-100"
                   >
                     <div className="w-8 h-8 bg-blue-600 text-white rounded-full flex items-center justify-center text-sm font-semibold">
                       {getUserInitials()}
                     </div>
-                    <div className="hidden md:block text-left">
-                      <p className="text-sm font-medium text-slate-900">
-                        {user?.user_metadata?.full_name || user?.email}
-                      </p>
-                      <p className="text-xs text-slate-500">
-                        {subscriptionStatus?.status === 'active' ? 'Professional Plan' : 'Free Plan'}
-                      </p>
-                    </div>
-                    <ChevronDown className="h-4 w-4 text-slate-400" />
                   </button>
 
-                  {/* User dropdown */}
                   {userMenuOpen && (
-                    <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none">
+                  <div className="absolute right-0 z-10 mt-2 w-48 origin-top-right rounded-md bg-white py-1 shadow-lg ring-1 ring-black ring-opacity-5">
                       <div className="px-4 py-2 text-sm text-gray-700 border-b border-gray-100">
                         <div className="font-medium">{user?.email}</div>
                         <div className="text-xs text-gray-500">
@@ -227,29 +200,6 @@ export default function DashboardLayout({
               </div>
                   )}
         </div>
-
-                {/* Mobile menu button */}
-                <button
-                  className="md:hidden"
-                  onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                >
-                  <Menu className="h-6 w-6 text-slate-400" />
-                </button>
-              </div>
-            </div>
-          </div>
-
-          {/* Mobile search */}
-          <div className="lg:hidden border-t border-slate-200 px-4 py-3">
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                <Search className="h-4 w-4 text-slate-400" />
-                  </div>
-                  <input
-                    type="text"
-                    placeholder="Search contracts..."
-                className="w-full pl-10 pr-4 py-2 border border-slate-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                  />
                 </div>
               </div>
         </header>
@@ -274,56 +224,203 @@ export default function DashboardLayout({
                </div>
              )}
 
-                           
+        <div className="flex">
+          {/* Sidebar */}
+          <div className={`${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} fixed inset-y-0 left-0 z-50 w-80 bg-white shadow-lg transform transition-transform duration-300 ease-in-out lg:translate-x-0 lg:static lg:inset-0`}>
+            <div className="flex flex-col h-full">
+              {/* Mobile close button */}
+              <div className="lg:hidden flex justify-end p-2">
+                <button
+                  onClick={() => setSidebarOpen(false)}
+                  className="p-1 hover:bg-gray-100 rounded"
+                >
+                  <X className="h-5 w-5 text-gray-600" />
+                </button>
+              </div>
 
-        {/* Mobile navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden bg-white border-b border-slate-200">
-            <div className="px-2 pt-2 pb-3 space-y-1">
+              {/* Navigation Sections */}
+              <div className="flex-1 overflow-y-auto">
+                {/* Contract Opportunities */}
+                <div className="p-4">
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                    Opportunities
+                  </div>
+                  
+                  {/* Contracts */}
+                  <div className="mb-2">
+                    <Link
+                      href="/dashboard/contracts"
+                      className={`flex items-center space-x-2 p-2 rounded-md text-sm font-medium ${
+                        pathname === '/dashboard/contracts' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <List className="h-4 w-4" />
+                      <span>Contracts</span>
+                    </Link>
+                  </div>
+
+                </div>
+
+                {/* Main Navigation */}
+                <div className="p-4 border-t border-gray-200">
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                    Main
+                  </div>
+                  
+                  {/* Dashboard */}
+                  <div className="mb-2">
               <Link
                 href="/dashboard"
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  pathname === '/dashboard' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                      className={`flex items-center space-x-2 p-2 rounded-md text-sm font-medium ${
+                        pathname === '/dashboard' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
                 }`}
-                onClick={() => setMobileMenuOpen(false)}
               >
-                Dashboard
+                      <Home className="h-4 w-4" />
+                      <span>Dashboard</span>
               </Link>
+                  </div>
+
+                  {/* Recommended */}
+                  <div className="mb-2">
               <Link
                 href="/dashboard/recommended"
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  pathname === '/dashboard/recommended' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
+                      className={`flex items-center space-x-2 p-2 rounded-md text-sm font-medium ${
+                        pathname === '/dashboard/recommended' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
                 }`}
-                onClick={() => setMobileMenuOpen(false)}
               >
-                Recommended
+                      <Star className="h-4 w-4" />
+                      <span>Recommended</span>
               </Link>
+                  </div>
+
+                  {/* My Tracking */}
+                  <div className="mb-2">
               <Link
                 href="/dashboard/tracking"
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  pathname === '/dashboard/tracking' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Tracking
+                      className={`flex items-center space-x-2 p-2 rounded-md text-sm font-medium ${
+                        pathname === '/dashboard/tracking' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Target className="h-4 w-4" />
+                      <span>My Tracking</span>
+                    </Link>
+                  </div>
+
+                  {/* Analytics */}
+                  <div className="mb-6">
+                    <Link
+                      href="/dashboard/analytics"
+                      className={`flex items-center space-x-2 p-2 rounded-md text-sm font-medium ${
+                        pathname === '/dashboard/analytics' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <BarChart3 className="h-4 w-4" />
+                      <span>Analytics</span>
+                    </Link>
+                  </div>
+                </div>
+
+                {/* Market Intelligence */}
+                <div className="p-4 border-t border-gray-200">
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                    Market Intelligence
+                  </div>
+                  
+                  {/* Awardees */}
+                  <div className="mb-2">
+                    <Link
+                      href="/dashboard/awardees"
+                      className={`flex items-center space-x-2 p-2 rounded-md text-sm font-medium ${
+                        pathname === '/dashboard/awardees' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Trophy className="h-4 w-4" />
+                      <span>Awardees</span>
+                    </Link>
+                  </div>
+
+                  {/* Agencies */}
+                  <div className="mb-2">
+                    <Link
+                      href="/dashboard/agencies"
+                      className={`flex items-center space-x-2 p-2 rounded-md text-sm font-medium ${
+                        pathname === '/dashboard/agencies' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Building className="h-4 w-4" />
+                      <span>Procuring Agencies</span>
+                    </Link>
+                  </div>
+
+                  {/* Competitive Analysis */}
+                  <div className="mb-6">
+                    <Link
+                      href="/dashboard/competitive"
+                      className={`flex items-center space-x-2 p-2 rounded-md text-sm font-medium ${
+                        pathname === '/dashboard/competitive' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <TrendingUp className="h-4 w-4" />
+                      <span>Competitive Analysis</span>
               </Link>
+                  </div>
+                </div>
+
+                {/* Account & Settings */}
+                <div className="p-4 border-t border-gray-200">
+                  <div className="text-xs font-bold text-gray-500 uppercase tracking-wider mb-3">
+                    Account
+                  </div>
+                  
+                  <div className="space-y-1">
               <Link
                 href="/dashboard/profile"
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  pathname === '/dashboard/profile' ? 'text-blue-600 bg-blue-50' : 'text-gray-700 hover:text-gray-900 hover:bg-gray-50'
-                }`}
-                onClick={() => setMobileMenuOpen(false)}
-              >
-                Profile
+                      className={`flex items-center space-x-2 p-2 rounded-md text-sm font-medium ${
+                        pathname === '/dashboard/profile' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <User className="h-4 w-4" />
+                      <span>Profile</span>
+                    </Link>
+                    <Link
+                      href="/dashboard/subscription"
+                      className={`flex items-center space-x-2 p-2 rounded-md text-sm font-medium ${
+                        pathname === '/dashboard/subscription' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <CreditCard className="h-4 w-4" />
+                      <span>Subscription</span>
+                    </Link>
+                    <Link
+                      href="/dashboard/notifications"
+                      className={`flex items-center space-x-2 p-2 rounded-md text-sm font-medium ${
+                        pathname === '/dashboard/notifications' ? 'bg-blue-600 text-white' : 'text-gray-700 hover:bg-gray-100'
+                      }`}
+                    >
+                      <Bell className="h-4 w-4" />
+                      <span>Notifications</span>
               </Link>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
+
+          {/* Mobile sidebar overlay */}
+          {sidebarOpen && (
+            <div
+              className="fixed inset-0 z-40 bg-gray-600 bg-opacity-75 lg:hidden"
+              onClick={() => setSidebarOpen(false)}
+            />
         )}
 
         {/* Main content */}
-        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex-1 flex flex-col min-w-0">
+            <main className="flex-1 p-6">
               {children}
           </main>
+          </div>
+        </div>
       </div>
     </ProtectedRoute>
   );

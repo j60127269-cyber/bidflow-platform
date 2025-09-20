@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { 
@@ -12,6 +12,8 @@ import {
 import FileUpload from '@/components/FileUpload';
 import { UploadedFile } from '@/lib/storageService';
 import { CANONICAL_CATEGORIES } from '@/lib/categories';
+import BidderList from '@/components/BidderList';
+import { ContractBidder } from '@/types/bidder-types';
 
 interface ContractForm {
   // 1. BASIC TENDER INFORMATION (19 variables)
@@ -118,6 +120,122 @@ export default function AddContract() {
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState<{ [key: string]: string }>({});
   const [newDocument, setNewDocument] = useState('');
+  const [bidders, setBidders] = useState<ContractBidder[]>([]);
+  const [contractId, setContractId] = useState<string | null>(null);
+  const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+
+  // Save form data to localStorage
+  const saveFormData = () => {
+    localStorage.setItem('contract_add_draft', JSON.stringify(formData));
+    setHasUnsavedChanges(true);
+    console.log('Form data saved to localStorage:', formData);
+  };
+
+  // Load form data from localStorage
+  const loadFormData = () => {
+    const savedData = localStorage.getItem('contract_add_draft');
+    if (savedData) {
+      try {
+        const parsedData = JSON.parse(savedData);
+        setFormData(parsedData);
+        setHasUnsavedChanges(true);
+        console.log('Form data loaded from localStorage:', parsedData);
+      } catch (e) {
+        console.error('Error parsing saved form data:', e);
+        localStorage.removeItem('contract_add_draft');
+      }
+    }
+  };
+
+  // Clear saved form data
+  const clearSavedData = () => {
+    localStorage.removeItem('contract_add_draft');
+    setHasUnsavedChanges(false);
+  };
+
+  const fetchBidders = async () => {
+    if (!contractId) return;
+    
+    try {
+      const response = await fetch(`/api/contracts/${contractId}/bidders`);
+      if (response.ok) {
+        const data = await response.json();
+        setBidders(data.bidders || []);
+      }
+    } catch (error) {
+      console.error('Error fetching bidders:', error);
+    }
+  };
+
+  // Load saved form data on component mount
+  useEffect(() => {
+    loadFormData();
+  }, []);
+
+  // Save form data whenever it changes
+  useEffect(() => {
+    // Only save if we have some data and it's not the initial empty state
+    if (formData.reference_number || formData.title || formData.procuring_entity) {
+      saveFormData();
+    }
+  }, [formData]);
+
+  // Fetch bidders when contractId changes
+  useEffect(() => {
+    if (contractId) {
+      fetchBidders();
+    }
+  }, [contractId]);
+
+  // Warn user about unsaved changes when leaving the page
+  useEffect(() => {
+    const handleBeforeUnload = (e: BeforeUnloadEvent) => {
+      if (hasUnsavedChanges) {
+        e.preventDefault();
+        e.returnValue = '';
+      }
+    };
+
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    return () => window.removeEventListener('beforeunload', handleBeforeUnload);
+  }, [hasUnsavedChanges]);
+
+  const createWinnerBidder = async (contractId: string) => {
+    try {
+      const winnerBidderData = {
+        company_name: formData.awarded_to,
+        bid_amount: formData.awarded_value?.toString(),
+        rank: '1',
+        bid_status: 'awarded',
+        preliminary_evaluation: 'compliant',
+        detailed_evaluation: 'responsive',
+        financial_evaluation: 'passed',
+        is_winner: true,
+        is_runner_up: false,
+        evaluation_date: formData.award_date || new Date().toISOString().split('T')[0],
+        notes: 'Automatically created from award information'
+      };
+
+      const response = await fetch(`/api/contracts/${contractId}/bidders`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify(winnerBidderData),
+      });
+
+      if (response.ok) {
+        console.log('Winner bidder created successfully');
+        // Refresh the bidders list
+        fetchBidders();
+      } else {
+        const error = await response.json();
+        console.error('Failed to create winner bidder:', error);
+      }
+    } catch (error) {
+      console.error('Error creating winner bidder:', error);
+    }
+  };
 
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
@@ -243,15 +361,39 @@ export default function AddContract() {
       });
 
       const result = await response.json();
+      console.log('Contract creation response:', result);
 
       if (!response.ok) {
         console.error('Error creating contract:', result.error);
+        
+        // Handle specific error cases
+        if (result.error && result.error.includes('duplicate key value violates unique constraint "contracts_reference_number_key"')) {
+          alert('Failed to create contract: A contract with this reference number already exists. Please use a different reference number.');
+        } else {
         alert(`Failed to create contract: ${result.error || 'Unknown error'}`);
+        }
         return;
       }
 
-      alert('Contract created successfully!');
-      router.push('/admin/contracts');
+      if (!result.data || !result.data.id) {
+        console.error('Invalid response structure:', result);
+        alert('Failed to create contract: Invalid response from server');
+        return;
+      }
+
+      // Set the contract ID for bidder management
+      setContractId(result.data.id);
+      
+      // If contract status is "awarded" and we have award information,
+      // automatically create a winner bidder entry
+      if (formData.status === 'awarded' && 
+          formData.awarded_to && 
+          formData.awarded_value) {
+        await createWinnerBidder(result.data.id);
+      }
+      
+      alert('Contract created successfully! You can now add bidders below.');
+      clearSavedData(); // Clear saved form data after successful creation
     } catch (error) {
       console.error('Error:', error);
       alert('Failed to create contract. Please try again.');
@@ -307,9 +449,12 @@ export default function AddContract() {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 
                 <div>
-                  <label htmlFor="reference_number" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="reference_number" className="block text-sm font-medium text-gray-900 mb-2">
                     Reference Number *
                   </label>
+                  <p className="text-xs text-gray-500 mb-2">
+                    Must be unique - check existing contracts to avoid duplicates
+                  </p>
                   <input
                     type="text"
                     id="reference_number"
@@ -317,7 +462,7 @@ export default function AddContract() {
                     value={formData.reference_number}
                     onChange={handleInputChange}
                     placeholder="e.g., URSB/SUPLS/2025-2026/00011"
-                    className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 ${
                       errors.reference_number ? 'border-red-300' : 'border-gray-300'
                     }`}
                   />
@@ -327,7 +472,7 @@ export default function AddContract() {
                 </div>
 
                 <div>
-                  <label htmlFor="title" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="title" className="block text-sm font-medium text-gray-900 mb-2">
                     Title *
                   </label>
                   <input
@@ -337,7 +482,7 @@ export default function AddContract() {
                     value={formData.title}
                     onChange={handleInputChange}
                     placeholder="Contract title"
-                    className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 ${
                       errors.title ? 'border-red-300' : 'border-gray-300'
                     }`}
                   />
@@ -347,7 +492,7 @@ export default function AddContract() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="short_description" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="short_description" className="block text-sm font-medium text-gray-900 mb-2">
                     Short Description
                   </label>
                   <textarea
@@ -357,12 +502,12 @@ export default function AddContract() {
                     onChange={handleInputChange}
                     rows={3}
                     placeholder="Brief description of the contract"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="category" className="block text-sm font-medium text-gray-900 mb-2">
                     Category
                   </label>
                   <select
@@ -370,7 +515,7 @@ export default function AddContract() {
                     name="category"
                     value={formData.category}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   >
                     {categories.map(category => (
                       <option key={category} value={category}>
@@ -381,7 +526,7 @@ export default function AddContract() {
                 </div>
 
                 <div>
-                  <label htmlFor="procurement_method" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="procurement_method" className="block text-sm font-medium text-gray-900 mb-2">
                     Procurement Method
                   </label>
                   <select
@@ -389,7 +534,7 @@ export default function AddContract() {
                     name="procurement_method"
                     value={formData.procurement_method}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   >
                     {procurementMethods.map(method => (
                       <option key={method} value={method}>
@@ -400,7 +545,7 @@ export default function AddContract() {
                 </div>
 
                 <div>
-                  <label htmlFor="estimated_value_min" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="estimated_value_min" className="block text-sm font-medium text-gray-900 mb-2">
                     Estimated Value Min
                   </label>
                   <input
@@ -410,12 +555,12 @@ export default function AddContract() {
                     value={formData.estimated_value_min}
                     onChange={handleInputChange}
                     placeholder="Minimum value"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="estimated_value_max" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="estimated_value_max" className="block text-sm font-medium text-gray-900 mb-2">
                     Estimated Value Max
                   </label>
                   <input
@@ -425,7 +570,7 @@ export default function AddContract() {
                     value={formData.estimated_value_max}
                     onChange={handleInputChange}
                     placeholder="Maximum value"
-                    className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 ${
                       errors.estimated_value_max ? 'border-red-300' : 'border-gray-300'
                     }`}
                   />
@@ -435,7 +580,7 @@ export default function AddContract() {
                 </div>
 
                 <div>
-                  <label htmlFor="currency" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="currency" className="block text-sm font-medium text-gray-900 mb-2">
                     Currency
                   </label>
                   <select
@@ -443,7 +588,7 @@ export default function AddContract() {
                     name="currency"
                     value={formData.currency}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   >
                     <option value="UGX">UGX</option>
                     <option value="USD">USD</option>
@@ -453,7 +598,7 @@ export default function AddContract() {
                 </div>
 
                 <div>
-                  <label htmlFor="bid_fee" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="bid_fee" className="block text-sm font-medium text-gray-900 mb-2">
                     Bid Fee
                   </label>
                   <input
@@ -463,12 +608,12 @@ export default function AddContract() {
                     value={formData.bid_fee}
                     onChange={handleInputChange}
                     placeholder="Bid fee amount"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="bid_security_amount" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="bid_security_amount" className="block text-sm font-medium text-gray-900 mb-2">
                     Bid Security Amount
                   </label>
                   <input
@@ -478,12 +623,12 @@ export default function AddContract() {
                     value={formData.bid_security_amount}
                     onChange={handleInputChange}
                     placeholder="Security amount"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="bid_security_type" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="bid_security_type" className="block text-sm font-medium text-gray-900 mb-2">
                     Bid Security Type
                   </label>
                   <input
@@ -493,12 +638,12 @@ export default function AddContract() {
                     value={formData.bid_security_type}
                     onChange={handleInputChange}
                     placeholder="e.g., Bank Guarantee"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="competition_level" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="competition_level" className="block text-sm font-medium text-gray-900 mb-2">
                     Competition Level
                   </label>
                   <select
@@ -506,7 +651,7 @@ export default function AddContract() {
                     name="competition_level"
                     value={formData.competition_level}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   >
                     {competitionLevels.map(level => (
                       <option key={level} value={level}>
@@ -531,7 +676,7 @@ export default function AddContract() {
                 </div>
 
                 <div>
-                  <label htmlFor="publish_date" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="publish_date" className="block text-sm font-medium text-gray-900 mb-2">
                     Publish Date
                   </label>
                   <input
@@ -540,12 +685,12 @@ export default function AddContract() {
                     name="publish_date"
                     value={formData.publish_date}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="pre_bid_meeting_date" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="pre_bid_meeting_date" className="block text-sm font-medium text-gray-900 mb-2">
                     Pre-bid Meeting Date
                   </label>
                   <input
@@ -554,12 +699,12 @@ export default function AddContract() {
                     name="pre_bid_meeting_date"
                     value={formData.pre_bid_meeting_date}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="site_visit_date" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="site_visit_date" className="block text-sm font-medium text-gray-900 mb-2">
                     Site Visit Date
                   </label>
                   <input
@@ -568,12 +713,12 @@ export default function AddContract() {
                     name="site_visit_date"
                     value={formData.site_visit_date}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="submission_deadline" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="submission_deadline" className="block text-sm font-medium text-gray-900 mb-2">
                     Submission Deadline *
                   </label>
                   <input
@@ -582,7 +727,7 @@ export default function AddContract() {
                     name="submission_deadline"
                     value={formData.submission_deadline}
                     onChange={handleInputChange}
-                    className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 ${
                       errors.submission_deadline ? 'border-red-300' : 'border-gray-300'
                     }`}
                   />
@@ -592,7 +737,7 @@ export default function AddContract() {
                 </div>
 
                 <div>
-                  <label htmlFor="bid_opening_date" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="bid_opening_date" className="block text-sm font-medium text-gray-900 mb-2">
                     Bid Opening Date
                   </label>
                   <input
@@ -601,7 +746,7 @@ export default function AddContract() {
                     name="bid_opening_date"
                     value={formData.bid_opening_date}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
               </div>
@@ -613,7 +758,7 @@ export default function AddContract() {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 
                 <div>
-                  <label htmlFor="procuring_entity" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="procuring_entity" className="block text-sm font-medium text-gray-900 mb-2">
                     Entity Name *
                   </label>
                   <input
@@ -623,7 +768,7 @@ export default function AddContract() {
                     value={formData.procuring_entity}
                     onChange={handleInputChange}
                     placeholder="Procuring entity name"
-                    className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm ${
+                    className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 ${
                       errors.procuring_entity ? 'border-red-300' : 'border-gray-300'
                     }`}
                   />
@@ -633,7 +778,7 @@ export default function AddContract() {
                 </div>
 
                 <div>
-                  <label htmlFor="contact_person" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="contact_person" className="block text-sm font-medium text-gray-900 mb-2">
                     Contact Person
                   </label>
                   <input
@@ -643,12 +788,12 @@ export default function AddContract() {
                     value={formData.contact_person}
                     onChange={handleInputChange}
                     placeholder="Contact person name"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="contact_position" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="contact_position" className="block text-sm font-medium text-gray-900 mb-2">
                     Contact Position
                   </label>
                   <input
@@ -658,12 +803,12 @@ export default function AddContract() {
                     value={formData.contact_position}
                     onChange={handleInputChange}
                     placeholder="Contact person position"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
 
                 <div>
-                  <label htmlFor="evaluation_methodology" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="evaluation_methodology" className="block text-sm font-medium text-gray-900 mb-2">
                     Evaluation Methodology
                   </label>
                   <input
@@ -673,7 +818,7 @@ export default function AddContract() {
                     value={formData.evaluation_methodology}
                     onChange={handleInputChange}
                     placeholder="e.g., Technical Compliance Selection"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
               </div>
@@ -758,7 +903,7 @@ export default function AddContract() {
 
                 <div className="space-y-4">
                   <div>
-                    <label htmlFor="submission_method" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="submission_method" className="block text-sm font-medium text-gray-900 mb-2">
                       Submission Method
                     </label>
                     <select
@@ -766,7 +911,7 @@ export default function AddContract() {
                       name="submission_method"
                       value={formData.submission_method}
                       onChange={handleInputChange}
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                     >
                       <option value="physical">Physical</option>
                       <option value="online">Online</option>
@@ -775,7 +920,7 @@ export default function AddContract() {
                   </div>
 
                   <div>
-                    <label htmlFor="submission_format" className="block text-sm font-medium text-gray-700 mb-2">
+                    <label htmlFor="submission_format" className="block text-sm font-medium text-gray-900 mb-2">
                       Submission Format
                     </label>
                     <input
@@ -785,13 +930,13 @@ export default function AddContract() {
                       value={formData.submission_format}
                       onChange={handleInputChange}
                       placeholder="e.g., Electronic submission"
-                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                      className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                     />
                   </div>
                 </div>
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Required Documents
                   </label>
                   <div className="mb-3">
@@ -840,7 +985,7 @@ export default function AddContract() {
 
 
                 <div className="md:col-span-2">
-                  <label className="block text-sm font-medium text-gray-700 mb-2">
+                  <label className="block text-sm font-medium text-gray-900 mb-2">
                     Bid Attachments
                   </label>
                   <FileUpload
@@ -859,7 +1004,7 @@ export default function AddContract() {
               <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
                 
                 <div>
-                  <label htmlFor="status" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="status" className="block text-sm font-medium text-gray-900 mb-2">
                     Status
                   </label>
                   <select
@@ -867,7 +1012,7 @@ export default function AddContract() {
                     name="status"
                     value={formData.status}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   >
                     {statuses.map(status => (
                       <option key={status} value={status}>
@@ -878,7 +1023,7 @@ export default function AddContract() {
                 </div>
 
                 <div>
-                  <label htmlFor="current_stage" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="current_stage" className="block text-sm font-medium text-gray-900 mb-2">
                     Current Stage
                   </label>
                   <select
@@ -886,7 +1031,7 @@ export default function AddContract() {
                     name="current_stage"
                     value={formData.current_stage}
                     onChange={handleInputChange}
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   >
                     {stages.map(stage => (
                       <option key={stage} value={stage}>
@@ -897,7 +1042,7 @@ export default function AddContract() {
                 </div>
 
                 <div className="md:col-span-2">
-                  <label htmlFor="award_information" className="block text-sm font-medium text-gray-700 mb-2">
+                  <label htmlFor="award_information" className="block text-sm font-medium text-gray-900 mb-2">
                     Award Information
                   </label>
                   <textarea
@@ -907,7 +1052,7 @@ export default function AddContract() {
                     onChange={handleInputChange}
                     rows={3}
                     placeholder="Information about award if status is 'awarded'"
-                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                    className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                   />
                 </div>
 
@@ -915,7 +1060,7 @@ export default function AddContract() {
                 {formData.status === 'awarded' && (
                   <>
                     <div>
-                      <label htmlFor="awarded_value" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="awarded_value" className="block text-sm font-medium text-gray-900 mb-2">
                         Awarded Value
                       </label>
                       <input
@@ -925,12 +1070,12 @@ export default function AddContract() {
                         value={formData.awarded_value || ''}
                         onChange={handleInputChange}
                         placeholder="Actual awarded amount"
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="awarded_to" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="awarded_to" className="block text-sm font-medium text-gray-900 mb-2">
                         Awarded To
                       </label>
                       <input
@@ -940,12 +1085,12 @@ export default function AddContract() {
                         value={formData.awarded_to}
                         onChange={handleInputChange}
                         placeholder="Company that won the contract"
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                       />
                     </div>
 
                     <div>
-                      <label htmlFor="award_date" className="block text-sm font-medium text-gray-700 mb-2">
+                      <label htmlFor="award_date" className="block text-sm font-medium text-gray-900 mb-2">
                         Award Date
                       </label>
                       <input
@@ -954,7 +1099,7 @@ export default function AddContract() {
                         name="award_date"
                         value={formData.award_date}
                         onChange={handleInputChange}
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
                       />
                     </div>
                   </>
@@ -962,11 +1107,77 @@ export default function AddContract() {
               </div>
             </div>
 
+            {/* Bidder Management - Show after contract is created */}
+            {contractId && (
+              <div className="border-b border-gray-200 pb-6">
+                <BidderList 
+                  contractId={contractId} 
+                  bidders={bidders} 
+                  onBidderUpdate={fetchBidders}
+                />
+              </div>
+            )}
+
             {/* Submit Button */}
-            <div className="flex justify-end space-x-3">
+            <div className="flex justify-between items-center">
+              <div className="flex space-x-3">
+                {hasUnsavedChanges && (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (confirm('Are you sure you want to clear all saved data?')) {
+                        clearSavedData();
+                        setFormData({
+                          reference_number: '',
+                          title: '',
+                          short_description: '',
+                          category: '',
+                          procurement_method: '',
+                          estimated_value_min: '',
+                          estimated_value_max: '',
+                          currency: 'UGX',
+                          bid_fee: '',
+                          bid_security_amount: '',
+                          bid_security_type: '',
+                          margin_of_preference: false,
+                          competition_level: 'medium',
+                          publish_date: '',
+                          pre_bid_meeting_date: '',
+                          site_visit_date: '',
+                          submission_deadline: '',
+                          bid_opening_date: '',
+                          procuring_entity: '',
+                          contact_person: '',
+                          contact_position: '',
+                          evaluation_methodology: '',
+                          requires_registration: false,
+                          requires_trading_license: false,
+                          requires_tax_clearance: false,
+                          requires_nssf_clearance: false,
+                          requires_manufacturer_auth: false,
+                          submission_method: '',
+                          submission_format: '',
+                          required_documents: [],
+                          bid_attachments: [],
+                          status: 'open',
+                          current_stage: 'published',
+                          award_information: '',
+                          awarded_value: undefined,
+                          awarded_to: '',
+                          award_date: ''
+                        });
+                      }
+                    }}
+                    className="px-4 py-2 border border-orange-300 rounded-md shadow-sm text-sm font-medium text-orange-700 bg-orange-50 hover:bg-orange-100 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-orange-500"
+                  >
+                    Clear Draft
+                  </button>
+                )}
+              </div>
+              <div className="flex space-x-3">
               <Link
                 href="/admin/contracts"
-                className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+                  className="px-4 py-2 border border-gray-300 rounded-md shadow-sm text-sm font-medium text-gray-900 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
               >
                 Cancel
               </Link>
@@ -983,10 +1194,11 @@ export default function AddContract() {
                 ) : (
                   <>
                     <Save className="w-4 h-4 mr-2" />
-                    Create Contract
+                    {hasUnsavedChanges ? 'Create Contract*' : 'Create Contract'}
                   </>
                 )}
               </button>
+              </div>
             </div>
           </form>
         </div>

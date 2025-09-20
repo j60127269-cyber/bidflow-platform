@@ -126,20 +126,20 @@ export default function BidderForm({
         {/* Basic Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Company Name *
             </label>
             <input
               type="text"
               value={formData.company_name}
               onChange={(e) => handleInputChange('company_name', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Bid Amount (UGX) *
             </label>
             <input
@@ -147,32 +147,32 @@ export default function BidderForm({
               step="0.01"
               value={formData.bid_amount}
               onChange={(e) => handleInputChange('bid_amount', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               required
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Rank
             </label>
             <input
               type="number"
               value={formData.rank}
               onChange={(e) => handleInputChange('rank', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               placeholder="1, 2, 3, etc. (0 for unsuccessful)"
             />
           </div>
 
           <div>
-            <label className="block text-sm font-medium text-gray-700 mb-1">
+            <label className="block text-sm font-medium text-gray-900 mb-1">
               Bid Status
             </label>
             <select
               value={formData.bid_status}
               onChange={(e) => handleInputChange('bid_status', e.target.value)}
-              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+              className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
             >
               {BID_STATUSES.map(status => (
                 <option key={status} value={status}>
@@ -188,13 +188,13 @@ export default function BidderForm({
           <h4 className="text-md font-medium text-gray-800 mb-3">Evaluation Results</h4>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Preliminary Evaluation
               </label>
               <select
                 value={formData.preliminary_evaluation}
                 onChange={(e) => handleInputChange('preliminary_evaluation', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
                 <option value="">Select...</option>
                 {EVALUATION_OPTIONS.preliminary.map(option => (
@@ -206,13 +206,13 @@ export default function BidderForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Detailed Evaluation
               </label>
               <select
                 value={formData.detailed_evaluation}
                 onChange={(e) => handleInputChange('detailed_evaluation', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
                 <option value="">Select...</option>
                 {EVALUATION_OPTIONS.detailed.map(option => (
@@ -224,13 +224,13 @@ export default function BidderForm({
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Financial Evaluation
               </label>
               <select
                 value={formData.financial_evaluation}
                 onChange={(e) => handleInputChange('financial_evaluation', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               >
                 <option value="">Select...</option>
                 {EVALUATION_OPTIONS.financial.map(option => (
@@ -245,7 +245,7 @@ export default function BidderForm({
 
         {/* Failure Reason */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-900 mb-1">
             Reason for Failure
           </label>
           <textarea
@@ -262,50 +262,50 @@ export default function BidderForm({
           <h4 className="text-md font-medium text-gray-800 mb-3">Contact Information</h4>
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Contact Person
               </label>
               <input
                 type="text"
                 value={formData.contact_person}
                 onChange={(e) => handleInputChange('contact_person', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Contact Email
               </label>
               <input
                 type="email"
                 value={formData.contact_email}
                 onChange={(e) => handleInputChange('contact_email', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Contact Phone
               </label>
               <input
                 type="tel"
                 value={formData.contact_phone}
                 onChange={(e) => handleInputChange('contact_phone', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">
+              <label className="block text-sm font-medium text-gray-900 mb-1">
                 Registration Number
               </label>
               <input
                 type="text"
                 value={formData.company_registration_number}
                 onChange={(e) => handleInputChange('company_registration_number', e.target.value)}
-                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-gray-900"
               />
             </div>
           </div>
@@ -322,7 +322,7 @@ export default function BidderForm({
                 onChange={(e) => handleInputChange('is_winner', e.target.checked)}
                 className="mr-2"
               />
-              <span className="text-sm font-medium text-gray-700">Winner</span>
+              <span className="text-sm font-medium text-gray-900">Winner</span>
             </label>
 
             <label className="flex items-center">
@@ -332,14 +332,14 @@ export default function BidderForm({
                 onChange={(e) => handleInputChange('is_runner_up', e.target.checked)}
                 className="mr-2"
               />
-              <span className="text-sm font-medium text-gray-700">Runner-up (2nd BEB, 3rd BEB, etc.)</span>
+              <span className="text-sm font-medium text-gray-900">Runner-up (2nd BEB, 3rd BEB, etc.)</span>
             </label>
           </div>
         </div>
 
         {/* Notes */}
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-900 mb-1">
             Additional Notes
           </label>
           <textarea
@@ -356,7 +356,7 @@ export default function BidderForm({
           <button
             type="button"
             onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            className="px-4 py-2 text-sm font-medium text-gray-900 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
           >
             Cancel
           </button>

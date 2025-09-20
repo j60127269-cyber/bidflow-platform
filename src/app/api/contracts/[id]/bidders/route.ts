@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 // GET /api/contracts/[id]/bidders - Get all bidders for a contract
 export async function GET(
@@ -8,7 +8,6 @@ export async function GET(
 ) {
   try {
     const { id } = await params;
-    const supabase = createClient();
 
     // Get bidders for the contract, ordered by rank
     const { data: bidders, error } = await supabase
@@ -38,7 +37,6 @@ export async function POST(
   try {
     const { id } = await params;
     const body = await request.json();
-    const supabase = createClient();
 
     // Validate required fields
     if (!body.company_name || !body.bid_amount) {
