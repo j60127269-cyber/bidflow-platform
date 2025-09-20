@@ -194,25 +194,25 @@ export default function DashboardLayout({
               </div>
         </header>
 
-                     {/* Upgrade Prompt */}
-             {showUpgradePrompt && (
-               <div className="bg-yellow-50 border-b border-yellow-200 px-4 py-3">
-                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                   <div className="flex items-start sm:items-center min-w-0 flex-1">
-                     <AlertCircle className="h-5 w-5 text-yellow-600 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" />
-                     <p className="text-sm text-yellow-800 break-words">
-                       Upgrade to Professional Plan to unlock all features and unlimited access.
-                     </p>
-                   </div>
-                   <Link
-                     href="/dashboard/subscription"
-                     className="bg-yellow-600 hover:bg-yellow-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 text-center"
-                   >
-                     Upgrade Now
-                   </Link>
-                 </div>
-               </div>
-             )}
+            {/* Upgrade Prompt */}
+            {showUpgradePrompt && (
+              <div className="bg-green-50 border-b border-green-200 px-4 py-3">
+                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div className="flex items-start sm:items-center min-w-0 flex-1">
+                    <AlertCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" />
+                    <p className="text-sm text-green-800 break-words">
+                      Upgrade to Professional Plan to unlock all features and unlimited access.
+                    </p>
+                  </div>
+                  <Link
+                    href="/dashboard/subscription"
+                    className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 text-center"
+                  >
+                    Upgrade Now
+                  </Link>
+                </div>
+              </div>
+            )}
 
         <div className="flex">
           {/* Sidebar */}
