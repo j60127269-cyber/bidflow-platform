@@ -14,6 +14,7 @@ import { UploadedFile } from '@/lib/storageService';
 import { CANONICAL_CATEGORIES } from '@/lib/categories';
 import BidderList from '@/components/BidderList';
 import { ContractBidder } from '@/types/bidder-types';
+import { findOrCreateAwardee } from '@/lib/awardeeUtils';
 
 interface ContractForm {
   // 1. BASIC TENDER INFORMATION (19 variables)
@@ -59,10 +60,11 @@ interface ContractForm {
   current_stage: string;
   award_information: string;
   
-  // 5. AWARD INFORMATION (3 variables)
+  // 5. AWARD INFORMATION (4 variables)
   awarded_value?: number;
   awarded_to?: string;
   award_date?: string;
+  awarded_company_id?: string;
 }
 
 export default function AddContract() {
@@ -114,7 +116,8 @@ export default function AddContract() {
     // Award Information
     awarded_value: undefined,
     awarded_to: '',
-    award_date: ''
+    award_date: '',
+    awarded_company_id: undefined
   });
 
   const [loading, setLoading] = useState(false);
@@ -123,6 +126,8 @@ export default function AddContract() {
   const [bidders, setBidders] = useState<ContractBidder[]>([]);
   const [contractId, setContractId] = useState<string | null>(null);
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
+  const [awardees, setAwardees] = useState<any[]>([]);
+  const [selectedAwardeeId, setSelectedAwardeeId] = useState<string>('');
 
   // Save form data to localStorage
   const saveFormData = () => {
@@ -187,6 +192,11 @@ export default function AddContract() {
     }
   }, [contractId]);
 
+  // Fetch awardees on component mount
+  useEffect(() => {
+    fetchAwardees();
+  }, []);
+
   // Warn user about unsaved changes when leaving the page
   useEffect(() => {
     const handleBeforeUnload = (e: BeforeUnloadEvent) => {
@@ -202,6 +212,22 @@ export default function AddContract() {
 
   const createWinnerBidder = async (contractId: string) => {
     try {
+      // If no awardee is linked, create one automatically
+      if (!formData.awarded_company_id && formData.awarded_to) {
+        try {
+          const awardee = await findOrCreateAwardee({
+            company_name: formData.awarded_to,
+            description: `Automatically created from contract award: ${formData.reference_number}`
+          });
+          
+          // Update the form data with the awardee ID
+          setFormData(prev => ({ ...prev, awarded_company_id: awardee.id }));
+          console.log('Awardee created/updated:', awardee.company_name);
+        } catch (error) {
+          console.error('Error creating awardee:', error);
+        }
+      }
+
       const winnerBidderData = {
         company_name: formData.awarded_to,
         bid_amount: formData.awarded_value?.toString(),
@@ -234,6 +260,21 @@ export default function AddContract() {
       }
     } catch (error) {
       console.error('Error creating winner bidder:', error);
+    }
+  };
+
+  const fetchAwardees = async () => {
+    try {
+      const response = await fetch('/api/awardees?limit=100');
+      const data = await response.json();
+      
+      if (data.success) {
+        setAwardees(data.awardees);
+      } else {
+        console.error('Error fetching awardees:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching awardees:', error);
     }
   };
 
@@ -349,7 +390,8 @@ export default function AddContract() {
         award_information: formData.award_information || null,
         awarded_value: formData.awarded_value || null,
         awarded_to: formData.awarded_to || null,
-        award_date: formData.award_date || null
+        award_date: formData.award_date || null,
+        awarded_company_id: formData.awarded_company_id || null
       };
 
       const response = await fetch('/api/contracts', {
@@ -1078,15 +1120,51 @@ export default function AddContract() {
                       <label htmlFor="awarded_to" className="block text-sm font-medium text-gray-900 mb-2">
                         Awarded To
                       </label>
-                      <input
-                        type="text"
-                        id="awarded_to"
-                        name="awarded_to"
-                        value={formData.awarded_to}
-                        onChange={handleInputChange}
-                        placeholder="Company that won the contract"
-                        className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
-                      />
+                      <div className="space-y-2">
+                        <select
+                          value={selectedAwardeeId}
+                          onChange={(e) => {
+                            const awardeeId = e.target.value;
+                            setSelectedAwardeeId(awardeeId);
+                            if (awardeeId) {
+                              const selectedAwardee = awardees.find(a => a.id === awardeeId);
+                              if (selectedAwardee) {
+                                setFormData(prev => ({ 
+                                  ...prev,
+                                  awarded_to: selectedAwardee.company_name,
+                                  awarded_company_id: selectedAwardee.id 
+                                }));
+                              }
+                            } else {
+                              setFormData(prev => ({ 
+                                ...prev,
+                                awarded_to: '',
+                                awarded_company_id: undefined 
+                              }));
+                            }
+                          }}
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
+                        >
+                          <option value="">Select an awardee or enter manually</option>
+                          {awardees.map((awardee) => (
+                            <option key={awardee.id} value={awardee.id}>
+                              {awardee.company_name}
+                            </option>
+                          ))}
+                        </select>
+                        <input
+                          type="text"
+                          id="awarded_to"
+                          name="awarded_to"
+                          value={formData.awarded_to}
+                          onChange={(e) => {
+                            setFormData(prev => ({ ...prev, awarded_to: e.target.value }));
+                            setSelectedAwardeeId(''); // Clear selection when typing manually
+                          }}
+                          placeholder="Or enter company name manually"
+                          className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900"
+                        />
+                      </div>
                     </div>
 
                     <div>
