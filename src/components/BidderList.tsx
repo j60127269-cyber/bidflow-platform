@@ -104,6 +104,7 @@ export default function BidderList({ contractId, bidders, onBidderUpdate }: Bidd
         onSave={handleBidderSave}
         onCancel={handleFormClose}
         isEditing={!!editingBidder}
+        useFormElement={false}
       />
     );
   }

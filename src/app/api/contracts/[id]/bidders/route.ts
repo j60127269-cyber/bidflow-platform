@@ -1,5 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+
+// Create a Supabase client with service role key to bypass RLS
+const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
 // GET /api/contracts/[id]/bidders - Get all bidders for a contract
 export async function GET(

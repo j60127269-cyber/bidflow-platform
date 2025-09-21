@@ -1,10 +1,19 @@
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
-
-// Create a Supabase client with service role key to bypass RLS
-const supabase = createClient(supabaseUrl, supabaseServiceKey);
+// Create a function to get the appropriate Supabase client
+const getSupabaseClient = () => {
+  const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+  
+  // Check if we're on the server side (has service role key)
+  if (typeof window === 'undefined' && process.env.SUPABASE_SERVICE_ROLE_KEY) {
+    // Server-side: use service role key to bypass RLS
+    return createClient(supabaseUrl, process.env.SUPABASE_SERVICE_ROLE_KEY);
+  } else {
+    // Client-side: use anon key (will be limited by RLS)
+    const supabaseAnonKey = process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!;
+    return createClient(supabaseUrl, supabaseAnonKey);
+  }
+};
 
 export interface AwardeeData {
   company_name: string;
@@ -26,6 +35,8 @@ export interface AwardeeData {
  * used in governmentCsvProcessor.ts while providing enhanced functionality
  */
 export async function findOrCreateAwardee(awardeeData: AwardeeData): Promise<any> {
+  const supabase = getSupabaseClient();
+  
   // First try to find existing awardee by name (fuzzy match)
   const { data: existing } = await supabase
     .from('awardees')
@@ -88,6 +99,8 @@ export async function findOrCreateAwardee(awardeeData: AwardeeData): Promise<any
  * Search awardees with fuzzy matching
  */
 export async function searchAwardees(query: string, limit: number = 10): Promise<any[]> {
+  const supabase = getSupabaseClient();
+  
   const { data, error } = await supabase
     .from('awardees')
     .select('id, company_name, business_type, primary_categories, locations')
@@ -107,6 +120,8 @@ export async function searchAwardees(query: string, limit: number = 10): Promise
  * Get awardee by ID
  */
 export async function getAwardeeById(id: string): Promise<any> {
+  const supabase = getSupabaseClient();
+  
   const { data, error } = await supabase
     .from('awardees')
     .select('*')
@@ -131,6 +146,8 @@ export async function getAwardeeStats(): Promise<{
   byLocation: Record<string, number>;
   femaleOwned: number;
 }> {
+  const supabase = getSupabaseClient();
+  
   const { data: awardees, error } = await supabase
     .from('awardees')
     .select('business_type, primary_categories, locations, female_owned');

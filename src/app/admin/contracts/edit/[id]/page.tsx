@@ -11,7 +11,7 @@ import FileUpload from '@/components/FileUpload';
 import { UploadedFile } from '@/lib/storageService';
 import BidderList from '@/components/BidderList';
 import { ContractBidder } from '@/types/bidder-types';
-import { findOrCreateAwardee } from '@/lib/awardeeUtils';
+// Removed direct import of findOrCreateAwardee - will use API instead
 
 interface ContractForm {
   reference_number: string;
@@ -346,14 +346,27 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       // If no awardee is linked, create one automatically
       if (!contract.awarded_company_id && contract.awarded_to) {
         try {
-          const awardee = await findOrCreateAwardee({
-            company_name: contract.awarded_to,
-            description: `Automatically created from contract award: ${contract.reference_number}`
+          const response = await fetch('/api/awardees', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              company_name: contract.awarded_to,
+              description: `Automatically created from contract award: ${contract.reference_number}`
+            }),
           });
-          
-          // Update the contract with the awardee ID
-          updateContract({ awarded_company_id: awardee.id });
-          console.log('Awardee created/updated:', awardee.company_name);
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+              // Update the contract with the awardee ID
+              updateContract({ awarded_company_id: result.awardee.id });
+              console.log('Awardee created/updated:', result.awardee.company_name);
+            }
+          } else {
+            console.error('Failed to create awardee via API');
+          }
         } catch (error) {
           console.error('Error creating awardee:', error);
         }

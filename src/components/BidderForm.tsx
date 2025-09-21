@@ -9,6 +9,7 @@ interface BidderFormProps {
   onSave: (bidder: ContractBidder) => void;
   onCancel: () => void;
   isEditing?: boolean;
+  useFormElement?: boolean; // New prop to control form element usage
 }
 
 const BID_STATUSES = [
@@ -31,7 +32,8 @@ export default function BidderForm({
   bidder, 
   onSave, 
   onCancel, 
-  isEditing = false 
+  isEditing = false,
+  useFormElement = true 
 }: BidderFormProps) {
   const [formData, setFormData] = useState<BidderFormData>({
     company_name: '',
@@ -75,11 +77,14 @@ export default function BidderForm({
     }
   }, [bidder, isEditing]);
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
+  const handleSubmit = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
     setSaving(true);
 
     try {
+      // Debug: Log the form data being sent
+      console.log('Sending bidder data:', formData);
+      
       const url = isEditing 
         ? `/api/contracts/${contractId}/bidders/${bidder?.id}`
         : `/api/contracts/${contractId}/bidders`;
@@ -116,13 +121,8 @@ export default function BidderForm({
     }));
   };
 
-  return (
-    <div className="bg-white p-6 rounded-lg shadow-lg">
-      <h3 className="text-lg font-semibold mb-4">
-        {isEditing ? 'Edit Bidder' : 'Add New Bidder'}
-      </h3>
-      
-      <form onSubmit={handleSubmit} className="space-y-4">
+  const formContent = (
+    <div className="space-y-4">
         {/* Basic Information */}
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
@@ -351,24 +351,60 @@ export default function BidderForm({
           />
         </div>
 
-        {/* Form Actions */}
-        <div className="flex justify-end space-x-3 pt-4 border-t">
-          <button
-            type="button"
-            onClick={onCancel}
-            className="px-4 py-2 text-sm font-medium text-gray-900 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
-          >
-            Cancel
-          </button>
-          <button
-            type="submit"
-            disabled={saving}
-            className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
-          >
-            {saving ? 'Saving...' : (isEditing ? 'Update Bidder' : 'Add Bidder')}
-          </button>
+        {/* Form Actions - only show when using form element */}
+        {useFormElement && (
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 text-sm font-medium text-gray-900 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Cancel
+            </button>
+            <button
+              type="submit"
+              disabled={saving}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : (isEditing ? 'Update Bidder' : 'Add Bidder')}
+            </button>
+          </div>
+        )}
+    </div>
+  );
+
+  return (
+    <div className="bg-white p-6 rounded-lg shadow-lg">
+      <h3 className="text-lg font-semibold mb-4">
+        {isEditing ? 'Edit Bidder' : 'Add New Bidder'}
+      </h3>
+      
+      {useFormElement ? (
+        <form onSubmit={handleSubmit}>
+          {formContent}
+        </form>
+      ) : (
+        <div>
+          {formContent}
+          <div className="flex justify-end space-x-3 pt-4 border-t">
+            <button
+              type="button"
+              onClick={onCancel}
+              className="px-4 py-2 text-sm font-medium text-gray-900 bg-gray-100 border border-gray-300 rounded-md hover:bg-gray-200 focus:outline-none focus:ring-2 focus:ring-gray-500"
+            >
+              Cancel
+            </button>
+            <button
+              type="button"
+              onClick={handleSubmit}
+              disabled={saving}
+              className="px-4 py-2 text-sm font-medium text-white bg-blue-600 border border-transparent rounded-md hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 disabled:opacity-50"
+            >
+              {saving ? 'Saving...' : (isEditing ? 'Update Bidder' : 'Add Bidder')}
+            </button>
+          </div>
         </div>
-      </form>
+      )}
     </div>
   );
 }

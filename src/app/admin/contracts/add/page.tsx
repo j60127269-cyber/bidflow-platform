@@ -14,7 +14,7 @@ import { UploadedFile } from '@/lib/storageService';
 import { CANONICAL_CATEGORIES } from '@/lib/categories';
 import BidderList from '@/components/BidderList';
 import { ContractBidder } from '@/types/bidder-types';
-import { findOrCreateAwardee } from '@/lib/awardeeUtils';
+// Removed direct import of findOrCreateAwardee - will use API instead
 
 interface ContractForm {
   // 1. BASIC TENDER INFORMATION (19 variables)
@@ -215,14 +215,27 @@ export default function AddContract() {
       // If no awardee is linked, create one automatically
       if (!formData.awarded_company_id && formData.awarded_to) {
         try {
-          const awardee = await findOrCreateAwardee({
-            company_name: formData.awarded_to,
-            description: `Automatically created from contract award: ${formData.reference_number}`
+          const response = await fetch('/api/awardees', {
+            method: 'POST',
+            headers: {
+              'Content-Type': 'application/json',
+            },
+            body: JSON.stringify({
+              company_name: formData.awarded_to,
+              description: `Automatically created from contract award: ${formData.reference_number}`
+            }),
           });
-          
-          // Update the form data with the awardee ID
-          setFormData(prev => ({ ...prev, awarded_company_id: awardee.id }));
-          console.log('Awardee created/updated:', awardee.company_name);
+
+          if (response.ok) {
+            const result = await response.json();
+            if (result.success) {
+              // Update the form data with the awardee ID
+              setFormData(prev => ({ ...prev, awarded_company_id: result.awardee.id }));
+              console.log('Awardee created/updated:', result.awardee.company_name);
+            }
+          } else {
+            console.error('Failed to create awardee via API');
+          }
         } catch (error) {
           console.error('Error creating awardee:', error);
         }
@@ -1152,11 +1165,11 @@ export default function AddContract() {
                             </option>
                           ))}
                         </select>
-                        <input
-                          type="text"
-                          id="awarded_to"
-                          name="awarded_to"
-                          value={formData.awarded_to}
+                      <input
+                        type="text"
+                        id="awarded_to"
+                        name="awarded_to"
+                        value={formData.awarded_to}
                           onChange={(e) => {
                             setFormData(prev => ({ ...prev, awarded_to: e.target.value }));
                             setSelectedAwardeeId(''); // Clear selection when typing manually
