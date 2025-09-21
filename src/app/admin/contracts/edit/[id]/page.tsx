@@ -11,6 +11,7 @@ import FileUpload from '@/components/FileUpload';
 import { UploadedFile } from '@/lib/storageService';
 import BidderList from '@/components/BidderList';
 import { ContractBidder } from '@/types/bidder-types';
+import { findOrCreateAwardee } from '@/lib/awardeeUtils';
 
 interface ContractForm {
   reference_number: string;
@@ -51,6 +52,7 @@ interface ContractForm {
   awarded_value?: number;
   awarded_to?: string;
   award_date?: string;
+  awarded_company_id?: string;
   publish_status: 'draft' | 'published' | 'archived';
   published_at?: string;
   published_by?: string;
@@ -88,6 +90,8 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [bidders, setBidders] = useState<ContractBidder[]>([]);
   const [loadingBidders, setLoadingBidders] = useState(false);
+  const [awardees, setAwardees] = useState<any[]>([]);
+  const [selectedAwardeeId, setSelectedAwardeeId] = useState<string>('');
   const [contract, setContract] = useState<ContractForm>({
     reference_number: '',
     title: '',
@@ -283,6 +287,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
           awarded_value: data.awarded_value || undefined,
           awarded_to: data.awarded_to || '',
           award_date: data.award_date || '',
+          awarded_company_id: data.awarded_company_id || undefined,
                      publish_status: data.publish_status || 'draft',
            published_at: data.published_at ? new Date(data.published_at).toISOString().split('T')[0] : '',
            published_by: data.published_by || '',
@@ -314,6 +319,21 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
     }
   }, [id]);
 
+  const fetchAwardees = useCallback(async () => {
+    try {
+      const response = await fetch('/api/awardees?limit=100');
+      const data = await response.json();
+      
+      if (data.success) {
+        setAwardees(data.awardees);
+      } else {
+        console.error('Error fetching awardees:', data.error);
+      }
+    } catch (error) {
+      console.error('Error fetching awardees:', error);
+    }
+  }, []);
+
   const createWinnerBidder = async () => {
     try {
       // Check if winner already exists
@@ -321,6 +341,22 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       if (existingWinner) {
         console.log('Winner bidder already exists, skipping creation');
         return;
+      }
+
+      // If no awardee is linked, create one automatically
+      if (!contract.awarded_company_id && contract.awarded_to) {
+        try {
+          const awardee = await findOrCreateAwardee({
+            company_name: contract.awarded_to,
+            description: `Automatically created from contract award: ${contract.reference_number}`
+          });
+          
+          // Update the contract with the awardee ID
+          updateContract({ awarded_company_id: awardee.id });
+          console.log('Awardee created/updated:', awardee.company_name);
+        } catch (error) {
+          console.error('Error creating awardee:', error);
+        }
       }
 
       const winnerBidderData = {
@@ -361,7 +397,8 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
   useEffect(() => {
     fetchContract();
     fetchBidders();
-  }, [fetchContract, fetchBidders]);
+    fetchAwardees();
+  }, [fetchContract, fetchBidders, fetchAwardees]);
 
   // Warn user about unsaved changes when leaving the page
   useEffect(() => {
@@ -488,6 +525,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       updateData.awarded_value = contract.awarded_value || null;
       updateData.awarded_to = contract.awarded_to || null;
       updateData.award_date = contract.award_date || null;
+      updateData.awarded_company_id = contract.awarded_company_id || null;
       updateData.detail_url = contract.detail_url || null;
 
       // Add boolean fields
@@ -1162,13 +1200,47 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                 <label className="block text-sm font-medium text-gray-900 mb-1">
                   Awarded To
                 </label>
-                <input
-                  type="text"
-                  value={contract.awarded_to || ''}
-                  onChange={(e) => updateContract({ awarded_to: e.target.value })}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
-                  placeholder="Company that won the contract"
-                />
+                <div className="space-y-2">
+                  <select
+                    value={selectedAwardeeId}
+                    onChange={(e) => {
+                      const awardeeId = e.target.value;
+                      setSelectedAwardeeId(awardeeId);
+                      if (awardeeId) {
+                        const selectedAwardee = awardees.find(a => a.id === awardeeId);
+                        if (selectedAwardee) {
+                          updateContract({ 
+                            awarded_to: selectedAwardee.company_name,
+                            awarded_company_id: selectedAwardee.id 
+                          });
+                        }
+                      } else {
+                        updateContract({ 
+                          awarded_to: '',
+                          awarded_company_id: undefined 
+                        });
+                      }
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
+                  >
+                    <option value="">Select an awardee or enter manually</option>
+                    {awardees.map((awardee) => (
+                      <option key={awardee.id} value={awardee.id}>
+                        {awardee.company_name}
+                      </option>
+                    ))}
+                  </select>
+                  <input
+                    type="text"
+                    value={contract.awarded_to || ''}
+                    onChange={(e) => {
+                      updateContract({ awarded_to: e.target.value });
+                      setSelectedAwardeeId(''); // Clear selection when typing manually
+                    }}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-1 focus:ring-blue-500 text-gray-900"
+                    placeholder="Or enter company name manually"
+                  />
+                </div>
               </div>
               <div>
                 <label className="block text-sm font-medium text-gray-900 mb-1">

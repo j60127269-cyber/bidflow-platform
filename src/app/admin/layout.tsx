@@ -16,7 +16,8 @@ import {
   X,
   Shield,
   History,
-  Database
+  Database,
+  Building
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -31,6 +32,7 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
   const navigation = [
     { name: 'Dashboard', href: '/admin', icon: BarChart3 },
     { name: 'Contracts', href: '/admin/contracts', icon: FileText },
+    { name: 'Awardees', href: '/admin/awardees', icon: Building },
     { name: 'Historical', href: '/admin/historical', icon: History },
     { name: 'Data Management', href: '/admin/data-management', icon: Database },
     { name: 'Users', href: '/admin/users', icon: Users },

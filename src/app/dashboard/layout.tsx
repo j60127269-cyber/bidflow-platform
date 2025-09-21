@@ -126,18 +126,6 @@ export default function DashboardLayout({
 
                 {/* Right Side - Actions */}
                 <div className="flex items-center space-x-4">
-                  {/* Settings */}
-                  <button className="p-2 text-gray-600 hover:text-gray-800">
-                    <Settings className="h-5 w-5" />
-                  </button>
-
-              {/* Subscribe Button */}
-              <button className="bg-purple-600 hover:bg-purple-700 text-white px-4 py-2 rounded-md text-sm font-medium">
-                Subscribe
-                <span className="ml-2 text-xs bg-purple-500 px-2 py-1 rounded-full">
-                  6 Days Left
-                </span>
-                </button>
 
               {/* User Menu */}
                 <div className="relative">
