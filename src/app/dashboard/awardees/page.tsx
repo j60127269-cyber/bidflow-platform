@@ -1,42 +1,63 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Building2, MapPin, Phone, Mail, ExternalLink, Plus } from 'lucide-react';
+import { Search, Filter, Building2, Award, ChevronDown, ArrowUpDown } from 'lucide-react';
 import Link from 'next/link';
 
 interface Awardee {
   id: string;
   company_name: string;
-  business_type: string;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
-  country: string;
-  phone: string;
-  email: string;
-  website: string;
-  notes: string;
+  registration_number?: string;
+  business_type?: string;
+  country?: string;
+  founded_year?: number;
+  contact_email?: string;
+  contact_phone?: string;
+  website?: string;
   created_at: string;
   updated_at: string;
+  total_awarded_value?: number;
+  total_contracts?: number;
+}
+
+interface AwardeeStats {
+  totalAwardees: number;
+  totalValue: number;
+  averageValue: number;
+  topAwardees: Array<{
+    company_name: string;
+    total_contracts: number;
+    total_value: number;
+  }>;
 }
 
 export default function AwardeesPage() {
   const [awardees, setAwardees] = useState<Awardee[]>([]);
+  const [stats, setStats] = useState<AwardeeStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [businessTypeFilter, setBusinessTypeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('company_name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(17);
 
   useEffect(() => {
     fetchAwardees();
+    fetchStats();
   }, []);
+
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy, sortOrder]);
 
   const fetchAwardees = async () => {
     try {
-      const response = await fetch('/api/awardees');
+      setLoading(true);
+      const response = await fetch('/api/awardees?limit=1000');
       if (response.ok) {
         const data = await response.json();
-        setAwardees(data.data || []);
+        setAwardees(data.awardees || []);
       }
     } catch (error) {
       console.error('Error fetching awardees:', error);
@@ -45,40 +66,92 @@ export default function AwardeesPage() {
     }
   };
 
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/awardees/stats');
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
   const filteredAwardees = awardees.filter(awardee => {
-    const matchesSearch = awardee.company_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         awardee.business_type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         awardee.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         awardee.state.toLowerCase().includes(searchTerm.toLowerCase());
-    
-    const matchesBusinessType = businessTypeFilter === 'all' || awardee.business_type === businessTypeFilter;
-    
-    return matchesSearch && matchesBusinessType;
+    const matchesSearch = awardee.company_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         awardee.contact_email?.toLowerCase().includes(searchTerm.toLowerCase());
+    return matchesSearch;
   });
 
-  const getBusinessTypeColor = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'corporation':
-        return 'bg-blue-100 text-blue-800';
-      case 'llc':
-        return 'bg-green-100 text-green-800';
-      case 'partnership':
-        return 'bg-purple-100 text-purple-800';
-      case 'sole_proprietorship':
-        return 'bg-yellow-100 text-yellow-800';
-      case 'limited_company':
-        return 'bg-indigo-100 text-indigo-800';
+  const sortedAwardees = [...filteredAwardees].sort((a, b) => {
+    let aValue, bValue;
+    
+    switch (sortBy) {
+      case 'company_name':
+        aValue = a.company_name.toLowerCase();
+        bValue = b.company_name.toLowerCase();
+        break;
+      case 'total_awarded_value':
+        aValue = a.total_awarded_value || 0;
+        bValue = b.total_awarded_value || 0;
+        break;
+      case 'created_at':
+        aValue = new Date(a.created_at).getTime();
+        bValue = new Date(b.created_at).getTime();
+        break;
       default:
-        return 'bg-gray-100 text-gray-800';
+        aValue = a.company_name.toLowerCase();
+        bValue = b.company_name.toLowerCase();
     }
+    
+    if (sortOrder === 'asc') {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
+  });
+
+  // Pagination logic
+  const totalPages = Math.ceil(sortedAwardees.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedAwardees = sortedAwardees.slice(startIndex, endIndex);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const formatCurrency = (amount: number) => {
+    if (amount === 0) return 'UGX 0';
+    
+    if (amount >= 1000000000) {
+      return `UGX ${(amount / 1000000000).toFixed(1)}B`;
+    } else if (amount >= 1000000) {
+      return `UGX ${(amount / 1000000).toFixed(1)}M`;
+    } else if (amount >= 1000) {
+      return `UGX ${(amount / 1000).toFixed(1)}K`;
+    }
+    
+    return `UGX ${amount.toLocaleString()}`;
   };
 
   if (loading) {
     return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading awardees...</p>
+      <div className="min-h-screen bg-gray-50">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="animate-pulse">
+            <div className="h-8 bg-gray-200 rounded w-1/3 mb-6"></div>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+              {[...Array(3)].map((_, i) => (
+                <div key={i} className="bg-white p-6 rounded-lg shadow">
+                  <div className="h-4 bg-gray-200 rounded w-1/2 mb-2"></div>
+                  <div className="h-8 bg-gray-200 rounded w-3/4"></div>
+                </div>
+              ))}
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -88,233 +161,305 @@ export default function AwardeesPage() {
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
-        <div className="flex items-center justify-between mb-8">
-          <div>
-            <h1 className="text-3xl font-bold text-gray-900">Awardees</h1>
-            <p className="mt-2 text-gray-600">
-              Manage and track all awardee companies and their information
-            </p>
-          </div>
-          <Link
-            href="/admin/awardees/add"
-            className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
-          >
-            <Plus className="h-4 w-4 mr-2" />
-            Add Awardee
-          </Link>
+        <div className="mb-8">
+          <h1 className="text-4xl font-bold text-gray-900 tracking-tight">Awardees</h1>
+          <p className="mt-2 text-lg text-gray-800">
+            Companies and organizations that have received contract awards
+          </p>
         </div>
 
-        {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Search awardees..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Business Type Filter */}
-            <select
-              value={businessTypeFilter}
-              onChange={(e) => setBusinessTypeFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Business Types</option>
-              <option value="corporation">Corporation</option>
-              <option value="llc">LLC</option>
-              <option value="partnership">Partnership</option>
-              <option value="sole_proprietorship">Sole Proprietorship</option>
-              <option value="limited_company">Limited Company</option>
-            </select>
-
-            {/* Results Count */}
-            <div className="flex items-center text-sm text-gray-500">
-              <span>{filteredAwardees.length} of {awardees.length} awardees</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Awardees Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredAwardees.map((awardee) => (
-            <div key={awardee.id} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-              <div className="p-6">
-                {/* Header */}
-                <div className="flex items-start justify-between mb-4">
-                  <div className="flex-1">
-                    <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
-                      {awardee.company_name}
-                    </h3>
-                    <p className="text-sm text-gray-500 mt-1">
-                      {awardee.business_type}
-                    </p>
+        {/* Stats Cards */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <Building2 className="h-6 w-6 text-gray-400" />
                   </div>
-                  <span className={`px-2 py-1 text-xs font-medium rounded-full ${getBusinessTypeColor(awardee.business_type)}`}>
-                    {awardee.business_type.replace('_', ' ')}
-                  </span>
-                </div>
-
-                {/* Contact Information */}
-                <div className="space-y-3">
-                  {/* Address */}
-                  <div className="flex items-start text-sm text-gray-600">
-                    <MapPin className="h-4 w-4 mr-2 text-gray-400 mt-0.5 flex-shrink-0" />
-                    <div>
-                      <p>{awardee.address}</p>
-                      <p>{awardee.city}, {awardee.state} {awardee.zip_code}</p>
-                      <p>{awardee.country}</p>
-                    </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-700 truncate">Total Awardees</dt>
+                      <dd className="text-lg font-medium text-gray-900">{stats.totalAwardees}</dd>
+                    </dl>
                   </div>
-
-                  {/* Phone */}
-                  {awardee.phone && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                      <span>{awardee.phone}</span>
-                    </div>
-                  )}
-
-                  {/* Email */}
-                  {awardee.email && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                      <span className="truncate">{awardee.email}</span>
-                    </div>
-                  )}
-
-                  {/* Website */}
-                  {awardee.website && (
-                    <div className="flex items-center text-sm text-gray-600">
-                      <ExternalLink className="h-4 w-4 mr-2 text-gray-400" />
-                      <a 
-                        href={awardee.website} 
-                        target="_blank" 
-                        rel="noopener noreferrer"
-                        className="text-blue-600 hover:text-blue-800 truncate"
-                      >
-                        {awardee.website}
-                      </a>
-                    </div>
-                  )}
-                </div>
-
-                {/* Notes */}
-                {awardee.notes && (
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <p className="text-sm text-gray-600 line-clamp-3">
-                      {awardee.notes}
-                    </p>
-                  </div>
-                )}
-
-                {/* Actions */}
-                <div className="mt-4 pt-4 border-t border-gray-100 flex space-x-2">
-                  <Link
-                    href={`/admin/awardees/${awardee.id}`}
-                    className="flex-1 text-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-200 rounded-md hover:bg-blue-50"
-                  >
-                    View Details
-                  </Link>
-                  <Link
-                    href={`/admin/awardees/edit/${awardee.id}`}
-                    className="flex-1 text-center px-3 py-2 text-sm font-medium text-gray-600 hover:text-gray-800 border border-gray-200 rounded-md hover:bg-gray-50"
-                  >
-                    Edit
-                  </Link>
                 </div>
               </div>
             </div>
-          ))}
-        </div>
 
-        {/* Empty State */}
-        {filteredAwardees.length === 0 && (
-          <div className="text-center py-12">
-            <div className="mx-auto h-12 w-12 text-gray-400">
-              <Building2 className="h-full w-full" />
-            </div>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No awardees found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || businessTypeFilter !== 'all' 
-                ? 'Try adjusting your search or filter criteria.'
-                : 'No awardees have been added yet.'
-              }
-            </p>
-            {!searchTerm && businessTypeFilter === 'all' && (
-              <div className="mt-6">
-                <Link
-                  href="/admin/awardees/add"
-                  className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700"
-                >
-                  <Plus className="h-4 w-4 mr-2" />
-                  Add Your First Awardee
-                </Link>
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <Award className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-700 truncate">Total Value</dt>
+                      <dd className="text-lg font-medium text-gray-900">{formatCurrency(stats.totalValue)}</dd>
+                    </dl>
+                  </div>
+                </div>
               </div>
-            )}
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <Building2 className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-700 truncate">Average Value</dt>
+                      <dd className="text-lg font-medium text-gray-900">{formatCurrency(stats.averageValue)}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Building2 className="h-8 w-8 text-blue-600" />
+        {/* Search and Filters */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200 mb-6">
+          <div className="px-6 py-5 border-b border-gray-200">
+            <div className="flex items-center justify-between">
+              {/* Left side - Search */}
+              <div className="flex-1 max-w-lg">
+                <div className="relative">
+                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
+                  <input
+                    type="text"
+                     placeholder="Search by Company Name"
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="w-full pl-12 pr-4 py-3 border border-gray-300 rounded-lg text-sm text-gray-900 placeholder-gray-700 focus:ring-2 focus:ring-blue-500 focus:border-blue-500 transition-colors"
+                  />
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Awardees</p>
-                <p className="text-2xl font-semibold text-gray-900">{awardees.length}</p>
+
+              {/* Right side - Actions */}
+              <div className="flex items-center space-x-3">
+                {/* Add Filters Button */}
+                <button className="inline-flex items-center px-5 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                  <Filter className="h-4 w-4 mr-2" />
+                  Add Filters
+                  <ChevronDown className="h-4 w-4 ml-2" />
+                </button>
+
+                 {/* Sort Button */}
+                 <button 
+                   onClick={() => setSortBy(sortBy === 'company_name' ? 'total_awarded_value' : 'company_name')}
+                   className="inline-flex items-center px-5 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                 >
+                   <ArrowUpDown className="h-4 w-4 mr-2" />
+                   Sort by {sortBy === 'company_name' ? 'Name' : 'Value'}
+                   <ChevronDown className="h-4 w-4 ml-2" />
+                 </button>
               </div>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <MapPin className="h-8 w-8 text-green-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Unique States</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {new Set(awardees.map(a => a.state)).size}
-                </p>
-              </div>
+          {/* Keywords Filter */}
+          {searchTerm && (
+            <div className="mt-6 flex items-center space-x-3">
+              <span className="text-sm font-medium text-gray-800">Keywords:</span>
+              <span className="inline-flex items-center px-3 py-1 rounded-full text-sm font-medium bg-blue-100 text-blue-800">
+                {searchTerm}
+                <button
+                  onClick={() => setSearchTerm('')}
+                  className="ml-2 inline-flex items-center justify-center w-4 h-4 rounded-full text-blue-400 hover:bg-blue-200 hover:text-blue-500 focus:outline-none focus:bg-blue-500 focus:text-white"
+                >
+                  <span className="sr-only">Remove</span>
+                  <svg className="w-2 h-2" stroke="currentColor" fill="none" viewBox="0 0 8 8">
+                    <path strokeLinecap="round" strokeWidth="1.5" d="m1 1 6 6m0-6-6 6" />
+                  </svg>
+                </button>
+              </span>
             </div>
-          </div>
+          )}
+        </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Phone className="h-8 w-8 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">With Contact Info</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {awardees.filter(a => a.phone || a.email).length}
-                </p>
-              </div>
+        {/* Awardees Table */}
+        <div className="bg-white rounded-xl shadow-sm border border-gray-200">
+          {sortedAwardees.length === 0 ? (
+            <div className="text-center py-16">
+              <Building2 className="mx-auto h-16 w-16 text-gray-300" />
+              <h3 className="mt-2 text-sm font-medium text-gray-900">No awardees found</h3>
+              <p className="mt-1 text-sm text-gray-700">
+                {searchTerm ? 'Try adjusting your search terms.' : 'No awardees have been created yet.'}
+              </p>
             </div>
-          </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                 <thead className="bg-gray-50">
+                   <tr>
+                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                       Company Name
+                     </th>
+                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                       Total Awards Value
+                     </th>
+                   </tr>
+                 </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedAwardees.map((awardee) => (
+                    <tr key={awardee.id} className="hover:bg-gray-50 transition-colors duration-150">
+                       <td className="px-6 py-5">
+                         <div className="flex items-center">
+                           <div className="flex-shrink-0 h-10 w-10">
+                             <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-sm">
+                               <span className="text-sm font-bold text-blue-700">
+                                 {awardee.company_name?.charAt(0) || 'A'}
+                               </span>
+                             </div>
+                           </div>
+                           <div className="ml-4">
+                             <Link
+                               href={`/dashboard/awardees/${encodeURIComponent(awardee.company_name.toLowerCase().replace(/\s+/g, '-'))}`}
+                               className="text-sm font-medium transition-colors"
+                               style={{ color: '#4392F1' }}
+                               onMouseEnter={(e) => e.target.style.color = '#2B7CE6'}
+                               onMouseLeave={(e) => e.target.style.color = '#4392F1'}
+                             >
+                               {awardee.company_name}
+                             </Link>
+                           </div>
+                         </div>
+                       </td>
+                       <td className="px-6 py-5 whitespace-nowrap">
+                         <div className="text-sm font-medium text-gray-900">
+                           {formatCurrency(awardee.total_awarded_value || 0)}
+                         </div>
+                       </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <ExternalLink className="h-8 w-8 text-orange-600" />
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="bg-white px-4 py-3 flex items-center justify-between border-t border-gray-200 sm:px-6">
+              <div className="flex-1 flex justify-between sm:hidden">
+                <button
+                  onClick={() => handlePageChange(currentPage - 1)}
+                  disabled={currentPage === 1}
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Previous
+                </button>
+                <button
+                  onClick={() => handlePageChange(currentPage + 1)}
+                  disabled={currentPage === totalPages}
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Next
+                </button>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">With Websites</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {awardees.filter(a => a.website).length}
-                </p>
+              <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
+                <div>
+                  <p className="text-sm text-gray-700">
+                    Showing{' '}
+                    <span className="font-medium">{startIndex + 1}</span>
+                    {' '}to{' '}
+                    <span className="font-medium">{Math.min(endIndex, sortedAwardees.length)}</span>
+                    {' '}of{' '}
+                    <span className="font-medium">{sortedAwardees.length}</span>
+                    {' '}results
+                  </p>
+                </div>
+                <div>
+                  <nav className="relative z-0 inline-flex rounded-md shadow-sm -space-x-px" aria-label="Pagination">
+                    {/* First Page Button */}
+                    <button
+                      onClick={() => handlePageChange(1)}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center px-2 py-2 rounded-l-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="sr-only">First</span>
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M15.707 15.707a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 111.414 1.414L11.414 10l4.293 4.293a1 1 0 010 1.414zm-6 0a1 1 0 01-1.414 0l-5-5a1 1 0 010-1.414l5-5a1 1 0 011.414 1.414L5.414 10l4.293 4.293a1 1 0 010 1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    
+                    {/* Previous Page Button */}
+                    <button
+                      onClick={() => handlePageChange(currentPage - 1)}
+                      disabled={currentPage === 1}
+                      className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="sr-only">Previous</span>
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M12.707 5.293a1 1 0 010 1.414L9.414 10l3.293 3.293a1 1 0 01-1.414 1.414l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    
+                    {/* Page numbers */}
+                    {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                      // Show first page, last page, current page, and pages around current page
+                      if (
+                        page === 1 ||
+                        page === totalPages ||
+                        (page >= currentPage - 1 && page <= currentPage + 1)
+                      ) {
+                        return (
+                          <button
+                            key={page}
+                            onClick={() => handlePageChange(page)}
+                            className={`relative inline-flex items-center px-4 py-2 border text-sm font-medium ${
+                              page === currentPage
+                                ? 'z-10 bg-blue-50 border-blue-500 text-blue-600'
+                                : 'bg-white border-gray-300 text-gray-500 hover:bg-gray-50'
+                            }`}
+                          >
+                            {page}
+                          </button>
+                        );
+                      } else if (
+                        page === currentPage - 2 ||
+                        page === currentPage + 2
+                      ) {
+                        return (
+                          <span key={page} className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                            ...
+                          </span>
+                        );
+                      }
+                      return null;
+                    })}
+                    
+                    {/* Next Page Button */}
+                    <button
+                      onClick={() => handlePageChange(currentPage + 1)}
+                      disabled={currentPage === totalPages}
+                      className="relative inline-flex items-center px-2 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="sr-only">Next</span>
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M7.293 14.707a1 1 0 010-1.414L10.586 10 7.293 6.707a1 1 0 011.414-1.414l4 4a1 1 0 010 1.414l-4 4a1 1 0 01-1.414 0z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                    
+                    {/* Last Page Button */}
+                    <button
+                      onClick={() => handlePageChange(totalPages)}
+                      disabled={currentPage === totalPages}
+                      className="relative inline-flex items-center px-2 py-2 rounded-r-md border border-gray-300 bg-white text-sm font-medium text-gray-500 hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                    >
+                      <span className="sr-only">Last</span>
+                      <svg className="h-4 w-4" fill="currentColor" viewBox="0 0 20 20">
+                        <path fillRule="evenodd" d="M4.293 4.293a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L8.586 10 4.293 5.707a1 1 0 010-1.414zm6 0a1 1 0 011.414 0l5 5a1 1 0 010 1.414l-5 5a1 1 0 01-1.414-1.414L14.586 10l-4.293-4.293a1 1 0 010-1.414z" clipRule="evenodd" />
+                      </svg>
+                    </button>
+                  </nav>
+                </div>
               </div>
             </div>
-          </div>
+          )}
         </div>
       </div>
     </div>

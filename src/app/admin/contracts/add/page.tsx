@@ -7,7 +7,10 @@ import {
   ArrowLeft,
   Save,
   Plus,
-  Trash2
+  Trash2,
+  AlertTriangle,
+  CheckCircle,
+  X
 } from 'lucide-react';
 import FileUpload from '@/components/FileUpload';
 import { UploadedFile } from '@/lib/storageService';
@@ -15,6 +18,27 @@ import { CANONICAL_CATEGORIES } from '@/lib/categories';
 import BidderList from '@/components/BidderList';
 import { ContractBidder } from '@/types/bidder-types';
 // Removed direct import of findOrCreateAwardee - will use API instead
+
+interface DuplicateValidation {
+  isUnique: boolean;
+  hasExactMatch: boolean;
+  potentialDuplicates: Array<{
+    id: string;
+    entity_name: string;
+    entity_type: string;
+    country: string;
+    website?: string;
+    similarity: number;
+  }>;
+  exactMatches: Array<{
+    id: string;
+    entity_name: string;
+    entity_type: string;
+    country: string;
+    website?: string;
+  }>;
+  recommendation: string;
+}
 
 interface ContractForm {
   // 1. BASIC TENDER INFORMATION (19 variables)
@@ -37,8 +61,9 @@ interface ContractForm {
   submission_deadline: string;
   bid_opening_date: string;
   
-  // 2. PROCURING ENTITY INFORMATION (3 variables)
+  // 2. PROCURING ENTITY INFORMATION (4 variables)
   procuring_entity: string;
+  procuring_entity_id?: string;
   contact_person: string;
   contact_position: string;
   
@@ -92,6 +117,7 @@ export default function AddContract() {
     
     // Procuring Entity Information
     procuring_entity: '',
+    procuring_entity_id: undefined,
     contact_person: '',
     contact_position: '',
     
@@ -128,6 +154,11 @@ export default function AddContract() {
   const [hasUnsavedChanges, setHasUnsavedChanges] = useState(false);
   const [awardees, setAwardees] = useState<any[]>([]);
   const [selectedAwardeeId, setSelectedAwardeeId] = useState<string>('');
+  const [procuringEntities, setProcuringEntities] = useState<any[]>([]);
+  const [selectedProcuringEntityId, setSelectedProcuringEntityId] = useState<string>('');
+  const [duplicateValidation, setDuplicateValidation] = useState<DuplicateValidation | null>(null);
+  const [validating, setValidating] = useState(false);
+  const [showDuplicateWarning, setShowDuplicateWarning] = useState(false);
 
   // Save form data to localStorage
   const saveFormData = () => {
@@ -291,6 +322,71 @@ export default function AddContract() {
     }
   };
 
+  // Find or create procuring entity
+  // Debounced validation function for procuring entity
+  const validateProcuringEntityName = async (entityName: string) => {
+    if (!entityName.trim() || entityName.length < 3) {
+      setDuplicateValidation(null);
+      setShowDuplicateWarning(false);
+      return;
+    }
+
+    try {
+      setValidating(true);
+      const response = await fetch('/api/procuring-entities/validate', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ entityName }),
+      });
+
+      if (response.ok) {
+        const data = await response.json();
+        setDuplicateValidation(data.validation);
+        setShowDuplicateWarning(!data.validation.isUnique);
+      }
+    } catch (error) {
+      console.error('Error validating procuring entity name:', error);
+    } finally {
+      setValidating(false);
+    }
+  };
+
+  const findOrCreateProcuringEntity = async (entityName: string, contactPerson?: string, contactPosition?: string) => {
+    if (!entityName.trim()) return;
+
+    try {
+      const response = await fetch('/api/procuring-entities/find-or-create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          entity_name: entityName,
+          contact_person: contactPerson,
+          contact_position: contactPosition
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.entity) {
+          setFormData(prev => ({
+            ...prev,
+            procuring_entity_id: result.entity.id
+          }));
+          setSelectedProcuringEntityId(result.entity.id);
+          console.log('✅ Linked to procuring entity:', result.entity.entity_name, result.created ? '(created)' : '(found)');
+        }
+      } else {
+        console.error('Failed to find or create procuring entity');
+      }
+    } catch (error) {
+      console.error('Error finding or creating procuring entity:', error);
+    }
+  };
+
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value, type } = e.target;
@@ -305,6 +401,19 @@ export default function AddContract() {
     // Clear error when user starts typing
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
+    }
+
+    // Auto-link procuring entity when entity name changes
+    if (name === 'procuring_entity' && value.trim()) {
+      // Validate for duplicates first
+      setTimeout(() => {
+        validateProcuringEntityName(value);
+      }, 500);
+      
+      // Then find or create entity
+      setTimeout(() => {
+        findOrCreateProcuringEntity(value, formData.contact_person, formData.contact_position);
+      }, 1000);
     }
   };
 
@@ -498,6 +607,66 @@ export default function AddContract() {
           </div>
 
           <form onSubmit={handleSubmit} className="p-6 space-y-8">
+            {/* Duplicate Warning */}
+            {showDuplicateWarning && duplicateValidation && (
+              <div className="bg-orange-50 border border-orange-200 rounded-lg p-4">
+                <div className="flex items-start">
+                  <AlertTriangle className="h-5 w-5 text-orange-400 mr-2 mt-0.5" />
+                  <div className="flex-1">
+                    <h3 className="text-sm font-medium text-orange-800">Potential Duplicate Procuring Entity</h3>
+                    <p className="text-sm text-orange-700 mt-1">{duplicateValidation.recommendation}</p>
+                    
+                    {duplicateValidation.potentialDuplicates.length > 0 && (
+                      <div className="mt-3">
+                        <p className="text-sm font-medium text-orange-800 mb-2">Similar entities found:</p>
+                        <div className="space-y-2">
+                          {duplicateValidation.potentialDuplicates.slice(0, 3).map((duplicate, index) => (
+                            <div key={duplicate.id} className="bg-orange-100 rounded p-2 text-sm">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <span className="font-medium">{duplicate.entity_name}</span>
+                                  <span className="text-orange-600 ml-2">({duplicate.entity_type})</span>
+                                </div>
+                                <span className="text-orange-600 text-xs">
+                                  {Math.round(duplicate.similarity * 100)}% similar
+                                </span>
+                              </div>
+                              {duplicate.website && (
+                                <div className="text-xs text-orange-600 mt-1">{duplicate.website}</div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                        <div className="mt-3 flex items-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => setShowDuplicateWarning(false)}
+                            className="text-sm text-orange-600 hover:text-orange-800 underline"
+                          >
+                            Continue anyway
+                          </button>
+                          <span className="text-orange-600">•</span>
+                          <button
+                            type="button"
+                            onClick={() => setFormData(prev => ({ ...prev, procuring_entity: '' }))}
+                            className="text-sm text-orange-600 hover:text-orange-800 underline"
+                          >
+                            Change name
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                  <button
+                    onClick={() => setShowDuplicateWarning(false)}
+                    className="text-orange-400 hover:text-orange-600"
+                  >
+                    <X className="h-4 w-4" />
+                  </button>
+                </div>
+              </div>
+            )}
+
             {/* 1. BASIC TENDER INFORMATION */}
             <div className="border-b border-gray-200 pb-6">
               <h2 className="text-lg font-semibold text-gray-900 mb-4">Basic Tender Information</h2>
@@ -816,6 +985,7 @@ export default function AddContract() {
                   <label htmlFor="procuring_entity" className="block text-sm font-medium text-gray-900 mb-2">
                     Entity Name *
                   </label>
+                  <div className="relative">
                   <input
                     type="text"
                     id="procuring_entity"
@@ -823,12 +993,40 @@ export default function AddContract() {
                     value={formData.procuring_entity}
                     onChange={handleInputChange}
                     placeholder="Procuring entity name"
-                    className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 ${
-                      errors.procuring_entity ? 'border-red-300' : 'border-gray-300'
+                      className={`block w-full px-3 py-2 border rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm text-gray-900 ${
+                        errors.procuring_entity 
+                          ? 'border-red-300' 
+                          : duplicateValidation?.isUnique === false 
+                          ? 'border-orange-300 focus:ring-orange-500' 
+                          : duplicateValidation?.isUnique === true 
+                          ? 'border-green-300 focus:ring-green-500'
+                          : 'border-gray-300'
                     }`}
                   />
+                    {validating && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-blue-600"></div>
+                      </div>
+                    )}
+                    {!validating && duplicateValidation && (
+                      <div className="absolute right-3 top-1/2 transform -translate-y-1/2">
+                        {duplicateValidation.isUnique ? (
+                          <CheckCircle className="h-4 w-4 text-green-500" />
+                        ) : (
+                          <AlertTriangle className="h-4 w-4 text-orange-500" />
+                        )}
+                      </div>
+                    )}
+                  </div>
                   {errors.procuring_entity && (
                     <p className="mt-1 text-sm text-red-600">{errors.procuring_entity}</p>
+                  )}
+                  {duplicateValidation && !errors.procuring_entity && (
+                    <p className={`text-xs mt-1 ${
+                      duplicateValidation.isUnique ? 'text-green-600' : 'text-orange-600'
+                    }`}>
+                      {duplicateValidation.isUnique ? '✓ Name appears to be unique' : '⚠ Similar entities found'}
+                    </p>
                   )}
                 </div>
 

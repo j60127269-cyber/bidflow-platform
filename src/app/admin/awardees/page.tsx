@@ -14,7 +14,10 @@ import {
   Tag,
   Phone,
   Mail,
-  Globe
+  Globe,
+  CheckSquare,
+  Square,
+  AlertTriangle
 } from 'lucide-react';
 
 interface Awardee {
@@ -57,6 +60,8 @@ export default function AwardeesPage() {
   });
   const [showFilters, setShowFilters] = useState(false);
   const [deleteLoading, setDeleteLoading] = useState<string | null>(null);
+  const [selectedAwardees, setSelectedAwardees] = useState<Set<string>>(new Set());
+  const [bulkDeleteLoading, setBulkDeleteLoading] = useState(false);
 
   // Fetch awardees
   const fetchAwardees = async (page = 1) => {
@@ -138,6 +143,70 @@ export default function AwardeesPage() {
     setFilters({ category: '', location: '', business_type: '' });
     setSearchTerm('');
     fetchAwardees(1);
+  };
+
+  // Handle individual checkbox selection
+  const handleSelectAwardee = (id: string) => {
+    setSelectedAwardees(prev => {
+      const newSet = new Set(prev);
+      if (newSet.has(id)) {
+        newSet.delete(id);
+      } else {
+        newSet.add(id);
+      }
+      return newSet;
+    });
+  };
+
+  // Handle select all/none
+  const handleSelectAll = () => {
+    if (selectedAwardees.size === awardees.length) {
+      setSelectedAwardees(new Set());
+    } else {
+      setSelectedAwardees(new Set(awardees.map(awardee => awardee.id)));
+    }
+  };
+
+  // Bulk delete selected awardees
+  const handleBulkDelete = async () => {
+    if (selectedAwardees.size === 0) {
+      alert('Please select awardees to delete');
+      return;
+    }
+
+    const selectedNames = awardees
+      .filter(awardee => selectedAwardees.has(awardee.id))
+      .map(awardee => awardee.company_name);
+
+    if (!confirm(`Are you sure you want to delete ${selectedAwardees.size} awardee(s)?\n\nSelected: ${selectedNames.join(', ')}\n\nThis action cannot be undone.`)) {
+      return;
+    }
+
+    setBulkDeleteLoading(true);
+    try {
+      const response = await fetch('/api/awardees/bulk-delete', {
+        method: 'DELETE',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({ ids: Array.from(selectedAwardees) })
+      });
+
+      const data = await response.json();
+
+      if (data.success) {
+        alert(`Successfully deleted ${data.deletedCount} awardee(s)`);
+        setSelectedAwardees(new Set());
+        fetchAwardees(pagination.page);
+      } else {
+        alert(`Failed to delete awardees: ${data.error}`);
+      }
+    } catch (error) {
+      console.error('Error:', error);
+      alert('Failed to delete awardees');
+    } finally {
+      setBulkDeleteLoading(false);
+    }
   };
 
   useEffect(() => {
@@ -253,11 +322,37 @@ export default function AwardeesPage() {
         )}
       </div>
 
-      {/* Results Summary */}
-      <div className="mb-4">
+      {/* Results Summary and Bulk Actions */}
+      <div className="mb-4 flex items-center justify-between">
         <p className="text-sm text-gray-600">
           Showing {awardees.length} of {pagination.total} awardees
+          {selectedAwardees.size > 0 && (
+            <span className="ml-2 text-blue-600 font-medium">
+              ({selectedAwardees.size} selected)
+            </span>
+          )}
         </p>
+        
+        {selectedAwardees.size > 0 && (
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={handleBulkDelete}
+              disabled={bulkDeleteLoading}
+              className="bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-md flex items-center space-x-2 disabled:opacity-50"
+            >
+              <AlertTriangle className="h-4 w-4" />
+              <span>
+                {bulkDeleteLoading ? 'Deleting...' : `Delete ${selectedAwardees.size} Selected`}
+              </span>
+            </button>
+            <button
+              onClick={() => setSelectedAwardees(new Set())}
+              className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+            >
+              Clear Selection
+            </button>
+          </div>
+        )}
       </div>
 
       {/* Awardees Table */}
@@ -284,6 +379,22 @@ export default function AwardeesPage() {
               <thead className="bg-gray-50">
                 <tr>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
+                    <div className="flex items-center">
+                      <button
+                        onClick={handleSelectAll}
+                        className="mr-3 p-1 hover:bg-gray-200 rounded"
+                        title={selectedAwardees.size === awardees.length ? 'Deselect All' : 'Select All'}
+                      >
+                        {selectedAwardees.size === awardees.length ? (
+                          <CheckSquare className="h-4 w-4 text-blue-600" />
+                        ) : (
+                          <Square className="h-4 w-4 text-gray-400" />
+                        )}
+                      </button>
+                      Select
+                    </div>
+                  </th>
+                  <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
                     Company
                   </th>
                   <th className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider">
@@ -305,7 +416,22 @@ export default function AwardeesPage() {
               </thead>
               <tbody className="bg-white divide-y divide-gray-200">
                 {awardees.map((awardee) => (
-                  <tr key={awardee.id} className="hover:bg-gray-50">
+                  <tr key={awardee.id} className={`hover:bg-gray-50 ${selectedAwardees.has(awardee.id) ? 'bg-blue-50' : ''}`}>
+                    <td className="px-6 py-4 whitespace-nowrap">
+                      <div className="flex items-center">
+                        <button
+                          onClick={() => handleSelectAwardee(awardee.id)}
+                          className="p-1 hover:bg-gray-200 rounded"
+                          title={selectedAwardees.has(awardee.id) ? 'Deselect' : 'Select'}
+                        >
+                          {selectedAwardees.has(awardee.id) ? (
+                            <CheckSquare className="h-4 w-4 text-blue-600" />
+                          ) : (
+                            <Square className="h-4 w-4 text-gray-400" />
+                          )}
+                        </button>
+                      </div>
+                    </td>
                     <td className="px-6 py-4 whitespace-nowrap">
                       <div className="flex items-center">
                         <Building className="h-5 w-5 text-gray-400 mr-3" />

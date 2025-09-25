@@ -1,421 +1,487 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Search, Building2, MapPin, Phone, Mail, ExternalLink, Calendar, DollarSign } from 'lucide-react';
+import { Search, Filter, Building, MapPin, DollarSign, FileText, TrendingUp, ChevronDown, Globe } from 'lucide-react';
+import Link from 'next/link';
 
-interface Agency {
+interface ProcuringEntity {
   id: string;
-  name: string;
-  type: string;
-  address: string;
-  city: string;
-  state: string;
-  zip_code: string;
+  entity_name: string;
+  entity_type: string;
+  parent_entity_id?: string;
+  contact_person?: string;
+  contact_email?: string;
+  contact_phone?: string;
+  address?: string;
+  city?: string;
   country: string;
-  phone: string;
-  email: string;
-  website: string;
-  description: string;
+  website?: string;
+  is_active: boolean;
   created_at: string;
   updated_at: string;
+  total_contracts?: number;
+  total_value?: number;
+  recent_contracts?: number;
 }
 
-interface AgencyStats {
-  total_contracts: number;
-  total_value: number;
-  average_contract_value: number;
-  last_contract_date: string;
+interface ProcuringEntityStats {
+  totalAgencies: number;
+  totalValue: number;
+  averageValue: number;
+  topAgencies: Array<{
+    name: string;
+    value: number;
+    contracts: number;
+  }>;
 }
 
 export default function AgenciesPage() {
-  const [agencies, setAgencies] = useState<Agency[]>([]);
-  const [agencyStats, setAgencyStats] = useState<Record<string, AgencyStats>>({});
+  const [procuringEntities, setProcuringEntities] = useState<ProcuringEntity[]>([]);
+  const [stats, setStats] = useState<ProcuringEntityStats | null>(null);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState('');
-  const [typeFilter, setTypeFilter] = useState('all');
+  const [sortBy, setSortBy] = useState('entity_name');
+  const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('asc');
+  const [currentPage, setCurrentPage] = useState<number>(1);
+  const [itemsPerPage] = useState<number>(17);
+  const [showFilters, setShowFilters] = useState(false);
+  const [filters, setFilters] = useState({
+    entity_type: '',
+    country: '',
+    is_active: ''
+  });
 
   useEffect(() => {
-    fetchAgencies();
+    fetchProcuringEntities();
+    fetchStats();
   }, []);
 
-  const fetchAgencies = async () => {
+  // Reset to first page when filters change
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [searchTerm, sortBy, sortOrder, filters]);
+
+  const fetchProcuringEntities = async () => {
     try {
-      // For now, we'll create mock data since we don't have an agencies API yet
-      // In a real implementation, you'd fetch from /api/agencies
-      const mockAgencies: Agency[] = [
-        {
-          id: '1',
-          name: 'Department of Defense',
-          type: 'Federal',
-          address: '1000 Defense Pentagon',
-          city: 'Washington',
-          state: 'DC',
-          zip_code: '20301',
-          country: 'USA',
-          phone: '(703) 571-3343',
-          email: 'info@defense.gov',
-          website: 'https://www.defense.gov',
-          description: 'The Department of Defense is responsible for providing the military forces needed to deter war and protect the security of our country.',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: '2',
-          name: 'General Services Administration',
-          type: 'Federal',
-          address: '1800 F Street NW',
-          city: 'Washington',
-          state: 'DC',
-          zip_code: '20405',
-          country: 'USA',
-          phone: '(202) 501-0800',
-          email: 'info@gsa.gov',
-          website: 'https://www.gsa.gov',
-          description: 'GSA provides centralized procurement for the federal government, offering billions of dollars worth of products, services, and facilities.',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-        {
-          id: '3',
-          name: 'California Department of Transportation',
-          type: 'State',
-          address: '1120 N Street',
-          city: 'Sacramento',
-          state: 'CA',
-          zip_code: '95814',
-          country: 'USA',
-          phone: '(916) 654-2852',
-          email: 'info@dot.ca.gov',
-          website: 'https://www.dot.ca.gov',
-          description: 'Caltrans is responsible for planning, designing, building, and maintaining the state highway system.',
-          created_at: new Date().toISOString(),
-          updated_at: new Date().toISOString(),
-        },
-      ];
-
-      setAgencies(mockAgencies);
-
-      // Mock stats - in real implementation, fetch from API
-      const mockStats: Record<string, AgencyStats> = {
-        '1': {
-          total_contracts: 45,
-          total_value: 125000000,
-          average_contract_value: 2777777,
-          last_contract_date: '2024-01-15',
-        },
-        '2': {
-          total_contracts: 32,
-          total_value: 89000000,
-          average_contract_value: 2781250,
-          last_contract_date: '2024-01-20',
-        },
-        '3': {
-          total_contracts: 28,
-          total_value: 67000000,
-          average_contract_value: 2392857,
-          last_contract_date: '2024-01-18',
-        },
-      };
-
-      setAgencyStats(mockStats);
+      setLoading(true);
+      const response = await fetch('/api/procuring-entities?limit=1000');
+      if (response.ok) {
+        const data = await response.json();
+        setProcuringEntities(data.procuringEntities || []);
+      }
     } catch (error) {
-      console.error('Error fetching agencies:', error);
+      console.error('Error fetching procuring entities:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredAgencies = agencies.filter(agency => {
-    const matchesSearch = agency.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         agency.type.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         agency.city.toLowerCase().includes(searchTerm.toLowerCase()) ||
-                         agency.state.toLowerCase().includes(searchTerm.toLowerCase());
+  const fetchStats = async () => {
+    try {
+      const response = await fetch('/api/procuring-entities/stats');
+      if (response.ok) {
+        const data = await response.json();
+        setStats(data);
+      }
+    } catch (error) {
+      console.error('Error fetching stats:', error);
+    }
+  };
+
+  const filteredProcuringEntities = procuringEntities.filter(entity => {
+    const matchesSearch = entity.entity_name?.toLowerCase().includes(searchTerm.toLowerCase()) ||
+                         entity.website?.toLowerCase().includes(searchTerm.toLowerCase());
     
-    const matchesType = typeFilter === 'all' || agency.type === typeFilter;
+    const matchesFilters = 
+      (!filters.entity_type || entity.entity_type === filters.entity_type) &&
+      (!filters.country || entity.country === filters.country) &&
+      (!filters.is_active || entity.is_active.toString() === filters.is_active);
     
-    return matchesSearch && matchesType;
+    return matchesSearch && matchesFilters;
   });
 
+  const sortedProcuringEntities = [...filteredProcuringEntities].sort((a, b) => {
+    let aValue, bValue;
+    
+    switch (sortBy) {
+      case 'entity_name':
+        aValue = a.entity_name.toLowerCase();
+        bValue = b.entity_name.toLowerCase();
+        break;
+      case 'entity_type':
+        aValue = a.entity_type.toLowerCase();
+        bValue = b.entity_type.toLowerCase();
+        break;
+      case 'total_value':
+        aValue = a.total_value || 0;
+        bValue = b.total_value || 0;
+        break;
+      case 'total_contracts':
+        aValue = a.total_contracts || 0;
+        bValue = b.total_contracts || 0;
+        break;
+      case 'city':
+        aValue = a.city?.toLowerCase() || '';
+        bValue = b.city?.toLowerCase() || '';
+        break;
+      default:
+        aValue = a.entity_name.toLowerCase();
+        bValue = b.entity_name.toLowerCase();
+    }
+    
+    if (sortOrder === 'asc') {
+      return aValue > bValue ? 1 : -1;
+    } else {
+      return aValue < bValue ? 1 : -1;
+    }
+  });
+
+  const totalPages = Math.ceil(sortedProcuringEntities.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedProcuringEntities = sortedProcuringEntities.slice(startIndex, endIndex);
+
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
-      style: 'currency',
-      currency: 'USD',
-      minimumFractionDigits: 0,
-      maximumFractionDigits: 0,
-    }).format(amount);
+    if (amount === 0) return 'UGX 0';
+    
+    if (amount >= 1000000000) {
+      return `UGX ${(amount / 1000000000).toFixed(1)}B`;
+    } else if (amount >= 1000000) {
+      return `UGX ${(amount / 1000000).toFixed(1)}M`;
+    } else if (amount >= 1000) {
+      return `UGX ${(amount / 1000).toFixed(1)}K`;
+    }
+    
+    return `UGX ${amount.toLocaleString()}`;
   };
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString('en-US', {
       year: 'numeric',
       month: 'short',
-      day: 'numeric',
+      day: 'numeric'
     });
   };
 
-  const getTypeColor = (type: string) => {
-    switch (type.toLowerCase()) {
-      case 'federal':
-        return 'bg-blue-100 text-blue-800';
-      case 'state':
-        return 'bg-green-100 text-green-800';
-      case 'local':
-        return 'bg-purple-100 text-purple-800';
-      case 'municipal':
-        return 'bg-yellow-100 text-yellow-800';
-      default:
-        return 'bg-gray-100 text-gray-800';
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
+    } else {
+      setSortBy(field);
+      setSortOrder('asc');
     }
   };
 
-  if (loading) {
-    return (
-      <div className="min-h-screen bg-gray-50 flex items-center justify-center">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading agencies...</p>
-        </div>
-      </div>
-    );
-  }
+  const handleFilterChange = (key: string, value: string) => {
+    setFilters(prev => ({ ...prev, [key]: value }));
+  };
+
+  const clearFilters = () => {
+    setFilters({ entity_type: '', country: '', is_active: '' });
+    setSearchTerm('');
+  };
 
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         {/* Header */}
         <div className="mb-8">
-          <h1 className="text-3xl font-bold text-gray-900">Agencies</h1>
-          <p className="mt-2 text-gray-600">
-            Track and analyze government agencies and their contracting activity
-          </p>
+          <h1 className="text-3xl font-bold text-gray-900">Procuring Entities</h1>
+          <p className="text-gray-800 mt-2">Explore government agencies and their procurement activities</p>
         </div>
 
-        {/* Filters and Search */}
-        <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 mb-6">
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            {/* Search */}
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 h-5 w-5" />
-              <input
-                type="text"
-                placeholder="Search agencies..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
-            </div>
-
-            {/* Type Filter */}
-            <select
-              value={typeFilter}
-              onChange={(e) => setTypeFilter(e.target.value)}
-              className="px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-            >
-              <option value="all">All Types</option>
-              <option value="Federal">Federal</option>
-              <option value="State">State</option>
-              <option value="Local">Local</option>
-              <option value="Municipal">Municipal</option>
-            </select>
-
-            {/* Results Count */}
-            <div className="flex items-center text-sm text-gray-500">
-              <span>{filteredAgencies.length} of {agencies.length} agencies</span>
-            </div>
-          </div>
-        </div>
-
-        {/* Agencies Grid */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 xl:grid-cols-3 gap-6">
-          {filteredAgencies.map((agency) => {
-            const stats = agencyStats[agency.id];
-            return (
-              <div key={agency.id} className="bg-white rounded-lg shadow-sm border border-gray-200 hover:shadow-md transition-shadow">
-                <div className="p-6">
-                  {/* Header */}
-                  <div className="flex items-start justify-between mb-4">
-                    <div className="flex-1">
-                      <h3 className="text-lg font-semibold text-gray-900 line-clamp-2">
-                        {agency.name}
-                      </h3>
-                      <p className="text-sm text-gray-500 mt-1">
-                        {agency.type} Agency
-                      </p>
-                    </div>
-                    <span className={`px-2 py-1 text-xs font-medium rounded-full ${getTypeColor(agency.type)}`}>
-                      {agency.type}
-                    </span>
+        {/* Stats Cards */}
+        {stats && (
+          <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-8">
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <Building className="h-6 w-6 text-gray-400" />
                   </div>
-
-                  {/* Contact Information */}
-                  <div className="space-y-3">
-                    {/* Address */}
-                    <div className="flex items-start text-sm text-gray-600">
-                      <MapPin className="h-4 w-4 mr-2 text-gray-400 mt-0.5 flex-shrink-0" />
-                      <div>
-                        <p>{agency.address}</p>
-                        <p>{agency.city}, {agency.state} {agency.zip_code}</p>
-                        <p>{agency.country}</p>
-                      </div>
-                    </div>
-
-                    {/* Phone */}
-                    {agency.phone && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Phone className="h-4 w-4 mr-2 text-gray-400" />
-                        <span>{agency.phone}</span>
-                      </div>
-                    )}
-
-                    {/* Email */}
-                    {agency.email && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <Mail className="h-4 w-4 mr-2 text-gray-400" />
-                        <span className="truncate">{agency.email}</span>
-                      </div>
-                    )}
-
-                    {/* Website */}
-                    {agency.website && (
-                      <div className="flex items-center text-sm text-gray-600">
-                        <ExternalLink className="h-4 w-4 mr-2 text-gray-400" />
-                        <a 
-                          href={agency.website} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-blue-600 hover:text-blue-800 truncate"
-                        >
-                          {agency.website}
-                        </a>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Stats */}
-                  {stats && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <div className="grid grid-cols-2 gap-4">
-                        <div className="text-center">
-                          <div className="flex items-center justify-center text-sm text-gray-600 mb-1">
-                            <Calendar className="h-4 w-4 mr-1" />
-                            <span>Contracts</span>
-                          </div>
-                          <p className="text-lg font-semibold text-gray-900">{stats.total_contracts}</p>
-                        </div>
-                        <div className="text-center">
-                          <div className="flex items-center justify-center text-sm text-gray-600 mb-1">
-                            <DollarSign className="h-4 w-4 mr-1" />
-                            <span>Total Value</span>
-                          </div>
-                          <p className="text-lg font-semibold text-gray-900">
-                            {formatCurrency(stats.total_value)}
-                          </p>
-                        </div>
-                      </div>
-                      <div className="mt-3 text-center">
-                        <p className="text-sm text-gray-500">
-                          Avg: {formatCurrency(stats.average_contract_value)}
-                        </p>
-                        <p className="text-xs text-gray-400">
-                          Last: {formatDate(stats.last_contract_date)}
-                        </p>
-                      </div>
-                    </div>
-                  )}
-
-                  {/* Description */}
-                  {agency.description && (
-                    <div className="mt-4 pt-4 border-t border-gray-100">
-                      <p className="text-sm text-gray-600 line-clamp-3">
-                        {agency.description}
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Actions */}
-                  <div className="mt-4 pt-4 border-t border-gray-100">
-                    <button className="w-full text-center px-3 py-2 text-sm font-medium text-blue-600 hover:text-blue-800 border border-blue-200 rounded-md hover:bg-blue-50">
-                      View Contracts →
-                    </button>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-700 truncate">Total Procuring Entities</dt>
+                      <dd className="text-lg font-medium text-gray-900">{stats.totalAgencies}</dd>
+                    </dl>
                   </div>
                 </div>
               </div>
-            );
-          })}
-        </div>
-
-        {/* Empty State */}
-        {filteredAgencies.length === 0 && (
-          <div className="text-center py-12">
-            <div className="mx-auto h-12 w-12 text-gray-400">
-              <Building2 className="h-full w-full" />
             </div>
-            <h3 className="mt-2 text-sm font-medium text-gray-900">No agencies found</h3>
-            <p className="mt-1 text-sm text-gray-500">
-              {searchTerm || typeFilter !== 'all' 
-                ? 'Try adjusting your search or filter criteria.'
-                : 'No agencies have been added yet.'
-              }
-            </p>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <DollarSign className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-700 truncate">Total Awards Value</dt>
+                      <dd className="text-lg font-medium text-gray-900">{formatCurrency(stats.totalValue)}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <TrendingUp className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-700 truncate">Average Value</dt>
+                      <dd className="text-lg font-medium text-gray-900">{formatCurrency(stats.averageValue)}</dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white overflow-hidden shadow rounded-lg">
+              <div className="p-5">
+                <div className="flex items-center">
+                  <div className="flex-shrink-0">
+                    <FileText className="h-6 w-6 text-gray-400" />
+                  </div>
+                  <div className="ml-5 w-0 flex-1">
+                    <dl>
+                      <dt className="text-sm font-medium text-gray-700 truncate">Active Agencies</dt>
+                      <dd className="text-lg font-medium text-gray-900">
+                        {procuringEntities.filter(e => e.is_active).length}
+                      </dd>
+                    </dl>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         )}
 
-        {/* Stats */}
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-4 gap-4">
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Building2 className="h-8 w-8 text-blue-600" />
+        {/* Search and Filters */}
+        <div className="bg-white rounded-lg shadow p-4 mb-6">
+          <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+            <div className="flex-1">
+              <div className="relative">
+                <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
+                <input
+                  type="text"
+                  placeholder="Search agencies by name or website..."
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                  className="w-full pl-10 pr-4 py-2 border border-gray-300 rounded-md text-gray-900 placeholder-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Agencies</p>
-                <p className="text-2xl font-semibold text-gray-900">{agencies.length}</p>
-              </div>
+            </div>
+            
+            <div className="flex items-center space-x-3">
+              <button
+                onClick={() => setShowFilters(!showFilters)}
+                className="flex items-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                <Filter className="h-4 w-4 mr-2" />
+                Filters
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </button>
+              
+              <button
+                onClick={() => handleSort('entity_name')}
+                className="flex items-center px-4 py-2 border border-gray-300 rounded-md hover:bg-gray-50"
+              >
+                Sort by Name
+                <ChevronDown className="h-4 w-4 ml-2" />
+              </button>
             </div>
           </div>
 
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <MapPin className="h-8 w-8 text-green-600" />
+          {/* Advanced Filters */}
+          {showFilters && (
+            <div className="border-t pt-4 mt-4">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Entity Type
+                  </label>
+                  <select
+                    value={filters.entity_type}
+                    onChange={(e) => handleFilterChange('entity_type', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Types</option>
+                    <option value="ministry">Ministry</option>
+                    <option value="department">Department</option>
+                    <option value="agency">Agency</option>
+                    <option value="authority">Authority</option>
+                    <option value="commission">Commission</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Country
+                  </label>
+                  <select
+                    value={filters.country}
+                    onChange={(e) => handleFilterChange('country', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Countries</option>
+                    <option value="Uganda">Uganda</option>
+                    <option value="Kenya">Kenya</option>
+                    <option value="Tanzania">Tanzania</option>
+                  </select>
+                </div>
+                
+                <div>
+                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                    Status
+                  </label>
+                  <select
+                    value={filters.is_active}
+                    onChange={(e) => handleFilterChange('is_active', e.target.value)}
+                    className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  >
+                    <option value="">All Status</option>
+                    <option value="true">Active</option>
+                    <option value="false">Inactive</option>
+                  </select>
+                </div>
               </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Unique States</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {new Set(agencies.map(a => a.state)).size}
-                </p>
+              
+              <div className="flex space-x-2">
+                <button
+                  onClick={clearFilters}
+                  className="bg-gray-500 hover:bg-gray-600 text-white px-4 py-2 rounded-md"
+                >
+                  Clear All
+                </button>
               </div>
             </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <Calendar className="h-8 w-8 text-purple-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Contracts</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {Object.values(agencyStats).reduce((sum, stats) => sum + stats.total_contracts, 0)}
-                </p>
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6">
-            <div className="flex items-center">
-              <div className="flex-shrink-0">
-                <DollarSign className="h-8 w-8 text-orange-600" />
-              </div>
-              <div className="ml-4">
-                <p className="text-sm font-medium text-gray-500">Total Value</p>
-                <p className="text-2xl font-semibold text-gray-900">
-                  {formatCurrency(Object.values(agencyStats).reduce((sum, stats) => sum + stats.total_value, 0))}
-                </p>
-              </div>
-            </div>
-          </div>
+          )}
         </div>
+
+        {/* Results Summary */}
+        <div className="mb-4 flex items-center justify-between">
+          <p className="text-sm text-gray-800">
+            Showing {paginatedProcuringEntities.length} of {sortedProcuringEntities.length} procuring entities
+          </p>
+        </div>
+
+        {/* Agencies Table */}
+        <div className="bg-white rounded-lg shadow overflow-hidden">
+          {loading ? (
+            <div className="p-8 text-center">
+              <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
+              <p className="mt-2 text-gray-800">Loading procuring entities...</p>
+            </div>
+          ) : paginatedProcuringEntities.length === 0 ? (
+            <div className="p-8 text-center">
+              <Building className="h-12 w-12 text-gray-400 mx-auto mb-4" />
+              <p className="text-gray-800">No procuring entities found</p>
+            </div>
+          ) : (
+            <div className="overflow-x-auto">
+              <table className="min-w-full divide-y divide-gray-200">
+                <thead className="bg-gray-50">
+                  <tr>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Name
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                      Website
+                    </th>
+                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                      Total Awards
+                    </th>
+                  </tr>
+                </thead>
+                <tbody className="bg-white divide-y divide-gray-200">
+                  {paginatedProcuringEntities.map((entity) => (
+                    <tr key={entity.id} className="hover:bg-gray-50">
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="flex items-center">
+                          <div className="flex-shrink-0 h-10 w-10">
+                            <div className="h-10 w-10 rounded-full bg-gradient-to-br from-blue-100 to-blue-200 flex items-center justify-center shadow-sm">
+                              <span className="text-sm font-bold text-blue-700">
+                                {entity.entity_name?.charAt(0) || 'A'}
+                              </span>
+                            </div>
+                          </div>
+                          <div className="ml-4">
+                            <Link
+                              href={`/dashboard/agencies/${encodeURIComponent(entity.entity_name.toLowerCase().replace(/\s+/g, '-'))}`}
+                              className="text-sm font-medium transition-colors"
+                              style={{ color: '#4392F1' }}
+                              onMouseEnter={(e) => (e.target as HTMLElement).style.color = '#2B7CE6'}
+                              onMouseLeave={(e) => (e.target as HTMLElement).style.color = '#4392F1'}
+                            >
+                              {entity.entity_name}
+                            </Link>
+                            {entity.parent_entity_id && (
+                              <p className="text-xs text-gray-700 mt-1">
+                                Parent: {entity.parent_entity_id}
+                              </p>
+                            )}
+                          </div>
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap">
+                        <div className="text-sm text-gray-900">
+                          {entity.website ? (
+                            <a 
+                              href={entity.website.startsWith('http') ? entity.website : `https://${entity.website}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-blue-600 hover:text-blue-800 flex items-center"
+                            >
+                              <Globe className="h-4 w-4 mr-1" />
+                              {entity.website}
+                            </a>
+                          ) : (
+                            <span className="text-gray-700">N/A</span>
+                          )}
+                        </div>
+                      </td>
+                      <td className="px-6 py-4 whitespace-nowrap text-right">
+                        <div className="text-lg font-medium text-gray-900">
+                          {formatCurrency(entity.total_value || 0)}
+                        </div>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <div className="flex items-center justify-between mt-6">
+            <div className="text-sm text-gray-700">
+              Page {currentPage} of {totalPages}
+            </div>
+            <div className="flex space-x-2">
+              <button
+                onClick={() => setCurrentPage(Math.max(1, currentPage - 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Previous
+              </button>
+              <button
+                onClick={() => setCurrentPage(Math.min(totalPages, currentPage + 1))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-2 border border-gray-300 rounded-md text-sm disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-50"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

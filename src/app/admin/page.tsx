@@ -12,7 +12,8 @@ import {
   Upload,
   Eye,
   UserCheck,
-  Calendar
+  Calendar,
+  Building
 } from 'lucide-react';
 
 interface DashboardStats {
@@ -107,7 +108,7 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading dashboard...</p>
+          <p className="mt-4 text-gray-800">Loading dashboard...</p>
         </div>
       </div>
     );
@@ -119,7 +120,7 @@ export default function AdminDashboard() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold text-gray-900">Admin Dashboard</h1>
-          <p className="mt-1 text-sm text-gray-600">
+          <p className="mt-1 text-sm text-gray-800">
             Overview of your BidCloud platform
           </p>
         </div>
@@ -151,7 +152,7 @@ export default function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-gray-700 truncate">
                     Total Contracts
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
@@ -171,7 +172,7 @@ export default function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-gray-700 truncate">
                     Total Users
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
@@ -191,7 +192,7 @@ export default function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-gray-700 truncate">
                     Active Subscriptions
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
@@ -211,7 +212,7 @@ export default function AdminDashboard() {
               </div>
               <div className="ml-5 w-0 flex-1">
                 <dl>
-                  <dt className="text-sm font-medium text-gray-500 truncate">
+                  <dt className="text-sm font-medium text-gray-700 truncate">
                     Total Contract Value
                   </dt>
                   <dd className="text-lg font-medium text-gray-900">
@@ -247,12 +248,12 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium text-gray-900 truncate">
                       {contract.title}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-700">
                       {contract.client} • {formatValue(contract.value)}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-700">
                       {formatDate(contract.created_at)}
                     </span>
                     <Link
@@ -289,12 +290,12 @@ export default function AdminDashboard() {
                     <p className="text-sm font-medium text-gray-900 truncate">
                       {user.company_name || 'Unnamed Company'}
                     </p>
-                    <p className="text-sm text-gray-500">
+                    <p className="text-sm text-gray-700">
                       {user.email} • {user.subscription_status || 'No subscription'}
                     </p>
                   </div>
                   <div className="flex items-center space-x-2">
-                    <span className="text-xs text-gray-500">
+                    <span className="text-xs text-gray-700">
                       {formatDate(user.created_at)}
                     </span>
                     <Link
@@ -330,7 +331,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-900">
                   Add New Contract
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-700">
                   Manually add a contract
                 </p>
               </div>
@@ -348,8 +349,26 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-900">
                   Import Contracts
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-700">
                   Bulk import from CSV
+                </p>
+              </div>
+            </Link>
+
+            <Link
+              href="/admin/agencies"
+              className="relative rounded-lg border border-gray-300 bg-white px-6 py-5 shadow-sm flex items-center space-x-3 hover:border-gray-400 focus-within:ring-2 focus-within:ring-offset-2 focus-within:ring-blue-500"
+            >
+              <div className="flex-shrink-0">
+                <Building className="h-6 w-6 text-blue-600" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <span className="absolute inset-0" aria-hidden="true" />
+                <p className="text-sm font-medium text-gray-900">
+                  Manage Procuring Entities
+                </p>
+                <p className="text-sm text-gray-700">
+                  Government agencies and departments
                 </p>
               </div>
             </Link>
@@ -366,7 +385,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-900">
                   Manage Users
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-700">
                   View user profiles
                 </p>
               </div>
@@ -384,7 +403,7 @@ export default function AdminDashboard() {
                 <p className="text-sm font-medium text-gray-900">
                   View Analytics
                 </p>
-                <p className="text-sm text-gray-500">
+                <p className="text-sm text-gray-700">
                   Platform insights
                 </p>
               </div>

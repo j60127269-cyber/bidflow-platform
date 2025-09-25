@@ -180,14 +180,14 @@ export default function OnboardingNotifications() {
                   <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     1
                   </div>
-                  <span className="text-sm text-slate-500">Welcome</span>
+                  <span className="text-sm text-slate-700">Welcome</span>
                 </div>
                 <div className="w-8 h-0.5 bg-slate-300"></div>
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     2
                   </div>
-                  <span className="text-sm text-slate-500">Preferences</span>
+                  <span className="text-sm text-slate-700">Preferences</span>
                 </div>
                 <div className="w-8 h-0.5 bg-slate-300"></div>
                 <div className="flex items-center space-x-2">
@@ -201,7 +201,7 @@ export default function OnboardingNotifications() {
                   <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     4
                   </div>
-                  <span className="text-sm text-slate-500">Subscription</span>
+                  <span className="text-sm text-slate-700">Subscription</span>
                 </div>
               </div>
             </div>
@@ -216,7 +216,7 @@ export default function OnboardingNotifications() {
             <h1 className="text-3xl font-bold text-slate-900 mb-4">
               Stay Informed About Opportunities
             </h1>
-            <p className="text-lg text-slate-600">
+            <p className="text-lg text-slate-800">
               Choose how you'd like to receive notifications about new contracts and updates
             </p>
           </div>
@@ -237,7 +237,7 @@ export default function OnboardingNotifications() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900">Email Notifications</h3>
-                      <p className="text-sm text-slate-600">Receive updates at {user?.email}</p>
+                      <p className="text-sm text-slate-800">Receive updates at {user?.email}</p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">
@@ -259,7 +259,7 @@ export default function OnboardingNotifications() {
                     </div>
                     <div>
                       <h3 className="font-semibold text-slate-900">WhatsApp Notifications</h3>
-                      <p className="text-sm text-slate-600">Get instant messages on WhatsApp</p>
+                      <p className="text-sm text-slate-800">Get instant messages on WhatsApp</p>
                     </div>
                   </div>
                   <label className="relative inline-flex items-center cursor-pointer">

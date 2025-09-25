@@ -164,7 +164,7 @@ export default function OnboardingPreferences() {
                   <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     1
                   </div>
-                  <span className="text-sm text-slate-500">Welcome</span>
+                  <span className="text-sm text-slate-700">Welcome</span>
                 </div>
                 <div className="w-8 h-0.5 bg-slate-300"></div>
                 <div className="flex items-center space-x-2">
@@ -178,14 +178,14 @@ export default function OnboardingPreferences() {
                   <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     3
                   </div>
-                  <span className="text-sm text-slate-500">Notifications</span>
+                  <span className="text-sm text-slate-700">Notifications</span>
                 </div>
                 <div className="w-8 h-0.5 bg-slate-300"></div>
                 <div className="flex items-center space-x-2">
                   <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                     4
                   </div>
-                  <span className="text-sm text-slate-500">Subscription</span>
+                  <span className="text-sm text-slate-700">Subscription</span>
                 </div>
               </div>
             </div>
@@ -200,7 +200,7 @@ export default function OnboardingPreferences() {
             <h1 className="text-3xl font-bold text-slate-900 mb-4">
               Tell Us About Your Business
             </h1>
-            <p className="text-lg text-slate-600">
+            <p className="text-lg text-slate-800">
               This helps us find the most relevant contracts for you
             </p>
           </div>
@@ -293,7 +293,7 @@ export default function OnboardingPreferences() {
               {/* Suggested Products based on selected industries */}
               {selectedIndustries.length > 0 && (
                 <div>
-                  <p className="text-sm text-slate-600 mb-3">
+                  <p className="text-sm text-slate-800 mb-3">
                     Suggested products for your industries:
                   </p>
                   <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">

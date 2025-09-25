@@ -24,7 +24,7 @@ export default function AwardeeDetailPage() {
   const [analysisTab, setAnalysisTab] = useState<'trends' | 'shares' | 'categories' | 'maps' | 'agency-rankings'>('trends');
 
   const companySlug = params.company as string;
-  const companyName = companySlug.replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
+  const companyName = decodeURIComponent(companySlug).replace(/-/g, ' ').replace(/\b\w/g, l => l.toUpperCase());
 
   useEffect(() => {
     fetchAwardeeData();
@@ -33,27 +33,112 @@ export default function AwardeeDetailPage() {
   const fetchAwardeeData = async () => {
     try {
       setLoading(true);
+      setError(null);
       
+      console.log('🔍 Looking for awardee:', companyName);
+      
+      // First try to find in awardees table with exact match
       const { data: awardeeData, error: awardeeError } = await supabase
         .from('awardees')
         .select('*')
         .eq('company_name', companyName)
         .single();
 
-      if (awardeeError) {
-        setError('Awardee not found');
+      if (awardeeData) {
+        console.log('✅ Found awardee in database:', awardeeData.company_name);
+        setAwardee(awardeeData);
+        
+        // Fetch contracts for this awardee
+        console.log('🔍 Fetching contracts for awardee ID:', awardeeData.id, 'and company name:', companyName);
+        const { data: contractsData, error: contractsError } = await supabase
+          .from('contracts')
+          .select('*')
+          .or(`awarded_company_id.eq.${awardeeData.id},awarded_to.ilike.%${companyName}%`)
+          .order('award_date', { ascending: false });
+        
+        if (contractsError) {
+          console.error('❌ Error fetching contracts:', contractsError);
+        } else {
+          console.log('✅ Found contracts:', contractsData?.length || 0);
+        }
+        
+        setContracts(contractsData || []);
+        setLoading(false);
         return;
       }
 
-      setAwardee(awardeeData);
+      // If not found in awardees table, try fuzzy search with multiple variations
+      console.log('🔍 Trying fuzzy search for:', companyName);
+      
+      // Try different variations of the company name
+      const searchVariations = [
+        companyName,
+        companyName.toLowerCase(),
+        companyName.toUpperCase(),
+        companyName.replace(/\s+/g, ' ').trim(), // Normalize spaces
+        companyName.replace(/[^\w\s]/g, ''), // Remove special characters
+      ];
+      
+      let foundAwardee = null;
+      
+      for (const variation of searchVariations) {
+        const { data: fuzzyAwardees } = await supabase
+          .from('awardees')
+          .select('*')
+          .ilike('company_name', `%${variation}%`);
 
-      const { data: contractsData } = await supabase
+        if (fuzzyAwardees && fuzzyAwardees.length > 0) {
+          foundAwardee = fuzzyAwardees[0];
+          console.log('✅ Found fuzzy match with variation:', variation, '->', foundAwardee.company_name);
+          break;
+        }
+      }
+
+      if (foundAwardee) {
+        setAwardee(foundAwardee);
+        
+        // Fetch contracts for this awardee
+        console.log('🔍 Fetching contracts for fuzzy match awardee ID:', foundAwardee.id, 'and company name:', companyName);
+        const { data: contractsData, error: contractsError } = await supabase
         .from('contracts')
         .select('*')
-        .eq('awarded_to', companyName)
+          .or(`awarded_company_id.eq.${foundAwardee.id},awarded_to.ilike.%${companyName}%`)
         .order('award_date', { ascending: false });
 
+        if (contractsError) {
+          console.error('❌ Error fetching contracts:', contractsError);
+        } else {
+          console.log('✅ Found contracts:', contractsData?.length || 0);
+        }
+
       setContracts(contractsData || []);
+        setLoading(false);
+        return;
+      }
+
+      // If still not found, show error - no virtual awardees
+      console.log('❌ No awardee found in database for:', companyName);
+      
+      // Debug: Let's see what awardees and contracts actually exist
+      const { data: allAwardees } = await supabase
+        .from('awardees')
+        .select('company_name')
+        .limit(10);
+      
+      console.log('🔍 Available awardees in database:', allAwardees?.map(a => a.company_name));
+      
+      // Debug: Let's see what contracts exist for this company name
+      const { data: debugContracts } = await supabase
+        .from('contracts')
+        .select('id, awarded_to, awarded_company_id, status')
+        .or(`awarded_to.ilike.%${companyName}%,awarded_to.ilike.%${companyName.toLowerCase()}%`)
+        .limit(5);
+      
+      console.log('🔍 Contracts found for company name:', debugContracts);
+      
+      setError(`Awardee "${companyName}" not found in the system. Please check the company name or contact the administrator.`);
+      setLoading(false);
+      return;
 
     } catch (err) {
       setError('Failed to load awardee data');
@@ -103,9 +188,9 @@ export default function AwardeeDetailPage() {
           <div className="bg-white rounded-lg shadow p-6 text-center">
             <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
             <h2 className="text-xl font-semibold text-gray-900 mb-2">Awardee Not Found</h2>
-            <p className="text-gray-600 mb-4">The awardee "{companyName}" could not be found.</p>
-            <Link href="/dashboard/contracts" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
-              Back to Contracts
+            <p className="text-gray-600 mb-4">{error}</p>
+            <Link href="/dashboard/awardees" className="inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md text-white bg-blue-600 hover:bg-blue-700">
+              Back to Awardees
             </Link>
           </div>
         </div>
@@ -157,8 +242,8 @@ export default function AwardeeDetailPage() {
         <div className="max-w-7xl mx-auto px-6 py-4">
           <div className="flex items-center justify-between">
             <div>
-              <Link href="/dashboard/contracts" className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block">
-                ← Search Awardees
+              <Link href="/dashboard/awardees" className="text-sm text-blue-600 hover:text-blue-800 mb-2 inline-block">
+                ← Back to Awardees
               </Link>
               <h1 className="text-2xl font-bold text-gray-900">{awardee.company_name}</h1>
             </div>
@@ -505,7 +590,14 @@ export default function AwardeeDetailPage() {
                   </tr>
                 </thead>
                 <tbody className="bg-white divide-y divide-gray-200">
-                  {contracts.slice(0, 10).map((contract) => (
+                  {contracts.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-gray-500">
+                        No contracts found for this awardee.
+                      </td>
+                    </tr>
+                  ) : (
+                    contracts.slice(0, 10).map((contract) => (
                     <tr key={contract.id} className="hover:bg-gray-50">
                       <td className="px-6 py-4 whitespace-nowrap">
                         <Link href={`/dashboard/contracts/${contract.id}`} className="text-blue-600 hover:text-blue-800 font-medium text-sm">
@@ -532,7 +624,8 @@ export default function AwardeeDetailPage() {
                         {formatDate(contract.contract_end_date || '')}
                       </td>
                     </tr>
-                  ))}
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>

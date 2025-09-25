@@ -17,7 +17,8 @@ import {
   Shield,
   History,
   Database,
-  Building
+  Building,
+  AlertTriangle
 } from 'lucide-react';
 
 interface AdminLayoutProps {
@@ -33,6 +34,8 @@ export default function AdminLayout({ children }: AdminLayoutProps) {
     { name: 'Dashboard', href: '/admin', icon: BarChart3 },
     { name: 'Contracts', href: '/admin/contracts', icon: FileText },
     { name: 'Awardees', href: '/admin/awardees', icon: Building },
+    { name: 'Procuring Entities', href: '/admin/agencies', icon: Building },
+    { name: 'Duplicates', href: '/admin/duplicates', icon: AlertTriangle },
     { name: 'Historical', href: '/admin/historical', icon: History },
     { name: 'Data Management', href: '/admin/data-management', icon: Database },
     { name: 'Users', href: '/admin/users', icon: Users },

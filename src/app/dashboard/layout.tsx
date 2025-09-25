@@ -18,6 +18,7 @@ import {
   Star,
   AlertCircle,
   Building,
+  Building2,
   Trophy,
   List,
   Flag
@@ -125,7 +126,7 @@ export default function DashboardLayout({
               </div>
 
                 {/* Right Side - Actions */}
-                <div className="flex items-center space-x-4">
+              <div className="flex items-center space-x-4">
 
               {/* User Menu */}
                 <div className="relative">
@@ -162,13 +163,6 @@ export default function DashboardLayout({
                       >
                         Subscription
                 </Link>
-              <Link
-                        href="/admin"
-                        className="block px-4 py-2 text-sm text-blue-600 hover:bg-blue-50 font-medium"
-                        onClick={() => setUserMenuOpen(false)}
-                      >
-                        Admin Panel
-                </Link>
                 <button 
                   onClick={handleSignOut}
                         className="block w-full text-left px-4 py-2 text-sm text-gray-700 hover:bg-gray-100"
@@ -182,25 +176,25 @@ export default function DashboardLayout({
               </div>
         </header>
 
-            {/* Upgrade Prompt */}
-            {showUpgradePrompt && (
+                     {/* Upgrade Prompt */}
+             {showUpgradePrompt && (
               <div className="bg-green-50 border-b border-green-200 px-4 py-3 lg:ml-80">
-                <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
-                  <div className="flex items-start sm:items-center min-w-0 flex-1">
+                 <div className="max-w-7xl mx-auto flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                   <div className="flex items-start sm:items-center min-w-0 flex-1">
                     <AlertCircle className="h-5 w-5 text-green-600 mr-2 flex-shrink-0 mt-0.5 sm:mt-0" />
                     <p className="text-sm text-green-800 break-words">
-                      Upgrade to Professional Plan to unlock all features and unlimited access.
-                    </p>
-                  </div>
-                  <Link
-                    href="/dashboard/subscription"
+                       Upgrade to Professional Plan to unlock all features and unlimited access.
+                     </p>
+                   </div>
+                   <Link
+                     href="/dashboard/subscription"
                     className="bg-green-600 hover:bg-green-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors flex-shrink-0 text-center"
-                  >
-                    Upgrade Now
-                  </Link>
-                </div>
-              </div>
-            )}
+                   >
+                     Upgrade Now
+                   </Link>
+                 </div>
+               </div>
+             )}
 
         <div className="flex">
           {/* Sidebar */}
@@ -283,9 +277,7 @@ export default function DashboardLayout({
                   <div className="mb-3">
                     <Link
                       href="/dashboard/awardees"
-                      className={`flex items-center space-x-3 py-2 px-3 rounded-md text-sm font-medium transition-colors ${
-                        pathname === '/dashboard/awardees' ? 'bg-blue-50 text-blue-700 border-l-4 border-blue-500' : 'text-gray-700 hover:bg-gray-50'
-                      }`}
+                      className="flex items-center space-x-3 py-2 px-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Building className="h-4 w-4" />
                       <span>Awardees</span>
@@ -299,7 +291,7 @@ export default function DashboardLayout({
                       className="flex items-center space-x-3 py-2 px-3 rounded-md text-sm font-medium text-gray-700 hover:bg-gray-50 transition-colors"
                     >
                       <Flag className="h-4 w-4" />
-                      <span>Agencies</span>
+                      <span>Procuring Entities</span>
               </Link>
                   </div>
                 </div>
@@ -335,7 +327,7 @@ export default function DashboardLayout({
             />
         )}
 
-          {/* Main content */}
+        {/* Main content */}
           <div className="flex-1 flex flex-col min-w-0 lg:ml-80">
             <main className="flex-1 p-6">
               {children}

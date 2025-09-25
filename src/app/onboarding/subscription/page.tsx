@@ -114,21 +114,21 @@ export default function OnboardingSubscription() {
                     <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                       1
                     </div>
-                    <span className="text-sm text-slate-500">Welcome</span>
+                    <span className="text-sm text-slate-700">Welcome</span>
                   </div>
                   <div className="w-8 h-0.5 bg-slate-300"></div>
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                       2
                     </div>
-                    <span className="text-sm text-slate-500">Preferences</span>
+                    <span className="text-sm text-slate-700">Preferences</span>
                   </div>
                   <div className="w-8 h-0.5 bg-slate-300"></div>
                   <div className="flex items-center space-x-2">
                     <div className="w-8 h-8 bg-slate-200 text-slate-500 rounded-full flex items-center justify-center text-sm font-semibold">
                       3
                     </div>
-                    <span className="text-sm text-slate-500">Notifications</span>
+                    <span className="text-sm text-slate-700">Notifications</span>
                   </div>
                   <div className="w-8 h-0.5 bg-slate-300"></div>
                   <div className="flex items-center space-x-2">
@@ -153,7 +153,7 @@ export default function OnboardingSubscription() {
               <h1 className="text-3xl font-bold text-slate-900 mb-4">
                 You're Already Subscribed!
               </h1>
-              <p className="text-lg text-slate-600">
+              <p className="text-lg text-slate-800">
                 You have an active {subscriptionStatus?.planName} subscription
               </p>
             </div>
@@ -163,7 +163,7 @@ export default function OnboardingSubscription() {
                 <h2 className="text-xl font-bold text-slate-900 mb-4">
                   Your Subscription Details
                 </h2>
-                <div className="space-y-2 text-slate-600">
+                <div className="space-y-2 text-slate-800">
                   <p><strong>Plan:</strong> {subscriptionStatus?.planName}</p>
                   <p><strong>Status:</strong> Active</p>
                   {subscriptionStatus?.subscriptionEndsAt && (
@@ -236,7 +236,7 @@ export default function OnboardingSubscription() {
             <h1 className="text-3xl font-bold text-slate-900 mb-4">
               Choose Your Plan
             </h1>
-            <p className="text-lg text-slate-600">
+            <p className="text-lg text-slate-800">
               Get started with BidCloud and access all premium features
             </p>
           </div>
@@ -249,8 +249,8 @@ export default function OnboardingSubscription() {
               <h2 className="text-2xl font-bold text-slate-900 mb-2">Professional</h2>
               <div className="mb-6">
                 <span className="text-4xl font-bold text-slate-900">50,000</span>
-                <span className="text-slate-600"> UGX</span>
-                <span className="text-slate-500 text-sm">/month</span>
+                <span className="text-slate-800"> UGX</span>
+                <span className="text-slate-700 text-sm">/month</span>
               </div>
             </div>
 
@@ -268,11 +268,11 @@ export default function OnboardingSubscription() {
             <div className="mb-6 p-4 bg-slate-50 rounded-lg">
               <h3 className="text-sm font-semibold text-slate-900 mb-3">Secure Payment Methods</h3>
               <div className="flex items-center justify-center space-x-4">
-                <div className="flex items-center text-slate-600">
+                <div className="flex items-center text-slate-800">
                   <CreditCard className="w-4 h-4 mr-1" />
                   <span className="text-sm">Cards</span>
                 </div>
-                <div className="flex items-center text-slate-600">
+                <div className="flex items-center text-slate-800">
                   <Zap className="w-4 h-4 mr-1" />
                   <span className="text-sm">Mobile Money</span>
                 </div>
@@ -304,7 +304,7 @@ export default function OnboardingSubscription() {
 
             {/* Subscription Info */}
             <div className="mt-6 text-center">
-              <p className="text-sm text-slate-600">
+              <p className="text-sm text-slate-800">
                 Cancel anytime • Secure payment via Flutterwave • Immediate access to all features
               </p>
             </div>
@@ -335,7 +335,7 @@ export default function OnboardingSubscription() {
                   <CheckCircle className="w-8 h-8 text-green-600" />
                 </div>
                 <h3 className="text-xl font-bold text-slate-900 mb-2">Welcome to BidCloud!</h3>
-                <p className="text-slate-600 mb-4">
+                <p className="text-slate-800 mb-4">
                   Your account has been created successfully. Redirecting to your dashboard...
                 </p>
                 <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>

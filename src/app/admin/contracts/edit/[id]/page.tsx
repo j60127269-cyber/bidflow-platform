@@ -33,6 +33,7 @@ interface ContractForm {
   submission_deadline: string;
   bid_opening_date?: string;
   procuring_entity: string;
+  procuring_entity_id?: string;
   contact_person?: string;
   contact_position?: string;
   evaluation_methodology?: string;
@@ -92,6 +93,8 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
   const [loadingBidders, setLoadingBidders] = useState(false);
   const [awardees, setAwardees] = useState<any[]>([]);
   const [selectedAwardeeId, setSelectedAwardeeId] = useState<string>('');
+  const [procuringEntities, setProcuringEntities] = useState<any[]>([]);
+  const [selectedProcuringEntityId, setSelectedProcuringEntityId] = useState<string>('');
   const [contract, setContract] = useState<ContractForm>({
     reference_number: '',
     title: '',
@@ -333,6 +336,38 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
       console.error('Error fetching awardees:', error);
     }
   }, []);
+
+  // Find or create procuring entity
+  const findOrCreateProcuringEntity = useCallback(async (entityName: string, contactPerson?: string, contactPosition?: string) => {
+    if (!entityName.trim()) return;
+
+    try {
+      const response = await fetch('/api/procuring-entities/find-or-create', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          entity_name: entityName,
+          contact_person: contactPerson,
+          contact_position: contactPosition
+        })
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        if (result.success && result.entity) {
+          updateContract({ procuring_entity_id: result.entity.id });
+          setSelectedProcuringEntityId(result.entity.id);
+          console.log('✅ Linked to procuring entity:', result.entity.entity_name, result.created ? '(created)' : '(found)');
+        }
+      } else {
+        console.error('Failed to find or create procuring entity');
+      }
+    } catch (error) {
+      console.error('Error finding or creating procuring entity:', error);
+    }
+  }, [updateContract]);
 
   const createWinnerBidder = async () => {
     try {
@@ -1243,9 +1278,9 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
                       </option>
                     ))}
                   </select>
-                  <input
-                    type="text"
-                    value={contract.awarded_to || ''}
+                <input
+                  type="text"
+                  value={contract.awarded_to || ''}
                     onChange={(e) => {
                       updateContract({ awarded_to: e.target.value });
                       setSelectedAwardeeId(''); // Clear selection when typing manually

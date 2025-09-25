@@ -348,7 +348,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading contracts...</p>
+          <p className="mt-4 text-slate-800">Loading contracts...</p>
         </div>
       </div>
     );
@@ -362,7 +362,7 @@ export default function DashboardPage() {
       <div className="flex items-center justify-between">
       <div>
         <h1 className="text-2xl font-bold text-slate-900">Dashboard</h1>
-        <p className="mt-1 text-sm text-slate-600">
+        <p className="mt-1 text-sm text-slate-800">
               Discover and track government and private sector contracts
         </p>
       </div>
@@ -383,7 +383,7 @@ export default function DashboardPage() {
               placeholder="Search contracts by title, client, or description..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
-              className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-lg leading-5 bg-white placeholder-slate-500 focus:outline-none focus:placeholder-slate-400 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+              className="block w-full pl-10 pr-3 py-3 border border-slate-300 rounded-lg leading-5 bg-white text-slate-900 placeholder-slate-700 focus:outline-none focus:placeholder-slate-600 focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
             />
               </div>
             </div>
@@ -393,7 +393,7 @@ export default function DashboardPage() {
           <select 
             value={selectedCategory}
             onChange={(e) => setSelectedCategory(e.target.value)}
-            className="block w-full px-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="block w-full px-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             {categories.map((category) => (
               <option key={category} value={category}>
@@ -405,7 +405,7 @@ export default function DashboardPage() {
           <select 
             value={selectedProcuringEntity}
             onChange={(e) => setSelectedProcuringEntity(e.target.value)}
-            className="block w-full px-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="block w-full px-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
             <option value="All Procuring Entities">All Procuring Entities</option>
             {procuringEntities.map((entity) => (
@@ -419,7 +419,7 @@ export default function DashboardPage() {
           <select 
             value={selectedValue}
             onChange={(e) => setSelectedValue(e.target.value)}
-            className="block w-full px-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
+            className="block w-full px-3 py-2 border border-slate-300 rounded-lg leading-5 bg-white text-slate-900 focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 sm:text-sm"
           >
               <option>Estimated Value</option>
             <option>Under 50M UGX</option>
@@ -438,7 +438,7 @@ export default function DashboardPage() {
 
       {/* Results */}
       <div className="flex items-center justify-between">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-slate-800">
           Showing {getDisplayContracts().length} of {getTotalContractsCount()} contracts
           {!hasActiveSubscription && filteredContracts.length > 1 && (
             <span className="text-blue-600 font-medium ml-2">
@@ -447,7 +447,7 @@ export default function DashboardPage() {
           )}
         </p>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-slate-600">Sort by:</span>
+          <span className="text-sm text-slate-800">Sort by:</span>
           <select 
             value={sortBy}
             onChange={(e) => setSortBy(e.target.value)}
@@ -467,7 +467,7 @@ export default function DashboardPage() {
             <Search className="h-12 w-12 mx-auto" />
           </div>
           <h3 className="text-lg font-medium text-slate-900 mb-2">No contracts found</h3>
-          <p className="text-slate-600">Try adjusting your search or filters</p>
+          <p className="text-slate-800">Try adjusting your search or filters</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -482,7 +482,7 @@ export default function DashboardPage() {
                       <h3 className="text-lg font-semibold text-slate-900 mb-2">
                         {contract.title}
                       </h3>
-                      <div className="flex items-center text-sm text-slate-600 mb-2">
+                      <div className="flex items-center text-sm text-slate-800 mb-2">
                         <Building className="h-4 w-4 mr-1" />
                         {contract.procuring_entity}
                       </div>
@@ -513,15 +513,15 @@ export default function DashboardPage() {
 
                 {/* Details */}
                 <div className="grid grid-cols-2 gap-4 mb-4">
-                  <div className="flex items-center text-sm text-slate-600">
+                  <div className="flex items-center text-sm text-slate-800">
                     <MapPin className="h-4 w-4 mr-2" />
                     {contract.procuring_entity}
                   </div>
-                  <div className="flex items-center text-sm text-slate-600">
+                  <div className="flex items-center text-sm text-slate-800">
                     <Calendar className="h-4 w-4 mr-2" />
                     Deadline: {formatDate(contract.submission_deadline)}
                 </div>
-                                    <div className="flex items-center text-sm text-slate-600">
+                                    <div className="flex items-center text-sm text-slate-800">
                     <Calendar className="h-4 w-4 mr-2" />
                     Posted: {formatDate(contract.publish_date || contract.created_at)}
                   </div>
@@ -588,7 +588,7 @@ export default function DashboardPage() {
                         <h3 className="text-lg font-semibold text-slate-900 mb-2">
                           {filteredContracts[3]?.title || "Contract Title"}
                         </h3>
-                                                  <div className="flex items-center text-sm text-slate-600 mb-2">
+                                                  <div className="flex items-center text-sm text-slate-800 mb-2">
                             <Building className="h-4 w-4 mr-1" />
                             {filteredContracts[3]?.procuring_entity || "Procuring Entity"}
                           </div>
@@ -599,24 +599,24 @@ export default function DashboardPage() {
       </div>
 
                                           {/* Description */}
-                      <p className="text-sm text-slate-600 mb-4">
+                      <p className="text-sm text-slate-800 mb-4">
                         {filteredContracts[3]?.short_description || filteredContracts[3]?.evaluation_methodology || "Contract description..."}
                       </p>
 
                     {/* Details */}
                     <div className="grid grid-cols-2 gap-4 mb-4">
-                                              <div className="flex items-center text-sm text-slate-600">
+                                              <div className="flex items-center text-sm text-slate-800">
                           <MapPin className="h-4 w-4 mr-2" />
                           {filteredContracts[3]?.procuring_entity || "Location"}
             </div>
-                        <div className="flex items-center text-sm text-slate-600">
+                        <div className="flex items-center text-sm text-slate-800">
                           <Calendar className="h-4 w-4 mr-2" />
                           Deadline: {filteredContracts[3]?.submission_deadline ? formatDate(filteredContracts[3].submission_deadline) : "Date"}
                       </div>
-                        <div className="flex items-center text-sm text-slate-600">
+                        <div className="flex items-center text-sm text-slate-800">
                           <Calendar className="h-4 w-4 mr-2" />
                           Posted: {filteredContracts[3]?.publish_date || filteredContracts[3]?.created_at ? formatDate(filteredContracts[3].publish_date || filteredContracts[3].created_at) : "Date"}
-                    </div>
+                      </div>
                         <div className="flex items-center justify-end">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             {filteredContracts[3]?.estimated_value_min && filteredContracts[3]?.estimated_value_max 
@@ -639,7 +639,7 @@ export default function DashboardPage() {
                         <Lock className="w-8 h-8 text-blue-600" />
             </div>
                       <h3 className="text-lg font-semibold text-slate-900 mb-2">Premium Contract</h3>
-                      <p className="text-slate-600 mb-4">Upgrade to access this and {filteredContracts.length - 4} more contracts</p>
+                      <p className="text-slate-800 mb-4">Upgrade to access this and {filteredContracts.length - 4} more contracts</p>
                       <button
                         onClick={handleUpgrade}
                         className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
@@ -660,7 +660,7 @@ export default function DashboardPage() {
                           <h3 className="text-lg font-semibold text-slate-900 mb-2">
                             {filteredContracts[4]?.title || "Contract Title"}
                           </h3>
-                          <div className="flex items-center text-sm text-slate-600 mb-2">
+                          <div className="flex items-center text-sm text-slate-800 mb-2">
                             <Building className="h-4 w-4 mr-1" />
                             {filteredContracts[4]?.procuring_entity || "Procuring Entity"}
                           </div>
@@ -671,24 +671,24 @@ export default function DashboardPage() {
                       </div>
 
                       {/* Description */}
-                      <p className="text-sm text-slate-600 mb-4">
+                      <p className="text-sm text-slate-800 mb-4">
                         {filteredContracts[4]?.short_description || filteredContracts[4]?.evaluation_methodology || "Contract description..."}
                       </p>
 
                       {/* Details */}
                       <div className="grid grid-cols-2 gap-4 mb-4">
-                                                <div className="flex items-center text-sm text-slate-600">
+                                                <div className="flex items-center text-sm text-slate-800">
                           <MapPin className="h-4 w-4 mr-2" />
                           {filteredContracts[4]?.procuring_entity || "Location"}
                         </div>
-                        <div className="flex items-center text-sm text-slate-600">
+                        <div className="flex items-center text-sm text-slate-800">
                           <Calendar className="h-4 w-4 mr-2" />
                           Deadline: {filteredContracts[4]?.submission_deadline ? formatDate(filteredContracts[4].submission_deadline) : "Date"}
           </div>
-                        <div className="flex items-center text-sm text-slate-600">
+                        <div className="flex items-center text-sm text-slate-800">
                           <Calendar className="h-4 w-4 mr-2" />
                           Posted: {filteredContracts[4]?.publish_date || filteredContracts[4]?.created_at ? formatDate(filteredContracts[4].publish_date || filteredContracts[4].created_at) : "Date"}
-                  </div>
+                      </div>
                         <div className="flex items-center justify-end">
                           <span className="inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium bg-green-100 text-green-800">
                             {filteredContracts[4]?.estimated_value_min && filteredContracts[4]?.estimated_value_max 
@@ -711,7 +711,7 @@ export default function DashboardPage() {
                           <Crown className="w-8 h-8 text-blue-600" />
           </div>
                         <h3 className="text-lg font-semibold text-slate-900 mb-2">Premium Contract</h3>
-                        <p className="text-slate-600 mb-4">Unlock unlimited access to all contracts</p>
+                        <p className="text-slate-800 mb-4">Unlock unlimited access to all contracts</p>
                         <button
                           onClick={handleUpgrade}
                           className="bg-blue-600 hover:bg-blue-700 text-white px-6 py-3 rounded-lg font-medium transition-colors"
@@ -732,7 +732,7 @@ export default function DashboardPage() {
                     <h3 className="text-xl font-semibold text-slate-900 mb-2">
                       {filteredContracts.length - 5} More Contracts Available
                     </h3>
-                    <p className="text-slate-600 mb-4">
+                    <p className="text-slate-800 mb-4">
                       Upgrade to Professional Plan to access all {filteredContracts.length} contracts and unlock premium features
                     </p>
                     <button

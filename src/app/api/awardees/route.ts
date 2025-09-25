@@ -19,7 +19,7 @@ export async function GET(request: NextRequest) {
     const location = searchParams.get('location') || '';
     const businessType = searchParams.get('business_type') || '';
 
-    // Build the query
+    // First, get all awardees
     let query = supabase
       .from('awardees')
       .select('*', { count: 'exact' });
@@ -44,11 +44,6 @@ export async function GET(request: NextRequest) {
       query = query.eq('business_type', businessType);
     }
 
-    // Apply pagination
-    const from = (page - 1) * limit;
-    const to = from + limit - 1;
-    query = query.range(from, to);
-
     // Order by company name
     query = query.order('company_name', { ascending: true });
 
@@ -62,14 +57,65 @@ export async function GET(request: NextRequest) {
       }, { status: 500 });
     }
 
-    return NextResponse.json({
-      success: true,
-      awardees: awardees || [],
+    // Get all awarded contracts to calculate total values
+    const { data: contracts, error: contractsError } = await supabase
+      .from('contracts')
+      .select(`
+        id,
+        awarded_company_id,
+        awarded_to,
+        awarded_value,
+        estimated_value_max
+      `)
+      .eq('status', 'awarded');
+
+    if (contractsError) {
+      console.error('Error fetching contracts:', contractsError);
+      return NextResponse.json({ 
+        error: 'Failed to fetch contracts', 
+        details: contractsError 
+      }, { status: 500 });
+    }
+
+    // Calculate total values for each awardee
+    const awardeesWithValues = awardees?.map(awardee => {
+      let totalValue = 0;
+      let contractCount = 0;
+
+      // Find contracts for this awardee
+      const awardeeContracts = contracts?.filter(contract => {
+        // Match by awarded_company_id if available, otherwise by awarded_to
+        return contract.awarded_company_id === awardee.id || 
+               contract.awarded_to === awardee.company_name;
+      }) || [];
+
+      // Calculate total value and contract count
+      awardeeContracts.forEach(contract => {
+        const value = contract.awarded_value || contract.estimated_value_max || 0;
+        totalValue += value;
+        contractCount += 1;
+      });
+
+      return {
+        ...awardee,
+        total_awarded_value: totalValue,
+        total_contracts: contractCount
+      };
+    }) || [];
+
+    // Apply pagination after calculating values
+    const from = (page - 1) * limit;
+    const to = from + limit - 1;
+    const paginatedAwardees = awardeesWithValues.slice(from, to + 1);
+
+    return NextResponse.json({ 
+      success: true, 
+      awardees: paginatedAwardees,
       pagination: {
         page,
         limit,
-        total: count || 0,
-        totalPages: Math.ceil((count || 0) / limit)
+        total: awardeesWithValues.length,
+        totalPages: Math.ceil(awardeesWithValues.length / limit)
       }
     });
 
@@ -86,7 +132,7 @@ export async function GET(request: NextRequest) {
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json();
-    
+
     // Validate required fields
     if (!body.company_name) {
       return NextResponse.json({ 
@@ -109,8 +155,8 @@ export async function POST(request: NextRequest) {
       description: body.description
     });
 
-    return NextResponse.json({
-      success: true,
+    return NextResponse.json({ 
+      success: true, 
       awardee
     }, { status: 201 });
 

@@ -90,12 +90,30 @@ export async function POST(request: NextRequest) {
   }
 }
 
-export async function GET() {
+export async function GET(request: NextRequest) {
   try {
-    const { data: contracts, error } = await supabase
+    const { searchParams } = new URL(request.url);
+    const awarded = searchParams.get('awarded');
+    const agency = searchParams.get('agency');
+    
+    // First, fetch contracts without the join to avoid foreign key issues
+    let query = supabase
       .from('contracts')
       .select('*')
       .order('created_at', { ascending: false });
+
+    // Filter by awarded status if requested
+    if (awarded === 'true') {
+      query = query.eq('status', 'awarded');
+    }
+
+    // Filter by agency if requested
+    if (agency) {
+      // Use ilike for case-insensitive search and handle whitespace
+      query = query.ilike('procuring_entity', `%${agency.trim()}%`);
+    }
+
+    const { data: contracts, error } = await query;
 
     if (error) {
       console.error('Error fetching contracts:', error);
@@ -105,9 +123,39 @@ export async function GET() {
       }, { status: 500 });
     }
 
+    // If we have contracts with awarded_company_id, fetch awardee names separately
+    const contractsWithAwardees = contracts || [];
+    const awardeeIds = contractsWithAwardees
+      .map(c => c.awarded_company_id)
+      .filter(Boolean);
+
+    let awardeeMap = new Map();
+    if (awardeeIds.length > 0) {
+      const { data: awardees, error: awardeesError } = await supabase
+        .from('awardees')
+        .select('id, company_name')
+        .in('id', awardeeIds);
+
+      if (!awardeesError && awardees) {
+        awardeeMap = new Map(awardees.map(a => [a.id, a.company_name]));
+      }
+    }
+
+    // Transform the data to include awardee company name and map field names
+    const transformedContracts = contractsWithAwardees.map(contract => ({
+      ...contract,
+      // Map database fields to expected frontend fields
+      estimated_value: contract.awarded_value || contract.estimated_value_max || 0,
+      award_date: contract.award_date || contract.updated_at,
+      awarded_company_name: contract.awarded_company_id 
+        ? awardeeMap.get(contract.awarded_company_id) || null 
+        : contract.awarded_to || null,
+      procuring_entity: contract.procuring_entity?.trim() || 'BidFlow Platform'
+    }));
+
     return NextResponse.json({
       success: true,
-      contracts: contracts || []
+      contracts: transformedContracts
     });
 
   } catch (error) {
