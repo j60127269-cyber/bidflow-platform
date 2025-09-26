@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Template Previews</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+        }
+        .email-header {
+            padding: 20px;
+            text-align: center;
+        }
+        .email-content {
+            padding: 20px;
+        }
+        .contract-match-header {
+            background: #007bff;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .deadline-reminder-header {
+            background: #000000;
+            color: white;
+            padding: 30px 20px;
+            text-align: center;
+        }
+        .contract-details {
+            background: #ffffff;
+            border: 1px solid #e9ecef;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .contract-detail-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 10px 0;
+            padding: 8px 0;
+            border-bottom: 1px solid #e9ecef;
+        }
+        .contract-detail-row:last-child {
+            border-bottom: none;
+        }
+        .detail-label {
+            font-weight: 600;
+            color: #000000;
+        }
+        .detail-value {
+            color: #000000;
+        }
+        .cta-button {
+            display: inline-block;
+            background: #007bff;
+            color: white;
+            padding: 12px 24px;
+            text-decoration: none;
+            border-radius: 6px;
+            font-weight: 600;
+            margin: 10px 5px;
+            transition: background-color 0.3s;
+        }
+        .cta-button:hover {
+            background: #0056b3;
+        }
+        .cta-button.secondary {
+            background: #000000;
+        }
+        .cta-button.secondary:hover {
+            background: #333333;
+        }
+        .footer {
+            background: #ffffff;
+            border-top: 1px solid #e9ecef;
+            padding: 20px;
+            text-align: center;
+            color: #000000;
+            font-size: 14px;
+        }
+        .priority-high {
+            background: #000000;
+        }
+        .priority-medium {
+            background: #007bff;
+        }
+        .priority-low {
+            background: #007bff;
+        }
+    </style>
+</head>
+<body>
+    <h1 style="text-align: center; color: #000000;">📧 Email Template Previews</h1>
+    
+    <!-- Contract Match Email -->
+    <div class="email-container">
+        <div class="contract-match-header">
+            <h1 style="margin: 0; font-size: 28px;">🎯 New Contract Match!</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">A contract matching your preferences has been published</p>
+        </div>
+        
+        <div class="email-content">
+            <div class="contract-details">
+                <h3 style="margin-top: 0; color: #000000;">📋 Contract Details</h3>
+                <div class="contract-detail-row">
+                    <span class="detail-label">Title:</span>
+                    <span class="detail-value">Supply of Office Equipment and Furniture</span>
+                </div>
+                <div class="contract-detail-row">
+                    <span class="detail-label">Agency:</span>
+                    <span class="detail-value">Ministry of Health</span>
+                </div>
+                <div class="contract-detail-row">
+                    <span class="detail-label">Deadline:</span>
+                    <span class="detail-value">Monday, January 15, 2024 at 2:30 PM</span>
+                </div>
+                <div class="contract-detail-row">
+                    <span class="detail-label">Industry:</span>
+                    <span class="detail-value">Office Supplies & Equipment</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="#" class="cta-button">View Full Contract Details</a>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #e9ecef;">
+                <h4 style="margin: 0 0 10px 0; color: #007bff;">🚀 Next Steps</h4>
+                <ul style="margin: 0; padding-left: 20px; color: #000000;">
+                    <li>Review the full contract requirements</li>
+                    <li>Prepare your bid documents</li>
+                    <li>Submit your proposal before the deadline</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This notification was sent because you have "Office Supplies & Equipment" in your industry preferences.</p>
+            <p><a href="#" style="color: #007bff;">Unsubscribe</a> | <a href="#" style="color: #007bff;">Manage Preferences</a></p>
+        </div>
+    </div>
+
+    <!-- Deadline Reminder Email -->
+    <div class="email-container">
+        <div class="deadline-reminder-header">
+            <h1 style="margin: 0; font-size: 28px;">⏰ Deadline Reminder</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">The contract you're tracking is due soon</p>
+        </div>
+        
+        <div class="email-content">
+            <div style="background: #ffffff; border: 2px solid #000000; padding: 15px; border-radius: 6px; margin: 20px 0;">
+                <h4 style="margin: 0 0 10px 0; color: #000000;">⚠️ Urgent: 2 Days Remaining</h4>
+                <p style="margin: 0; color: #000000;">Don't miss this opportunity!</p>
+            </div>
+            
+            <div class="contract-details">
+                <h3 style="margin-top: 0; color: #000000;">📋 Contract Details</h3>
+                <div class="contract-detail-row">
+                    <span class="detail-label">Title:</span>
+                    <span class="detail-value">Construction of New Office Building</span>
+                </div>
+                <div class="contract-detail-row">
+                    <span class="detail-label">Agency:</span>
+                    <span class="detail-value">Kampala Capital City Authority</span>
+                </div>
+                <div class="contract-detail-row">
+                    <span class="detail-label">Deadline:</span>
+                    <span class="detail-value">Wednesday, January 17, 2024 at 5:00 PM</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="#" class="cta-button">View Contract Details</a>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 15px; border-radius: 6px; margin: 20px 0; border: 1px solid #e9ecef;">
+                <h4 style="margin: 0 0 10px 0; color: #007bff;">🚀 Final Checklist</h4>
+                <ul style="margin: 0; padding-left: 20px; color: #000000;">
+                    <li>Review all contract requirements</li>
+                    <li>Prepare and organize bid documents</li>
+                    <li>Submit your proposal before the deadline</li>
+                </ul>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This reminder was sent because you're tracking this contract.</p>
+            <p><a href="#" style="color: #007bff;">Unsubscribe</a> | <a href="#" style="color: #007bff;">Manage Preferences</a></p>
+        </div>
+    </div>
+
+    <!-- Priority-based Contract Match -->
+    <div class="email-container">
+        <div class="priority-high" style="color: white; padding: 30px 20px; text-align: center;">
+            <h1 style="margin: 0; font-size: 28px;">🎯 High Priority Contract Match!</h1>
+            <p style="margin: 10px 0 0 0; font-size: 16px;">A high-value contract matching your preferences</p>
+        </div>
+        
+        <div class="email-content">
+            <div class="contract-details">
+                <h3 style="margin-top: 0; color: #000000;">📋 Contract Details</h3>
+                <div class="contract-detail-row">
+                    <span class="detail-label">Title:</span>
+                    <span class="detail-value">National Infrastructure Development Project</span>
+                </div>
+                <div class="contract-detail-row">
+                    <span class="detail-label">Agency:</span>
+                    <span class="detail-value">Ministry of Works and Transport</span>
+                </div>
+                <div class="contract-detail-row">
+                    <span class="detail-label">Deadline:</span>
+                    <span class="detail-value">Friday, January 20, 2024 at 12:00 PM</span>
+                </div>
+                <div class="contract-detail-row">
+                    <span class="detail-label">Priority:</span>
+                    <span class="detail-value" style="color: #000000; font-weight: 600;">HIGH</span>
+                </div>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+                <a href="#" class="cta-button">View Full Contract Details</a>
+            </div>
+        </div>
+        
+        <div class="footer">
+            <p>This is a high-priority contract based on your preferences and contract value.</p>
+            <p><a href="#" style="color: #007bff;">Unsubscribe</a> | <a href="#" style="color: #007bff;">Manage Preferences</a></p>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin: 40px 0; color: #000000;">
+        <p>These are exactly how the emails will look when sent to your users! 🎉</p>
+        <p>The system automatically generates beautiful, professional emails with:</p>
+        <ul style="text-align: left; max-width: 500px; margin: 20px auto; color: #000000;">
+            <li>🎨 Clean black, white, and blue color scheme</li>
+            <li>📋 Organized contract details in tables</li>
+            <li>🚀 Clear call-to-action buttons</li>
+            <li>⚠️ Priority-based styling</li>
+            <li>📱 Mobile-responsive design</li>
+            <li>🔗 Direct links to contracts and bidding</li>
+        </ul>
+    </div>
+</body>
+</html>

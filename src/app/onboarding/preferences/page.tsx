@@ -10,12 +10,6 @@ import { CANONICAL_CATEGORIES } from "@/lib/categories";
 
 const industries = CANONICAL_CATEGORIES;
 
-const contractRanges = [
-  { label: "Small (Under 1M UGX)", value: "small" },
-  { label: "Medium (1M - 10M UGX)", value: "medium" },
-  { label: "Large (10M - 100M UGX)", value: "large" },
-  { label: "Enterprise (Over 100M UGX)", value: "enterprise" }
-];
 
 
 
@@ -27,7 +21,6 @@ export default function OnboardingPreferences() {
   const [selectedProducts, setSelectedProducts] = useState<string[]>([]);
   const [customProduct, setCustomProduct] = useState("");
   const [showCustomProduct, setShowCustomProduct] = useState(false);
-  const [selectedContractRanges, setSelectedContractRanges] = useState<string[]>([]);
   const [loading, setLoading] = useState(false);
 
   const handleIndustryToggle = (industry: string) => {
@@ -58,13 +51,6 @@ export default function OnboardingPreferences() {
     setSelectedProducts(prev => prev.filter(p => p !== product));
   };
 
-  const handleContractRangeToggle = (range: string) => {
-    setSelectedContractRanges(prev => 
-      prev.includes(range) 
-        ? prev.filter(r => r !== range)
-        : [...prev, range]
-    );
-  };
 
   const handleContinue = async () => {
     if (selectedIndustries.length === 0) {
@@ -75,10 +61,6 @@ export default function OnboardingPreferences() {
       alert("Please select at least one product/service");
       return;
     }
-    if (selectedContractRanges.length === 0) {
-      alert("Please select at least one contract value range");
-      return;
-    }
 
     setLoading(true);
     
@@ -87,7 +69,6 @@ export default function OnboardingPreferences() {
       console.log('Saving preferences for user:', user?.id);
       console.log('Selected industries:', selectedIndustries);
       console.log('Selected products:', selectedProducts);
-      console.log('Selected contract ranges:', selectedContractRanges);
       
       const { error } = await supabase
         .from('profiles')
@@ -96,8 +77,6 @@ export default function OnboardingPreferences() {
           email: user?.email,
           preferred_categories: selectedIndustries,
           business_type: selectedProducts.join(', '),
-          min_contract_value: getContractValueRanges(selectedContractRanges).min,
-          max_contract_value: getContractValueRanges(selectedContractRanges).max,
           updated_at: new Date().toISOString()
         }, {
           onConflict: 'id'
@@ -121,32 +100,6 @@ export default function OnboardingPreferences() {
     }
   };
 
-  const getContractValueRanges = (ranges: string[]) => {
-    if (ranges.length === 0) {
-      return { min: 0, max: 1000000 };
-    }
-
-    const rangeValues = ranges.map(range => {
-    switch (range) {
-      case 'small':
-        return { min: 0, max: 1000000 };
-      case 'medium':
-        return { min: 1000000, max: 10000000 };
-      case 'large':
-        return { min: 10000000, max: 100000000 };
-      case 'enterprise':
-        return { min: 100000000, max: 999999999999 };
-      default:
-        return { min: 0, max: 1000000 };
-    }
-    });
-
-    // Calculate overall min and max from all selected ranges
-    const minValue = Math.min(...rangeValues.map(r => r.min));
-    const maxValue = Math.max(...rangeValues.map(r => r.max));
-
-    return { min: minValue, max: maxValue };
-  };
 
   const handleBack = () => {
     router.push('/onboarding/welcome');
@@ -404,53 +357,6 @@ export default function OnboardingPreferences() {
               )}
             </div>
 
-            {/* Contract Value Range */}
-            <div>
-              <h2 className="text-xl font-semibold text-slate-900 mb-4">
-                What contract value ranges are you targeting?
-              </h2>
-              
-              {/* Selected Ranges */}
-              {selectedContractRanges.length > 0 && (
-                <div className="mb-4">
-                  <div className="flex flex-wrap gap-2">
-                    {selectedContractRanges.map((range) => {
-                      const rangeInfo = contractRanges.find(r => r.value === range);
-                      return (
-                        <div
-                          key={range}
-                          className="flex items-center bg-blue-100 text-blue-700 px-3 py-1 rounded-full text-sm"
-                        >
-                          {rangeInfo?.label}
-                          <button
-                            onClick={() => handleContractRangeToggle(range)}
-                            className="ml-2 text-blue-500 hover:text-blue-700"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
-                {contractRanges.map((range) => (
-                  <button
-                    key={range.value}
-                    onClick={() => handleContractRangeToggle(range.value)}
-                    className={`p-4 rounded-lg border text-left transition-colors ${
-                      selectedContractRanges.includes(range.value)
-                        ? 'border-blue-500 bg-blue-50 text-blue-700'
-                        : 'border-slate-200 hover:border-slate-300'
-                    }`}
-                  >
-                    <div className="font-medium">{range.label}</div>
-                  </button>
-                ))}
-              </div>
-            </div>
           </div>
 
           {/* Navigation */}
