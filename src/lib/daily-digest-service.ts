@@ -58,7 +58,7 @@ export class DailyDigestService {
   }
 
   /**
-   * Get users who have daily digest enabled
+   * Get users who have daily digest enabled (MANDATORY for all users)
    */
   private static async getUsersWithDailyDigest(): Promise<UserDigestData[]> {
     const { data: users, error } = await supabase
@@ -74,7 +74,7 @@ export class DailyDigestService {
           contract_type_preferences
         )
       `)
-      .eq('daily_digest_enabled', true);
+      .eq('daily_digest_enabled', true); // MANDATORY - All users must have this enabled
 
     if (error) {
       console.error('Error fetching users with daily digest:', error);

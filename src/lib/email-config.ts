@@ -8,10 +8,10 @@ export interface EmailServiceConfig {
   fromName: string;
 }
 
-// Default configuration - you can change this based on your preferred email service
+// Default configuration - using Resend for email sending
 export const emailConfig: EmailServiceConfig = {
-  provider: 'supabase', // Change to your preferred provider
-  apiKey: process.env.EMAIL_API_KEY || '',
+  provider: 'resend', // Using Resend for email sending
+  apiKey: process.env.RESEND_API_KEY || '',
   fromEmail: process.env.FROM_EMAIL || 'notifications@bidflow.com',
   fromName: process.env.FROM_NAME || 'BidFlow Notifications'
 };
@@ -47,9 +47,35 @@ export class EmailServiceProvider {
   }
 
   private static async sendWithResend(config: EmailServiceConfig, emailData: any): Promise<boolean> {
-    // TODO: Implement Resend integration
-    console.log('Resend email service not implemented yet');
-    return false;
+    try {
+      const response = await fetch('https://api.resend.com/emails', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${config.apiKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          from: `${config.fromName} <${config.fromEmail}>`,
+          to: [emailData.to],
+          subject: emailData.subject,
+          html: emailData.html,
+          text: emailData.text,
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        console.error('Resend API error:', errorData);
+        return false;
+      }
+
+      const result = await response.json();
+      console.log('Email sent successfully via Resend:', result.id);
+      return true;
+    } catch (error) {
+      console.error('Error sending email via Resend:', error);
+      return false;
+    }
   }
 
   private static async sendWithSendGrid(config: EmailServiceConfig, emailData: any): Promise<boolean> {

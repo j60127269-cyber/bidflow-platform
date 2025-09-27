@@ -21,6 +21,7 @@ export interface Notification {
 export interface UserNotificationPreferences {
   new_contract_notifications: boolean;
   deadline_reminders: boolean;
+  daily_digest_enabled: boolean;
   email_enabled: boolean;
   in_app_enabled: boolean;
   whatsapp_enabled: boolean;
@@ -83,6 +84,7 @@ export class NotificationService {
         return {
           new_contract_notifications: true,
           deadline_reminders: true,
+          daily_digest_enabled: true, // MANDATORY - Always enabled
           email_enabled: true,
           in_app_enabled: true,
           whatsapp_enabled: false
