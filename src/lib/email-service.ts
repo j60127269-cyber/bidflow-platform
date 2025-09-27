@@ -285,6 +285,174 @@ Manage your notification preferences: ${process.env.NEXT_PUBLIC_APP_URL}/dashboa
   }
 
   /**
+   * Generate daily digest email with multiple opportunities
+   */
+  static generateDailyDigestEmail(opportunities: any[], userEmail: string, totalMatches: number): EmailData {
+    const today = new Date().toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+    
+    const subject = `${opportunities.length} New Bid Opportunities for You Today!`;
+    
+    const opportunitiesHtml = opportunities.map((opp, index) => `
+      <div style="background: #ffffff; border: 1px solid #e9ecef; border-radius: 8px; padding: 20px; margin: 15px 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+        <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+          <div style="flex: 1;">
+            <h3 style="margin: 0 0 10px 0; color: #000000; font-size: 18px; line-height: 1.3;">
+              ${opp.title}
+            </h3>
+            <div style="display: flex; flex-wrap: wrap; gap: 10px; margin-bottom: 10px;">
+              ${opp.matching_keywords ? `
+                <span style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                  🔍 ${opp.matching_keywords}
+                </span>
+              ` : ''}
+              ${opp.matching_location ? `
+                <span style="background: #fff3cd; color: #856404; padding: 4px 8px; border-radius: 4px; font-size: 12px; font-weight: 600;">
+                  📍 ${opp.matching_location}
+                </span>
+              ` : ''}
+            </div>
+          </div>
+          <div style="text-align: right;">
+            <div style="display: flex; align-items: center; margin-bottom: 5px;">
+              <span style="color: #000000; font-size: 12px; margin-right: 5px;">Match:</span>
+              <div style="display: flex; gap: 2px;">
+                ${Array.from({length: 5}, (_, i) => `
+                  <div style="width: 8px; height: 8px; background: ${i < (opp.match_score || 5) ? '#28a745' : '#e9ecef'}; border-radius: 1px;"></div>
+                `).join('')}
+              </div>
+            </div>
+            <div style="color: #007bff; font-size: 12px; font-weight: 600;">
+              ${opp.days_remaining || 'N/A'} days left
+            </div>
+          </div>
+        </div>
+        
+        <div style="display: flex; justify-content: space-between; align-items: center; padding-top: 15px; border-top: 1px solid #e9ecef;">
+          <div style="display: flex; align-items: center; gap: 15px;">
+            <div style="display: flex; align-items: center; color: #000000; font-size: 14px;">
+              <span style="margin-right: 5px;">📅</span>
+              <span>Deadline: ${opp.submission_deadline ? new Date(opp.submission_deadline).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+              }) : 'Not specified'}</span>
+            </div>
+            <div style="display: flex; align-items: center; color: #000000; font-size: 14px;">
+              <span style="margin-right: 5px;">🏢</span>
+              <span>${opp.procuring_entity}</span>
+            </div>
+          </div>
+          <div style="display: flex; gap: 10px;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/contracts/${opp.id}" 
+               style="background: #007bff; color: white; padding: 8px 16px; text-decoration: none; border-radius: 4px; font-size: 12px; font-weight: 600;">
+              View Details
+            </a>
+            <button style="background: #f8f9fa; color: #000000; padding: 8px 16px; border: 1px solid #e9ecef; border-radius: 4px; font-size: 12px; font-weight: 600; cursor: pointer;">
+              📋 Track
+            </button>
+          </div>
+        </div>
+      </div>
+    `).join('');
+
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>Daily Bid Opportunities</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
+          <div style="background: #007bff; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">📋 Daily Bid Opportunities</h1>
+            <p style="color: white; margin: 10px 0 0 0; font-size: 16px;">Your matched opportunities for ${today}</p>
+          </div>
+          
+          <div style="background: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef;">
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e9ecef;">
+              <h2 style="color: #000000; margin: 0 0 10px 0; font-size: 20px;">
+                Below are your top <strong>${opportunities.length}</strong> out of <strong>${totalMatches}</strong> matched bid opportunities for ${today}
+              </h2>
+              <p style="color: #000000; margin: 0; font-size: 16px;">
+                <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="color: #007bff; text-decoration: none; font-weight: 600;">LOG IN</a> to view all other matching opportunities
+              </p>
+            </div>
+            
+            ${opportunitiesHtml}
+            
+            <div style="text-align: center; margin: 40px 0;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
+                 style="background: #000000; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;">
+                View All Opportunities
+              </a>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e9ecef;">
+              <h3 style="color: #007bff; margin-top: 0;">💡 Pro Tips</h3>
+              <ul style="color: #000000; margin: 0; padding-left: 20px;">
+                <li>Review contract requirements carefully before bidding</li>
+                <li>Set up deadline reminders for contracts you're interested in</li>
+                <li>Use the favorites feature to track important opportunities</li>
+                <li>Check back daily for new matches based on your preferences</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; padding: 20px; background: #ffffff; border-radius: 8px; border: 1px solid #e9ecef;">
+            <p style="color: #000000; margin: 0; font-size: 14px;">
+              This daily digest was sent because you have enabled daily opportunity notifications in your preferences.
+              <br>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/notifications/settings" style="color: #007bff;">Manage your notification preferences</a>
+            </p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const text = `
+Daily Bid Opportunities - ${today}
+
+Below are your top ${opportunities.length} out of ${totalMatches} matched bid opportunities for ${today}.
+
+${opportunities.map((opp, index) => `
+${index + 1}. ${opp.title}
+   Agency: ${opp.procuring_entity}
+   Deadline: ${opp.submission_deadline ? new Date(opp.submission_deadline).toLocaleDateString() : 'Not specified'}
+   Match Score: ${opp.match_score || 5}/5
+   Days Remaining: ${opp.days_remaining || 'N/A'}
+   Keywords: ${opp.matching_keywords || 'N/A'}
+   Location: ${opp.matching_location || 'N/A'}
+   
+   View Details: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/contracts/${opp.id}
+`).join('\n')}
+
+View All Opportunities: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard
+
+Pro Tips:
+- Review contract requirements carefully before bidding
+- Set up deadline reminders for contracts you're interested in
+- Use the favorites feature to track important opportunities
+- Check back daily for new matches based on your preferences
+
+This daily digest was sent because you have enabled daily opportunity notifications in your preferences.
+Manage your notification preferences: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/notifications/settings
+    `;
+
+    return {
+      to: userEmail,
+      subject,
+      html,
+      text
+    };
+  }
+
+  /**
    * Format amount with K, M, B suffixes
    */
   private static formatAmount(amount: number): string {

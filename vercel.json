@@ -1,11 +1,16 @@
 {
-  "buildCommand": "npm run build",
-  "devCommand": "npm run dev",
-  "installCommand": "npm install",
-  "framework": "nextjs",
-  "functions": {
-    "app/**/*.tsx": {
-      "maxDuration": 30
+  "crons": [
+    {
+      "path": "/api/daily-digest/process",
+      "schedule": "0 5 * * *"
+    },
+    {
+      "path": "/api/notifications/process",
+      "schedule": "0 6 * * *"
+    },
+    {
+      "path": "/api/contracts/match",
+      "schedule": "0 */6 * * *"
     }
-  }
+  ]
 }
