@@ -6,12 +6,12 @@ export async function POST(request: NextRequest) {
   try {
     console.log('Processing new contracts for immediate notifications...');
     
-    // Get recently published contracts (last 24 hours)
+    // Get recently published contracts (last 7 days to catch more real contracts)
     const { data: contracts, error: contractsError } = await supabase
       .from('contracts')
       .select('*')
       .eq('publish_status', 'published')
-      .gte('published_at', new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString())
+      .gte('published_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
       .order('published_at', { ascending: false });
 
     if (contractsError) {
