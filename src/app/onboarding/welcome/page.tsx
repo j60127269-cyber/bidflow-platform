@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { ArrowRight, TrendingUp, Users, Award, Star, CheckCircle, Zap, Target, Clock, DollarSign } from "lucide-react";
+import { ArrowRight, TrendingUp, Users, Award, Star, CheckCircle, Search, Bell, BarChart3, Target, Clock, DollarSign } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { onboardingService } from "@/lib/onboardingService";
 
@@ -127,7 +127,7 @@ export default function OnboardingWelcome() {
                 <div className="grid md:grid-cols-3 gap-8 items-center">
                   <div className="text-center">
                     <div className="w-16 h-16 bg-blue-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                      <Target className="w-8 h-8 text-blue-600" />
+                      <Search className="w-8 h-8 text-blue-600" />
                     </div>
                     <h3 className="font-semibold text-slate-900 mb-2">Find Opportunities</h3>
                     <p className="text-slate-600 text-sm">AI-powered contract discovery</p>
@@ -141,7 +141,7 @@ export default function OnboardingWelcome() {
                   </div>
                   <div className="text-center">
                     <div className="w-16 h-16 bg-purple-100 rounded-2xl flex items-center justify-center mx-auto mb-4 shadow-lg">
-                      <DollarSign className="w-8 h-8 text-purple-600" />
+                      <Award className="w-8 h-8 text-purple-600" />
                     </div>
                     <h3 className="font-semibold text-slate-900 mb-2">Grow Revenue</h3>
                     <p className="text-slate-600 text-sm">40% average win rate increase</p>
@@ -191,7 +191,7 @@ export default function OnboardingWelcome() {
               <div className="space-y-6">
                 <div className="flex items-start group hover:bg-slate-50 p-4 rounded-xl transition-all duration-300">
                   <div className="w-12 h-12 bg-gradient-to-r from-blue-500 to-blue-600 rounded-xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <Zap className="w-6 h-6 text-white" />
+                    <Search className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-2 text-lg">Find Contracts 10x Faster</h3>
@@ -201,7 +201,7 @@ export default function OnboardingWelcome() {
                 
                 <div className="flex items-start group hover:bg-slate-50 p-4 rounded-xl transition-all duration-300">
                   <div className="w-12 h-12 bg-gradient-to-r from-green-500 to-green-600 rounded-xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <Target className="w-6 h-6 text-white" />
+                    <TrendingUp className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-2 text-lg">Beat the Competition</h3>
@@ -211,7 +211,7 @@ export default function OnboardingWelcome() {
                 
                 <div className="flex items-start group hover:bg-slate-50 p-4 rounded-xl transition-all duration-300">
                   <div className="w-12 h-12 bg-gradient-to-r from-purple-500 to-purple-600 rounded-xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <Clock className="w-6 h-6 text-white" />
+                    <Bell className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-2 text-lg">Never Miss Deadlines</h3>
@@ -223,7 +223,7 @@ export default function OnboardingWelcome() {
               <div className="space-y-6">
                 <div className="flex items-start group hover:bg-slate-50 p-4 rounded-xl transition-all duration-300">
                   <div className="w-12 h-12 bg-gradient-to-r from-indigo-500 to-indigo-600 rounded-xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <TrendingUp className="w-6 h-6 text-white" />
+                    <BarChart3 className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-2 text-lg">Track Your Success</h3>
@@ -243,7 +243,7 @@ export default function OnboardingWelcome() {
                 
                 <div className="flex items-start group hover:bg-slate-50 p-4 rounded-xl transition-all duration-300">
                   <div className="w-12 h-12 bg-gradient-to-r from-orange-500 to-orange-600 rounded-xl flex items-center justify-center mr-4 shadow-lg group-hover:scale-110 transition-transform duration-300">
-                    <DollarSign className="w-6 h-6 text-white" />
+                    <Award className="w-6 h-6 text-white" />
                   </div>
                   <div>
                     <h3 className="font-semibold text-slate-900 mb-2 text-lg">Mobile Money Ready</h3>

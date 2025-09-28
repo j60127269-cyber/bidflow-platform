@@ -8,7 +8,7 @@ export default function Home() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-blue-50">
+    <div className="min-h-screen bg-white">
       {/* Navigation */}
       <nav className="bg-white/80 backdrop-blur-md border-b border-slate-200 sticky top-0 z-50">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
@@ -79,7 +79,7 @@ export default function Home() {
       )}
 
       {/* Hero Section */}
-      <section className="relative overflow-hidden">
+      <section className="relative overflow-hidden bg-white">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 sm:py-24">
           <div className="text-center">
             <div className="mb-8">
@@ -380,42 +380,42 @@ export default function Home() {
       </section>
 
       {/* Footer */}
-      <footer className="bg-slate-900 text-white py-12">
+      <footer className="bg-black text-white py-12">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
           <div className="grid md:grid-cols-4 gap-8">
             <div>
-              <h3 className="text-2xl font-bold text-blue-400 mb-4">BidCloud</h3>
-              <p className="text-slate-400">
+              <h3 className="text-2xl font-bold text-white mb-4">BidCloud</h3>
+              <p className="text-white">
                 Uganda's premier contract intelligence platform helping businesses 
-                win more contracts through data-driven insights.
+                win more contracts through data driven insights.
               </p>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Product</h4>
-              <ul className="space-y-2 text-slate-400">
-                <li><a href="#" className="hover:text-white transition-colors">Features</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Pricing</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">API</a></li>
+              <h4 className="font-semibold mb-4 text-white">Product</h4>
+              <ul className="space-y-2 text-white">
+                <li><a href="#" className="hover:text-gray-300 transition-colors">Features</a></li>
+                <li><a href="#" className="hover:text-gray-300 transition-colors">Pricing</a></li>
+                <li><a href="#" className="hover:text-gray-300 transition-colors">API</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Company</h4>
-              <ul className="space-y-2 text-slate-400">
-                <li><a href="#" className="hover:text-white transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Contact</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Careers</a></li>
+              <h4 className="font-semibold mb-4 text-white">Company</h4>
+              <ul className="space-y-2 text-white">
+                <li><a href="#" className="hover:text-gray-300 transition-colors">About</a></li>
+                <li><a href="#" className="hover:text-gray-300 transition-colors">Contact</a></li>
+                <li><a href="#" className="hover:text-gray-300 transition-colors">Careers</a></li>
               </ul>
             </div>
             <div>
-              <h4 className="font-semibold mb-4">Support</h4>
-              <ul className="space-y-2 text-slate-400">
-                <li><a href="#" className="hover:text-white transition-colors">Help Center</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Documentation</a></li>
-                <li><a href="#" className="hover:text-white transition-colors">Status</a></li>
+              <h4 className="font-semibold mb-4 text-white">Support</h4>
+              <ul className="space-y-2 text-white">
+                <li><a href="#" className="hover:text-gray-300 transition-colors">Help Center</a></li>
+                <li><a href="#" className="hover:text-gray-300 transition-colors">Documentation</a></li>
+                <li><a href="#" className="hover:text-gray-300 transition-colors">Status</a></li>
               </ul>
             </div>
           </div>
-          <div className="border-t border-slate-800 mt-8 pt-8 text-center text-slate-400">
+          <div className="border-t border-gray-800 mt-8 pt-8 text-center text-white">
             <p>&copy; 2025 BidCloud. All rights reserved.</p>
           </div>
         </div>
