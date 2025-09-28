@@ -62,32 +62,28 @@ export class DailyDigestService {
    */
   private static async getUsersWithDailyDigest(): Promise<UserDigestData[]> {
     const { data: users, error } = await supabase
-      .from('user_notification_preferences')
+      .from('profiles')
       .select(`
-        user_id,
-        daily_digest_enabled,
-        user_profiles!inner(
-          id,
-          email,
-          industry_preferences,
-          location_preferences,
-          contract_type_preferences
-        )
+        id,
+        email,
+        industry_preferences,
+        location_preferences,
+        contract_type_preferences
       `)
-      .eq('daily_digest_enabled', true); // MANDATORY - All users must have this enabled
+      .not('email', 'is', null); // Get all users with email addresses
 
     if (error) {
-      console.error('Error fetching users with daily digest:', error);
+      console.error('Error fetching users for daily digest:', error);
       throw error;
     }
 
     return users.map(user => ({
-      id: user.user_id,
-      email: user.user_profiles.email,
+      id: user.id,
+      email: user.email,
       preferences: {
-        industries: user.user_profiles.industry_preferences || [],
-        locations: user.user_profiles.location_preferences || [],
-        contract_types: user.user_profiles.contract_type_preferences || []
+        industries: user.industry_preferences || [],
+        locations: user.location_preferences || [],
+        contract_types: user.contract_type_preferences || []
       },
       opportunities: [],
       total_matches: 0
@@ -134,9 +130,7 @@ export class DailyDigestService {
         title,
         procuring_entity,
         submission_deadline,
-        category,
-        industry,
-        location
+        category
       `)
       .gte('submission_deadline', today.toISOString())
       .lte('submission_deadline', thirtyDaysFromNow.toISOString())
@@ -144,14 +138,23 @@ export class DailyDigestService {
       .order('submission_deadline', { ascending: true })
       .limit(10);
 
-    // Apply industry filter if user has preferences
+    // Apply industry filter if user has preferences (using category field)
     if (user.preferences.industries.length > 0) {
-      query = query.in('industry', user.preferences.industries);
+      // Use flexible matching for categories
+      const industryConditions = user.preferences.industries.map(industry => {
+        const keywords = this.getIndustryKeywords(industry);
+        return keywords.map(keyword => `category.ilike.%${keyword}%`).join(',');
+      });
+      // For now, just get all contracts and filter in code
     }
 
-    // Apply location filter if user has preferences
+    // Apply location filter if user has preferences (using procuring_entity)
     if (user.preferences.locations.length > 0) {
-      query = query.in('location', user.preferences.locations);
+      // Use flexible matching for locations in procuring_entity
+      const locationConditions = user.preferences.locations.map(location => {
+        return `procuring_entity.ilike.%${location}%`;
+      });
+      // For now, just get all contracts and filter in code
     }
 
     const { data: contracts, error } = await query;
@@ -165,8 +168,13 @@ export class DailyDigestService {
       return [];
     }
 
+    // Filter contracts based on user preferences
+    const filteredContracts = contracts.filter(contract => {
+      return this.matchesUserPreferences(contract, user.preferences);
+    });
+
     // Transform contracts to opportunities with matching data
-    return contracts.map(contract => {
+    return filteredContracts.map(contract => {
       const deadline = new Date(contract.submission_deadline);
       const daysRemaining = Math.ceil((deadline.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
       
@@ -191,30 +199,89 @@ export class DailyDigestService {
     const today = new Date();
     const thirtyDaysFromNow = new Date(today.getTime() + (30 * 24 * 60 * 60 * 1000));
 
-    let query = supabase
+    const { data: contracts, error } = await supabase
       .from('contracts')
-      .select('id', { count: 'exact' })
+      .select('id, category, procuring_entity')
       .gte('submission_deadline', today.toISOString())
       .lte('submission_deadline', thirtyDaysFromNow.toISOString())
       .eq('publish_status', 'published');
-
-    // Apply same filters as opportunities
-    if (user.preferences.industries.length > 0) {
-      query = query.in('industry', user.preferences.industries);
-    }
-
-    if (user.preferences.locations.length > 0) {
-      query = query.in('location', user.preferences.locations);
-    }
-
-    const { count, error } = await query;
 
     if (error) {
       console.error('Error getting total matches:', error);
       return 0;
     }
 
-    return count || 0;
+    if (!contracts) return 0;
+
+    // Filter contracts based on user preferences
+    const filteredContracts = contracts.filter(contract => {
+      return this.matchesUserPreferences(contract, user.preferences);
+    });
+
+    return filteredContracts.length;
+  }
+
+  /**
+   * Check if contract matches user preferences
+   */
+  private static matchesUserPreferences(contract: any, preferences: any): boolean {
+    // If no preferences set, match all contracts
+    if (preferences.industries.length === 0 && preferences.locations.length === 0 && preferences.contract_types.length === 0) {
+      return true;
+    }
+
+    let hasMatch = false;
+
+    // Check industry match (using category field)
+    if (preferences.industries.length > 0) {
+      for (const industry of preferences.industries) {
+        const keywords = this.getIndustryKeywords(industry);
+        for (const keyword of keywords) {
+          if (contract.category.toLowerCase().includes(keyword.toLowerCase())) {
+            hasMatch = true;
+            break;
+          }
+        }
+        if (hasMatch) break;
+      }
+    }
+
+    // Check location match (using procuring_entity field)
+    if (preferences.locations.length > 0) {
+      for (const location of preferences.locations) {
+        if (contract.procuring_entity.toLowerCase().includes(location.toLowerCase())) {
+          hasMatch = true;
+          break;
+        }
+      }
+    }
+
+    // Check contract type match (using category field)
+    if (preferences.contract_types.length > 0) {
+      for (const contractType of preferences.contract_types) {
+        if (contract.category.toLowerCase().includes(contractType.toLowerCase())) {
+          hasMatch = true;
+          break;
+        }
+      }
+    }
+
+    return hasMatch;
+  }
+
+  /**
+   * Get industry keywords for flexible matching
+   */
+  private static getIndustryKeywords(industry: string): string[] {
+    const keywordMap: { [key: string]: string[] } = {
+      'Information Technology': ['ict', 'computer', 'software', 'technology', 'it', 'digital'],
+      'Construction': ['construction', 'building', 'infrastructure', 'civil'],
+      'Healthcare': ['health', 'medical', 'hospital', 'clinic'],
+      'Education': ['education', 'school', 'university', 'learning'],
+      'Transportation': ['transport', 'logistics', 'shipping', 'delivery']
+    };
+    
+    return keywordMap[industry] || [industry.toLowerCase()];
   }
 
   /**
@@ -223,12 +290,26 @@ export class DailyDigestService {
   private static getMatchingKeywords(contract: any, preferences: any): string {
     const matches = [];
     
-    if (preferences.industries.includes(contract.industry)) {
-      matches.push(contract.industry);
+    // Check industry matches
+    if (preferences.industries.length > 0) {
+      for (const industry of preferences.industries) {
+        const keywords = this.getIndustryKeywords(industry);
+        for (const keyword of keywords) {
+          if (contract.category.toLowerCase().includes(keyword.toLowerCase())) {
+            matches.push(industry);
+            break;
+          }
+        }
+      }
     }
     
-    if (preferences.contract_types.includes(contract.category)) {
-      matches.push(contract.category);
+    // Check contract type matches
+    if (preferences.contract_types.length > 0) {
+      for (const contractType of preferences.contract_types) {
+        if (contract.category.toLowerCase().includes(contractType.toLowerCase())) {
+          matches.push(contractType);
+        }
+      }
     }
 
     return matches.join(', ');
@@ -238,8 +319,12 @@ export class DailyDigestService {
    * Get matching location for display
    */
   private static getMatchingLocation(contract: any, preferences: any): string {
-    if (preferences.locations.includes(contract.location)) {
-      return contract.location;
+    if (preferences.locations.length > 0) {
+      for (const location of preferences.locations) {
+        if (contract.procuring_entity.toLowerCase().includes(location.toLowerCase())) {
+          return location;
+        }
+      }
     }
     return '';
   }
@@ -254,24 +339,36 @@ export class DailyDigestService {
     // Industry match
     if (preferences.industries.length > 0) {
       totalChecks++;
-      if (preferences.industries.includes(contract.industry)) {
-        score++;
+      for (const industry of preferences.industries) {
+        const keywords = this.getIndustryKeywords(industry);
+        for (const keyword of keywords) {
+          if (contract.category.toLowerCase().includes(keyword.toLowerCase())) {
+            score++;
+            break;
+          }
+        }
       }
     }
 
     // Location match
     if (preferences.locations.length > 0) {
       totalChecks++;
-      if (preferences.locations.includes(contract.location)) {
-        score++;
+      for (const location of preferences.locations) {
+        if (contract.procuring_entity.toLowerCase().includes(location.toLowerCase())) {
+          score++;
+          break;
+        }
       }
     }
 
     // Contract type match
     if (preferences.contract_types.length > 0) {
       totalChecks++;
-      if (preferences.contract_types.includes(contract.category)) {
-        score++;
+      for (const contractType of preferences.contract_types) {
+        if (contract.category.toLowerCase().includes(contractType.toLowerCase())) {
+          score++;
+          break;
+        }
       }
     }
 

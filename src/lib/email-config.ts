@@ -12,8 +12,8 @@ export interface EmailServiceConfig {
 export const emailConfig: EmailServiceConfig = {
   provider: 'resend', // Using Resend for email sending
   apiKey: process.env.RESEND_API_KEY || '',
-  fromEmail: process.env.FROM_EMAIL || 'notifications@bidflow.com',
-  fromName: process.env.FROM_NAME || 'BidFlow Notifications'
+  fromEmail: process.env.FROM_EMAIL || 'onboarding@resend.dev', // Use Resend's verified domain
+  fromName: process.env.FROM_NAME || 'BidCloud Notifications'
 };
 
 // Email service implementations

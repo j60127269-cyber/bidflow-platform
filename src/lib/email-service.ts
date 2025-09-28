@@ -366,49 +366,86 @@ Manage your notification preferences: ${process.env.NEXT_PUBLIC_APP_URL}/dashboa
         <head>
           <meta charset="utf-8">
           <meta name="viewport" content="width=device-width, initial-scale=1.0">
-          <title>Daily Bid Opportunities</title>
+          <title>Just For You - BidFlow</title>
         </head>
-        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px;">
-          <div style="background: #007bff; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
-            <h1 style="color: white; margin: 0; font-size: 28px;">📋 Daily Bid Opportunities</h1>
-            <p style="color: white; margin: 10px 0 0 0; font-size: 16px;">Your matched opportunities for ${today}</p>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 800px; margin: 0 auto; padding: 20px; background-color: #ffffff;">
+          
+          <!-- Header -->
+          <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="color: #000000; margin: 0; font-size: 32px; font-weight: bold;">BidFlow</h1>
+            <h2 style="color: #000000; margin: 20px 0 10px 0; font-size: 24px; font-weight: normal;">Just For You</h2>
+            <p style="color: #666; margin: 0; font-size: 16px;">
+              We've found more exceptional opportunities that match your interests. 
+              You can review all recommendations in <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="color: #007bff; text-decoration: none;">your account</a>.
+            </p>
           </div>
           
-          <div style="background: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef;">
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin-bottom: 30px; border: 1px solid #e9ecef;">
-              <h2 style="color: #000000; margin: 0 0 10px 0; font-size: 20px;">
-                Below are your top <strong>${opportunities.length}</strong> out of <strong>${totalMatches}</strong> matched bid opportunities for ${today}
-              </h2>
-              <p style="color: #000000; margin: 0; font-size: 16px;">
-                <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" style="color: #007bff; text-decoration: none; font-weight: 600;">LOG IN</a> to view all other matching opportunities
-              </p>
-            </div>
-            
-            ${opportunitiesHtml}
-            
-            <div style="text-align: center; margin: 40px 0;">
-              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
-                 style="background: #000000; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;">
-                View All Opportunities
-              </a>
-            </div>
-            
-            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e9ecef;">
-              <h3 style="color: #007bff; margin-top: 0;">💡 Pro Tips</h3>
-              <ul style="color: #000000; margin: 0; padding-left: 20px;">
-                <li>Review contract requirements carefully before bidding</li>
-                <li>Set up deadline reminders for contracts you're interested in</li>
-                <li>Use the favorites feature to track important opportunities</li>
-                <li>Check back daily for new matches based on your preferences</li>
-              </ul>
-            </div>
+          <!-- Opportunities Grid -->
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin: 30px 0;">
+            ${opportunities.map((opp, index) => `
+              <div style="background: #ffffff; border: 1px solid #e9ecef; border-radius: 8px; overflow: hidden; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                <!-- Contract Image Placeholder -->
+                <div style="height: 200px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 18px; font-weight: bold;">
+                  📋 ${opp.category}
+                </div>
+                
+                <!-- Contract Details -->
+                <div style="padding: 20px;">
+                  <div style="margin-bottom: 10px;">
+                    <span style="color: #666; font-size: 14px;">${opp.procuring_entity}</span>
+                  </div>
+                  
+                  <h3 style="margin: 0 0 10px 0; color: #000000; font-size: 18px; line-height: 1.3;">
+                    <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/contracts/${opp.id}" style="color: #007bff; text-decoration: none;">
+                      ${opp.title}
+                    </a>
+                  </h3>
+                  
+                  <div style="display: flex; align-items: center; margin-bottom: 15px;">
+                    <span style="color: #000000; font-size: 20px; font-weight: bold;">UGX ${opp.estimated_value_min ? (opp.estimated_value_min / 1000000).toFixed(1) + 'M' : 'N/A'}</span>
+                    ${opp.estimated_value_max ? `<span style="color: #666; margin-left: 5px;">- ${(opp.estimated_value_max / 1000000).toFixed(1)}M</span>` : ''}
+                  </div>
+                  
+                  <div style="color: #666; font-size: 14px; margin-bottom: 15px;">
+                    📅 Deadline: ${opp.submission_deadline ? new Date(opp.submission_deadline).toLocaleDateString('en-US', {
+                      month: 'short',
+                      day: 'numeric',
+                      year: 'numeric'
+                    }) : 'Not specified'}
+                  </div>
+                  
+                  <div style="display: flex; justify-content: space-between; align-items: center;">
+                    <div style="display: flex; align-items: center;">
+                      <span style="color: #000000; font-size: 12px; margin-right: 5px;">Match:</span>
+                      <div style="display: flex; gap: 2px;">
+                        ${Array.from({length: 5}, (_, i) => `
+                          <div style="width: 8px; height: 8px; background: ${i < (opp.match_score || 5) ? '#28a745' : '#e9ecef'}; border-radius: 1px;"></div>
+                        `).join('')}
+                      </div>
+                    </div>
+                    <div style="color: #007bff; font-size: 12px; font-weight: 600;">
+                      ${opp.days_remaining || 'N/A'} days left
+                    </div>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
           </div>
           
-          <div style="text-align: center; margin-top: 30px; padding: 20px; background: #ffffff; border-radius: 8px; border: 1px solid #e9ecef;">
-            <p style="color: #000000; margin: 0; font-size: 14px;">
-              This daily digest was sent because you have enabled daily opportunity notifications in your preferences.
+          <!-- Call to Action -->
+          <div style="text-align: center; margin: 40px 0;">
+            <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard" 
+               style="background: #007bff; color: white; padding: 15px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block; font-size: 16px;">
+              EXPLORE MORE →
+            </a>
+          </div>
+          
+          <!-- Footer -->
+          <div style="text-align: center; margin-top: 40px; padding: 20px; border-top: 1px solid #e9ecef;">
+            <p style="color: #666; margin: 0; font-size: 14px;">
+              This personalized digest was sent because you have industry preferences set in your account.
               <br>
-              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/notifications/settings" style="color: #007bff;">Manage your notification preferences</a>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/notifications/settings" style="color: #007bff;">Manage your preferences</a>
             </p>
           </div>
         </body>
@@ -441,6 +478,114 @@ Pro Tips:
 - Check back daily for new matches based on your preferences
 
 This daily digest was sent because you have enabled daily opportunity notifications in your preferences.
+Manage your notification preferences: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/notifications/settings
+    `;
+
+    return {
+      to: userEmail,
+      subject,
+      html,
+      text
+    };
+  }
+
+  /**
+   * Generate immediate notification email for new contract matches
+   */
+  static generateImmediateNotificationEmail(contract: any, userEmail: string): EmailData {
+    const subject = `New Contract Match: ${contract.title}`;
+    
+    const html = `
+      <!DOCTYPE html>
+      <html>
+        <head>
+          <meta charset="utf-8">
+          <meta name="viewport" content="width=device-width, initial-scale=1.0">
+          <title>New Contract Match</title>
+        </head>
+        <body style="font-family: Arial, sans-serif; line-height: 1.6; color: #333; max-width: 600px; margin: 0 auto; padding: 20px;">
+          <div style="background: #007bff; padding: 30px; text-align: center; border-radius: 10px 10px 0 0;">
+            <h1 style="color: white; margin: 0; font-size: 28px;">🎯 New Contract Match!</h1>
+            <p style="color: white; margin: 10px 0 0 0; font-size: 16px;">A contract matching your preferences has been published</p>
+          </div>
+          
+          <div style="background: #ffffff; padding: 30px; border-radius: 0 0 10px 10px; border: 1px solid #e9ecef;">
+            <h2 style="color: #000000; margin-top: 0;">${contract.title}</h2>
+            
+            <div style="background: white; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e9ecef;">
+              <h3 style="color: #000000; margin-top: 0;">📋 Contract Details</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #000000;">Agency:</td>
+                  <td style="padding: 8px 0; color: #000000;">${contract.procuring_entity}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #000000;">Category:</td>
+                  <td style="padding: 8px 0; color: #000000;">${contract.category}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 8px 0; font-weight: bold; color: #000000;">Deadline:</td>
+                  <td style="padding: 8px 0; color: #000000;">${contract.submission_deadline ? new Date(contract.submission_deadline).toLocaleDateString('en-US', {
+                    weekday: 'long',
+                    year: 'numeric',
+                    month: 'long',
+                    day: 'numeric',
+                    hour: '2-digit',
+                    minute: '2-digit'
+                  }) : 'Not specified'}</td>
+                </tr>
+              </table>
+            </div>
+            
+            <div style="text-align: center; margin: 30px 0;">
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/contracts/${contract.id}" 
+                 style="background: #007bff; color: white; padding: 12px 30px; text-decoration: none; border-radius: 5px; font-weight: bold; display: inline-block;">
+                View Full Contract Details
+              </a>
+            </div>
+            
+            <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0; border: 1px solid #e9ecef;">
+              <h3 style="color: #007bff; margin-top: 0;">💡 Next Steps</h3>
+              <ul style="color: #000000; margin: 0; padding-left: 20px;">
+                <li>Review the full contract requirements</li>
+                <li>Prepare your bid documents</li>
+                <li>Submit your proposal before the deadline</li>
+                <li>Track the contract for updates</li>
+              </ul>
+            </div>
+          </div>
+          
+          <div style="text-align: center; margin-top: 30px; padding: 20px; background: #ffffff; border-radius: 8px; border: 1px solid #e9ecef;">
+            <p style="color: #000000; margin: 0; font-size: 14px;">
+              This notification was sent because this contract matches your industry preferences.
+              <br>
+              <a href="${process.env.NEXT_PUBLIC_APP_URL}/dashboard/notifications/settings" style="color: #007bff;">Manage your notification preferences</a>
+            </p>
+          </div>
+        </body>
+      </html>
+    `;
+
+    const text = `
+New Contract Match: ${contract.title}
+
+A new contract matching your preferences has been published:
+
+Contract Details:
+- Title: ${contract.title}
+- Agency: ${contract.procuring_entity}
+- Category: ${contract.category}
+- Deadline: ${contract.submission_deadline ? new Date(contract.submission_deadline).toLocaleDateString() : 'Not specified'}
+
+View the full contract details: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/contracts/${contract.id}
+
+Next Steps:
+- Review the full contract requirements
+- Prepare your bid documents
+- Submit your proposal before the deadline
+- Track the contract for updates
+
+This notification was sent because this contract matches your industry preferences.
 Manage your notification preferences: ${process.env.NEXT_PUBLIC_APP_URL}/dashboard/notifications/settings
     `;
 
