@@ -1,5 +1,6 @@
--- Enhanced Notification Queue System
--- This migration creates a comprehensive notification system with queue management
+-- Enhanced Notification Queue System (Immediate Notifications)
+-- This migration creates a comprehensive notification system with immediate processing
+-- Notifications are sent instantly when contracts are published
 
 -- 1. Create notification queue table with status tracking
 CREATE TABLE IF NOT EXISTS notification_queue (

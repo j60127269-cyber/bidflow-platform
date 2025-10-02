@@ -630,7 +630,39 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               contract.awarded_to && 
               contract.awarded_value) {
             await createWinnerBidder();
-      }
+          }
+
+          // If contract was just published, trigger immediate notifications
+          if (!wasPublished && isNowPublished) {
+            try {
+              console.log('🚀 Triggering immediate notifications for published contract...');
+              const notificationResponse = await fetch('/api/contracts/notify-on-publish', {
+                method: 'POST',
+                headers: {
+                  'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({ contractId: id })
+              });
+
+              if (notificationResponse.ok) {
+                const notificationResult = await notificationResponse.json();
+                console.log('✅ Notifications triggered successfully:', notificationResult);
+                
+                // Show success message to user
+                if (notificationResult.matchingUsers > 0) {
+                  alert(`Contract published successfully! 📧 Notifications sent to ${notificationResult.matchingUsers} users.`);
+                } else {
+                  alert('Contract published successfully! No matching users found for notifications.');
+                }
+              } else {
+                console.error('❌ Failed to trigger notifications:', await notificationResponse.text());
+                alert('Contract published successfully, but notifications failed to send. You can manually trigger them later.');
+              }
+            } catch (error) {
+              console.error('❌ Error triggering notifications:', error);
+              alert('Contract published successfully, but notifications failed to send. You can manually trigger them later.');
+            }
+          }
 
       alert('Contract updated successfully!');
       setHasUnsavedChanges(false);

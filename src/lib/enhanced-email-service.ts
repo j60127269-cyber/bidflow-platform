@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { Resend } from 'resend';
 
 interface EmailTemplate {
   subject: string;
@@ -13,6 +14,7 @@ export class EmailService {
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.SUPABASE_SERVICE_ROLE_KEY!
   );
+  private static resend = new Resend(process.env.RESEND_API_KEY);
 
   /**
    * Send email with retry logic
@@ -30,20 +32,16 @@ export class EmailService {
       try {
         console.log(`[EMAIL] Sending email to ${to} (attempt ${attempt + 1}/${this.MAX_RETRIES})`);
 
-        const emailData = {
-          to,
+        const { data, error } = await this.resend.emails.send({
+          from: process.env.RESEND_FROM_EMAIL || 'BidCloud <noreply@bidcloud.org>',
+          to: [to],
           subject,
-          html,
-          text
-        };
-
-        const { data, error } = await this.supabase.functions.invoke('send-email', {
-          body: emailData
+          html
         });
 
         if (error) throw error;
 
-        const success = data?.success || false;
+        const success = !!data?.id;
         
         if (success) {
           const deliveryTime = Date.now() - startTime;
@@ -51,7 +49,7 @@ export class EmailService {
           
           return {
             success: true,
-            messageId: `email_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
+            messageId: data?.id,
             retryCount: attempt,
             deliveryTime
           };

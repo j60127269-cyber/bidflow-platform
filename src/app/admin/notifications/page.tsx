@@ -177,27 +177,6 @@ export default function NotificationQueuePage() {
     }
   };
 
-  const handleProcessNow = async () => {
-    setActionLoading('process-now');
-    try {
-      const response = await fetch('/api/admin/notifications/process-now', {
-        method: 'POST',
-      });
-      const result = await response.json();
-      
-      if (result.success) {
-        alert(`Processed ${result.processed} notifications (${result.success} successful, ${result.failed} failed)`);
-        await fetchQueueItems();
-        await fetchStats();
-      } else {
-        alert(`Error: ${result.error}`);
-      }
-    } catch (error) {
-      alert(`Error: ${error}`);
-    } finally {
-      setActionLoading(null);
-    }
-  };
 
   const getStatusColor = (status: string) => {
     switch (status) {
@@ -299,14 +278,6 @@ export default function NotificationQueuePage() {
           </div>
           <div className="p-6">
             <div className="flex flex-wrap gap-4">
-              <button
-                onClick={handleProcessNow}
-                disabled={actionLoading === 'process-now'}
-                className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 disabled:opacity-50"
-              >
-                {actionLoading === 'process-now' ? 'Processing...' : 'Process Now'}
-              </button>
-              
               <button
                 onClick={handleBulkRetry}
                 disabled={actionLoading === 'bulk-retry'}
