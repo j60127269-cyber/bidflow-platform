@@ -59,44 +59,14 @@ export async function POST(request: NextRequest) {
           continue;
         }
 
-        // Filter users based on their preferences
+        // Filter users based on their preferences using exact matching
         const matchingUsers = users?.filter(user => {
-          // Helper function to check if any preference matches the contract category
-          const checkMatch = (preferences: string[] | null | undefined) => {
-            if (!preferences || preferences.length === 0) return true; // No preferences = match all
-            
-            return preferences.some(preference => {
-              // Exact match
-              if (contract.category.toLowerCase().includes(preference.toLowerCase())) return true;
-              if (preference.toLowerCase().includes(contract.category.toLowerCase())) return true;
-              
-              // Check for common keywords
-              const contractLower = contract.category.toLowerCase();
-              const preferenceLower = preference.toLowerCase();
-              
-              // Check for ICT/IT keywords
-              if ((preferenceLower.includes('information technology') || preferenceLower.includes('it')) && 
-                  (contractLower.includes('ict') || contractLower.includes('computer') || contractLower.includes('software'))) {
-                return true;
-              }
-              
-              // Check for construction keywords
-              if (preferenceLower.includes('construction') && 
-                  (contractLower.includes('construction') || contractLower.includes('engineering') || contractLower.includes('building'))) {
-                return true;
-              }
-              
-              // Check for healthcare keywords
-              if (preferenceLower.includes('health') && 
-                  (contractLower.includes('health') || contractLower.includes('medical') || contractLower.includes('hospital'))) {
-                return true;
-              }
-              
-              return false;
-            });
-          };
-
-          const matchesPreferredCategories = checkMatch(user.preferred_categories);
+          // Simple exact matching with standardized categories
+          const userCategories = user.preferred_categories || [];
+          const contractCategory = contract.category;
+          
+          // Exact match only - no fuzzy logic needed
+          const matchesPreferredCategories = userCategories.includes(contractCategory);
 
           console.log(`User ${user.email}:`, {
             preferred_categories: user.preferred_categories,
@@ -120,9 +90,23 @@ export async function POST(request: NextRequest) {
 
         const contractVersion = versionData?.version || 1;
 
-        // Add notifications to queue for matching users
+        // Add notifications to queue for matching users (with duplicate prevention)
         for (const user of matchingUsers) {
           try {
+            // Check if user already received notification for this specific contract
+            const { data: existingNotification } = await supabase
+              .from('notification_queue')
+              .select('id')
+              .eq('user_id', user.id)
+              .eq('contract_id', contract.id)
+              .eq('status', 'sent')
+              .single();
+
+            if (existingNotification) {
+              console.log(`User ${user.email} already received notification for contract ${contract.id} - skipping duplicate`);
+              continue;
+            }
+
             const queueResult = await NotificationQueueService.addToQueue(
               user.id,
               contract.id,
