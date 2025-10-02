@@ -28,7 +28,7 @@ export default function NotificationsPage() {
 
   useEffect(() => {
     if (user) {
-      fetchNotifications();
+    fetchNotifications();
     }
   }, [user]);
 
@@ -169,9 +169,9 @@ export default function NotificationsPage() {
     return (
       <div className="min-h-screen bg-gray-50">
         <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-          <div className="flex items-center justify-center min-h-[400px]">
-            <div className="text-center">
-              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
+      <div className="flex items-center justify-center min-h-[400px]">
+        <div className="text-center">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
               <p className="mt-4 text-gray-800">Loading notifications...</p>
             </div>
           </div>
@@ -183,15 +183,15 @@ export default function NotificationsPage() {
   return (
     <div className="min-h-screen bg-gray-50">
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {/* Header */}
+      {/* Header */}
         <div className="mb-8">
-          <div className="flex items-center justify-between">
-            <div>
+      <div className="flex items-center justify-between">
+        <div>
               <h1 className="text-3xl font-bold text-gray-900">Notifications</h1>
               <p className="mt-2 text-gray-800">
                 Stay updated with contract matches and deadline reminders
-              </p>
-            </div>
+          </p>
+        </div>
             <div className="flex items-center space-x-4">
               <Link
                 href="/dashboard/notifications/settings"
@@ -200,15 +200,15 @@ export default function NotificationsPage() {
                 <Settings className="w-4 h-4 mr-2" />
                 Settings
               </Link>
-              {unreadCount > 0 && (
-                <button
-                  onClick={markAllAsRead}
+        {unreadCount > 0 && (
+          <button 
+            onClick={markAllAsRead}
                   className="flex items-center px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-                >
+          >
                   <CheckCheck className="w-4 h-4 mr-2" />
                   Mark All Read
-                </button>
-              )}
+          </button>
+        )}
             </div>
           </div>
         </div>
@@ -237,10 +237,10 @@ export default function NotificationsPage() {
               Unread ({unreadCount})
             </button>
           </div>
-        </div>
+      </div>
 
-        {/* Notifications List */}
-        <div className="bg-white rounded-lg shadow">
+      {/* Notifications List */}
+      <div className="bg-white rounded-lg shadow">
           {filteredNotifications.length === 0 ? (
             <div className="p-8 text-center">
               <Bell className="h-12 w-12 text-gray-400 mx-auto mb-4" />
@@ -253,12 +253,12 @@ export default function NotificationsPage() {
                   : 'You\'ll receive notifications when new contracts match your preferences or when deadlines approach.'
                 }
               </p>
-            </div>
-          ) : (
+        </div>
+        ) : (
             <div className="divide-y divide-gray-200">
               {filteredNotifications.map((notification) => (
-                <div
-                  key={notification.id}
+            <div 
+              key={notification.id} 
                   className={`p-6 hover:bg-gray-50 transition-colors ${
                     notification.notification_status === 'sent' && !notification.read_at 
                       ? 'bg-blue-50 border-l-4 border-blue-500' 
@@ -270,8 +270,8 @@ export default function NotificationsPage() {
                       <div className="flex items-center space-x-3 mb-2">
                         <span className="text-2xl">{getTypeIcon(notification.type)}</span>
                         <h3 className="text-lg font-semibold text-gray-900">
-                          {notification.title}
-                        </h3>
+                        {notification.title}
+                      </h3>
                         <span className={`px-2 py-1 rounded-full text-xs font-medium ${getPriorityColor(notification.priority)}`}>
                           {notification.priority}
                         </span>
@@ -301,12 +301,12 @@ export default function NotificationsPage() {
                             View Contract
                             <ExternalLink className="w-3 h-3 ml-1" />
                           </Link>
-                        )}
-                      </div>
+                      )}
                     </div>
+                  </div>
                     
                     {notification.notification_status === 'sent' && !notification.read_at && (
-                      <button
+                      <button 
                         onClick={() => markAsRead(notification.id)}
                         className="flex items-center px-3 py-1 text-sm text-blue-600 hover:text-blue-700 transition-colors"
                       >
@@ -314,11 +314,11 @@ export default function NotificationsPage() {
                         Mark as Read
                       </button>
                     )}
-                  </div>
-                </div>
-              ))}
+              </div>
             </div>
-          )}
+          ))}
+        </div>
+        )}
         </div>
       </div>
     </div>

@@ -1,6 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server';
-import { supabase } from '@/lib/supabase';
-import { ImmediateNotificationService } from '@/lib/immediate-notification-service';
+import { createClient } from '@supabase/supabase-js';
+import { NotificationQueueService } from '@/lib/notification-queue-service-simple';
+
+// Use service role to bypass RLS for admin operations
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_ROLE_KEY!
+);
 
 export async function POST(request: NextRequest) {
   try {
@@ -11,8 +17,8 @@ export async function POST(request: NextRequest) {
       .from('contracts')
       .select('*')
       .eq('publish_status', 'published')
-      .gte('published_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
-      .order('published_at', { ascending: false });
+      .gte('created_at', new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString())
+      .order('created_at', { ascending: false });
 
     if (contractsError) {
       console.error('Error fetching contracts:', contractsError);
@@ -42,12 +48,11 @@ export async function POST(request: NextRequest) {
           .select(`
             id,
             email,
-            industry_preferences,
-            location_preferences,
-            contract_type_preferences,
-            preferred_categories
+            preferred_categories,
+            email_notifications
           `)
-          .not('email', 'is', null);
+          .not('email', 'is', null)
+          .eq('email_notifications', true);
 
         if (usersError) {
           console.error('Error fetching users:', usersError);
@@ -91,57 +96,55 @@ export async function POST(request: NextRequest) {
             });
           };
 
-          const matchesIndustry = checkMatch(user.industry_preferences);
-          const matchesContractType = checkMatch(user.contract_type_preferences);
           const matchesPreferredCategories = checkMatch(user.preferred_categories);
 
           console.log(`User ${user.email}:`, {
-            industry_preferences: user.industry_preferences,
-            contract_type_preferences: user.contract_type_preferences,
             preferred_categories: user.preferred_categories,
             contract_category: contract.category,
-            matchesIndustry,
-            matchesContractType,
             matchesPreferredCategories
           });
 
-          return matchesIndustry || matchesContractType || matchesPreferredCategories;
+          return matchesPreferredCategories;
         }) || [];
 
         console.log(`Found ${matchingUsers.length} users with matching preferences for contract: ${contract.title}`);
 
-        // Create notifications for matching users
+        // Get current contract version
+        const { data: versionData } = await supabase
+          .from('contract_versions')
+          .select('version')
+          .eq('contract_id', contract.id)
+          .order('version', { ascending: false })
+          .limit(1)
+          .single();
+
+        const contractVersion = versionData?.version || 1;
+
+        // Add notifications to queue for matching users
         for (const user of matchingUsers) {
           try {
-            const { error: notificationError } = await supabase
-              .from('notifications')
-              .insert({
-                user_id: user.id,
-                type: 'new_contract_match',
-                title: `New Contract Match: ${contract.title}`,
-                message: `A new contract matching your preferences has been published: ${contract.title}`,
-                data: {
-                  contract_id: contract.id,
-                  contract_title: contract.title,
-                  procuring_entity: contract.procuring_entity,
-                  category: contract.category,
-                  estimated_value_min: contract.estimated_value_min,
-                  estimated_value_max: contract.estimated_value_max,
-                  submission_deadline: contract.submission_deadline,
-                  user_email: user.email
-                },
-                channel: 'email',
-                priority: 'high'
-              });
+            const queueResult = await NotificationQueueService.addToQueue(
+              user.id,
+              contract.id,
+              contractVersion,
+              'contract_match',
+              1, // Normal priority
+              {
+                preferred_categories: user.preferred_categories,
+                business_type: user.business_type,
+                contract_title: contract.title,
+                procuring_entity: contract.procuring_entity
+              }
+            );
 
-            if (notificationError) {
-              console.error('Error creating notification:', notificationError);
-            } else {
+            if (queueResult.success) {
               totalNotifications++;
-              console.log(`Created notification for user: ${user.email}`);
+              console.log(`Added notification to queue for user: ${user.email}`);
+            } else {
+              console.error(`Failed to add notification to queue for ${user.email}:`, queueResult.error);
             }
           } catch (error) {
-            console.error('Error processing user notification:', error);
+            console.error('Error adding notification to queue:', error);
           }
         }
 
@@ -150,11 +153,18 @@ export async function POST(request: NextRequest) {
       }
     }
 
+    // Process the queue to send emails immediately
+    const queueResult = await NotificationQueueService.processQueue(50);
+
     return NextResponse.json({
       success: true,
       message: 'Contract processing completed',
       contractsProcessed: contracts.length,
-      notificationsCreated: totalNotifications
+      notificationsQueued: totalNotifications,
+      queueProcessed: queueResult.processed,
+      queueSuccess: queueResult.success,
+      queueFailed: queueResult.failed,
+      queueErrors: queueResult.errors
     });
 
   } catch (error) {

@@ -1054,7 +1054,7 @@ def main():
     
     # Initialize scraper
     email = "sebunyaronaldoo@gmail.com"
-    password = "h9$B7Zd$QHP#_vL"
+    password = "%#gFF7L*DcuxRF6"
     
     scraper = EGPScraper(email, password)
     
