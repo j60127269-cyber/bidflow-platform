@@ -26,7 +26,7 @@ export const DAILY_DIGEST_CRON: CronJob = {
 };
 
 /**
- * Deadline Reminder Cron Job
+ * Deadline Reminder Cron Job.
  * Runs every day at 9:00 AM UTC
  */
 export const DEADLINE_REMINDER_CRON: CronJob = {
