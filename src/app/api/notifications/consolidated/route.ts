@@ -5,7 +5,7 @@
 
 import { NextRequest, NextResponse } from 'next/server';
 import { ConsolidatedNotificationSystem } from '@/lib/consolidated-notification-system';
-import { EnhancedEmailService } from '@/lib/enhanced-email-service';
+import { EmailService } from '@/lib/enhanced-email-service';
 import { createClient } from '@supabase/supabase-js';
 
 const supabase = createClient(

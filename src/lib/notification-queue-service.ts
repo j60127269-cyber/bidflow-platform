@@ -1,5 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
-import { EnhancedEmailService } from './enhanced-email-service';
+import { EmailService } from './enhanced-email-service';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,

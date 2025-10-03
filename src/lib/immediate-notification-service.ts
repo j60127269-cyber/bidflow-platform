@@ -1,6 +1,6 @@
 import { supabase } from '@/lib/supabase';
 import { EmailServiceProvider, emailConfig } from '@/lib/email-config';
-import { generateImmediateNotificationEmail } from '@/lib/email-service';
+import { EmailService } from '@/lib/email-service';
 
 export class ImmediateNotificationService {
   static async processNewContractNotifications() {
@@ -58,7 +58,7 @@ export class ImmediateNotificationService {
             submission_deadline: contractData.submission_deadline
           };
           
-          const emailContent = generateImmediateNotificationEmail(contract, userEmail);
+          const emailContent = EmailService.generateImmediateNotificationEmail(contract, userEmail);
 
           // Send email
           const emailSent = await EmailServiceProvider.sendEmail(emailConfig, {
