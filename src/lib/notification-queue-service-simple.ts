@@ -1,4 +1,5 @@
 import { createClient } from '@supabase/supabase-js';
+import { EmailService } from './enhanced-email-service';
 
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -101,10 +102,36 @@ export class NotificationQueueService {
             })
             .eq('id', notification.id);
 
-          // Simulate email sending (for now)
-          const emailSuccess = Math.random() > 0.2; // 80% success rate
+          // Get user details for email sending
+          const { data: user, error: userError } = await supabase
+            .from('profiles')
+            .select('email, first_name, last_name')
+            .eq('id', notification.user_id)
+            .single();
 
-          if (emailSuccess) {
+          if (userError || !user?.email) {
+            await this.handleRetry(notification, 'User not found or no email address');
+            failed++;
+            continue;
+          }
+
+          // Get contract details for email content
+          const { data: contract, error: contractError } = await supabase
+            .from('contracts')
+            .select('*')
+            .eq('id', notification.contract_id)
+            .single();
+
+          if (contractError || !contract) {
+            await this.handleRetry(notification, 'Contract not found');
+            failed++;
+            continue;
+          }
+
+          // Actually send the email using EmailService
+          const emailResult = await EmailService.sendNewContractNotification(contract, user.email);
+
+          if (emailResult.success) {
             // Mark as sent
             await supabase
               .from('notification_queue')
@@ -112,14 +139,15 @@ export class NotificationQueueService {
                 status: 'sent',
                 email_sent: true,
                 email_sent_at: new Date().toISOString(),
-                email_message_id: `msg_${Date.now()}`
+                email_message_id: emailResult.messageId || `msg_${Date.now()}`
               })
               .eq('id', notification.id);
 
             success++;
+            console.log(`✅ Email sent successfully to ${user.email} for contract: ${contract.title}`);
           } else {
             // Handle retry logic
-            await this.handleRetry(notification, 'Simulated email failure');
+            await this.handleRetry(notification, emailResult.error || 'Email sending failed');
             failed++;
           }
 
