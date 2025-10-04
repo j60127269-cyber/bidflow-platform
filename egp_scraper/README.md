@@ -40,7 +40,7 @@ pip install -r requirements.txt
 2. **Make the script executable:**
    ```bash
    chmod +x egp_post_award_scraper.py
-   ```
+```
 
 ## Usage
 

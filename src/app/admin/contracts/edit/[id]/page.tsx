@@ -662,7 +662,7 @@ export default function EditContract({ params }: { params: Promise<{ id: string 
               console.error('❌ Error triggering notifications:', error);
               alert('Contract published successfully, but notifications failed to send. You can manually trigger them later.');
             }
-          }
+      }
 
       alert('Contract updated successfully!');
       setHasUnsavedChanges(false);
