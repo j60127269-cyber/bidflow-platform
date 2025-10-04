@@ -847,14 +847,14 @@ export default function Home() {
             <div>
               <h4 className="font-semibold mb-4 text-white">Company</h4>
               <ul className="space-y-2 text-white">
-                <li><a href="#" className="hover:text-gray-300 transition-colors">About</a></li>
-                <li><a href="#" className="hover:text-gray-300 transition-colors">Contact</a></li>
+                <li><Link href="/about" className="hover:text-gray-300 transition-colors">About</Link></li>
+                <li><Link href="/contact" className="hover:text-gray-300 transition-colors">Contact</Link></li>
               </ul>
             </div>
             <div>
               <h4 className="font-semibold mb-4 text-white">Support</h4>
               <ul className="space-y-2 text-white">
-                <li><a href="#" className="hover:text-gray-300 transition-colors">Help Center</a></li>
+                <li><Link href="/help" className="hover:text-gray-300 transition-colors">Help Center</Link></li>
               </ul>
             </div>
           </div>
