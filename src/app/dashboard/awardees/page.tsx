@@ -179,7 +179,7 @@ export default function AwardeesPage() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-700 truncate">Total Awardees</dt>
+                      <dt className="text-sm font-medium text-black truncate">Total Awardees</dt>
                       <dd className="text-lg font-medium text-gray-900">{stats.totalAwardees}</dd>
                     </dl>
                   </div>
@@ -195,7 +195,7 @@ export default function AwardeesPage() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-700 truncate">Total Value</dt>
+                      <dt className="text-sm font-medium text-black truncate">Total Value</dt>
                       <dd className="text-lg font-medium text-gray-900">{formatCurrency(stats.totalValue)}</dd>
                     </dl>
                   </div>
@@ -211,7 +211,7 @@ export default function AwardeesPage() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-700 truncate">Average Value</dt>
+                      <dt className="text-sm font-medium text-black truncate">Average Value</dt>
                       <dd className="text-lg font-medium text-gray-900">{formatCurrency(stats.averageValue)}</dd>
                     </dl>
                   </div>
@@ -242,7 +242,7 @@ export default function AwardeesPage() {
               {/* Right side - Actions */}
               <div className="flex items-center space-x-3">
                 {/* Add Filters Button */}
-                <button className="inline-flex items-center px-5 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
+                <button className="inline-flex items-center px-5 py-3 border border-gray-300 rounded-lg text-sm font-medium text-black bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors">
                   <Filter className="h-4 w-4 mr-2" />
                   Add Filters
                   <ChevronDown className="h-4 w-4 ml-2" />
@@ -251,7 +251,7 @@ export default function AwardeesPage() {
                  {/* Sort Button */}
                  <button 
                    onClick={() => setSortBy(sortBy === 'company_name' ? 'total_awarded_value' : 'company_name')}
-                   className="inline-flex items-center px-5 py-3 border border-gray-300 rounded-lg text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
+                   className="inline-flex items-center px-5 py-3 border border-gray-300 rounded-lg text-sm font-medium text-black bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-colors"
                  >
                    <ArrowUpDown className="h-4 w-4 mr-2" />
                    Sort by {sortBy === 'company_name' ? 'Name' : 'Value'}
@@ -287,7 +287,7 @@ export default function AwardeesPage() {
             <div className="text-center py-16">
               <Building2 className="mx-auto h-16 w-16 text-gray-300" />
               <h3 className="mt-2 text-sm font-medium text-gray-900">No awardees found</h3>
-              <p className="mt-1 text-sm text-gray-700">
+              <p className="mt-1 text-sm text-black">
                 {searchTerm ? 'Try adjusting your search terms.' : 'No awardees have been created yet.'}
               </p>
             </div>
@@ -296,10 +296,10 @@ export default function AwardeesPage() {
               <table className="min-w-full divide-y divide-gray-200">
                  <thead className="bg-gray-50">
                    <tr>
-                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                     <th className="px-6 py-4 text-left text-xs font-semibold text-black uppercase tracking-wider">
                        Company Name
                      </th>
-                     <th className="px-6 py-4 text-left text-xs font-semibold text-gray-600 uppercase tracking-wider">
+                     <th className="px-6 py-4 text-left text-xs font-semibold text-black uppercase tracking-wider">
                        Total Awards Value
                      </th>
                    </tr>
@@ -348,21 +348,21 @@ export default function AwardeesPage() {
                 <button
                   onClick={() => handlePageChange(currentPage - 1)}
                   disabled={currentPage === 1}
-                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-black bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Previous
                 </button>
                 <button
                   onClick={() => handlePageChange(currentPage + 1)}
                   disabled={currentPage === totalPages}
-                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-gray-700 bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="ml-3 relative inline-flex items-center px-4 py-2 border border-gray-300 text-sm font-medium rounded-md text-black bg-white hover:bg-gray-50 disabled:opacity-50 disabled:cursor-not-allowed"
                 >
                   Next
                 </button>
               </div>
               <div className="hidden sm:flex-1 sm:flex sm:items-center sm:justify-between">
                 <div>
-                  <p className="text-sm text-gray-700">
+                  <p className="text-sm text-black">
                     Showing{' '}
                     <span className="font-medium">{startIndex + 1}</span>
                     {' '}to{' '}
@@ -424,7 +424,7 @@ export default function AwardeesPage() {
                         page === currentPage + 2
                       ) {
                         return (
-                          <span key={page} className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-gray-700">
+                          <span key={page} className="relative inline-flex items-center px-4 py-2 border border-gray-300 bg-white text-sm font-medium text-black">
                             ...
                           </span>
                         );

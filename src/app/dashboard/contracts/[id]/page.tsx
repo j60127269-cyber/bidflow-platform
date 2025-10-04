@@ -450,7 +450,7 @@ export default function ContractDetailsPage() {
       <div className="min-h-screen bg-gray-50 flex items-center justify-center">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-gray-600">Loading contract details...</p>
+          <p className="mt-4 text-black">Loading contract details...</p>
         </div>
       </div>
     );
@@ -462,7 +462,7 @@ export default function ContractDetailsPage() {
         <div className="text-center">
           <AlertCircle className="h-12 w-12 text-red-500 mx-auto mb-4" />
           <h2 className="text-xl font-semibold text-gray-900 mb-2">Contract Not Found</h2>
-          <p className="text-gray-600 mb-4">{error || 'The contract you are looking for does not exist.'}</p>
+          <p className="text-black mb-4">{error || 'The contract you are looking for does not exist.'}</p>
           <Link
             href="/dashboard"
             className="inline-flex items-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-600 hover:bg-blue-700"
@@ -508,7 +508,7 @@ export default function ContractDetailsPage() {
                 </h1>
                 
                 {/* Reference Number */}
-                <div className="flex items-center text-gray-600">
+                <div className="flex items-center text-black">
                   <FileText className="w-4 h-4 mr-2" />
                   <span className="text-sm font-medium">Reference:</span>
                   <span className="text-sm ml-1 font-mono bg-gray-100 px-2 py-1 rounded">
@@ -519,7 +519,7 @@ export default function ContractDetailsPage() {
               
               {/* Action Buttons */}
               <div className="flex items-center space-x-3 flex-shrink-0">
-                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-gray-700 bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
+                <button className="inline-flex items-center px-4 py-2 border border-gray-300 rounded-lg shadow-sm text-sm font-medium text-black bg-white hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 transition-all duration-200">
                   <Share2 className="w-4 h-4 mr-2" />
                   Share
                 </button>
@@ -553,7 +553,7 @@ export default function ContractDetailsPage() {
               {contract.short_description && (
                 <div className="mb-6 p-4 bg-gray-50 rounded-lg">
                   <h3 className="text-sm font-medium text-gray-900 mb-2">Description</h3>
-                  <p className="text-gray-700 leading-relaxed">{contract.short_description}</p>
+                  <p className="text-black leading-relaxed">{contract.short_description}</p>
                 </div>
               )}
               
@@ -603,7 +603,7 @@ export default function ContractDetailsPage() {
                 <div className="flex items-center justify-between p-4 bg-green-50 rounded-lg">
                   <div>
                     <p className="text-sm font-medium text-gray-900">Original Source</p>
-                    <p className="text-sm text-gray-600">View the original tender notice</p>
+                    <p className="text-sm text-black">View the original tender notice</p>
                   </div>
                   <a
                     href={contract.detail_url}
@@ -969,7 +969,7 @@ export default function ContractDetailsPage() {
                           </td>
                       </tr>
                         <tr>
-                          <td colSpan={6} className="px-4 py-2 text-sm text-gray-600 bg-gray-50">
+                          <td colSpan={6} className="px-4 py-2 text-sm text-black bg-gray-50">
                             <strong>Contract:</strong> {similarContract.title}
                             {similarContract.short_description && (
                               <span className="ml-2">- {similarContract.short_description}</span>
@@ -1063,7 +1063,7 @@ export default function ContractDetailsPage() {
                           </td>
                         </tr>
                         <tr>
-                          <td colSpan={6} className="px-4 py-2 text-sm text-gray-600 bg-gray-50">
+                          <td colSpan={6} className="px-4 py-2 text-sm text-black bg-gray-50">
                             <strong>Procuring Entity:</strong> {opportunity.procuring_entity}
                             {opportunity.short_description && (
                               <span className="ml-2">- {opportunity.short_description}</span>

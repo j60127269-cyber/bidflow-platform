@@ -201,7 +201,7 @@ export default function AgenciesPage() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-700 truncate">Total Procuring Entities</dt>
+                      <dt className="text-sm font-medium text-black truncate">Total Procuring Entities</dt>
                       <dd className="text-lg font-medium text-gray-900">{stats.totalAgencies}</dd>
                     </dl>
                   </div>
@@ -217,7 +217,7 @@ export default function AgenciesPage() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-700 truncate">Total Awards Value</dt>
+                      <dt className="text-sm font-medium text-black truncate">Total Awards Value</dt>
                       <dd className="text-lg font-medium text-gray-900">{formatCurrency(stats.totalValue)}</dd>
                     </dl>
                   </div>
@@ -233,7 +233,7 @@ export default function AgenciesPage() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-700 truncate">Average Value</dt>
+                      <dt className="text-sm font-medium text-black truncate">Average Value</dt>
                       <dd className="text-lg font-medium text-gray-900">{formatCurrency(stats.averageValue)}</dd>
                     </dl>
                   </div>
@@ -249,7 +249,7 @@ export default function AgenciesPage() {
                   </div>
                   <div className="ml-5 w-0 flex-1">
                     <dl>
-                      <dt className="text-sm font-medium text-gray-700 truncate">Active Agencies</dt>
+                      <dt className="text-sm font-medium text-black truncate">Active Agencies</dt>
                       <dd className="text-lg font-medium text-gray-900">
                         {procuringEntities.filter(e => e.is_active).length}
                       </dd>
@@ -302,7 +302,7 @@ export default function AgenciesPage() {
             <div className="border-t pt-4 mt-4">
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-black mb-1">
                     Entity Type
                   </label>
                   <select
@@ -320,7 +320,7 @@ export default function AgenciesPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-black mb-1">
                     Country
                   </label>
                   <select
@@ -336,7 +336,7 @@ export default function AgenciesPage() {
                 </div>
                 
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">
+                  <label className="block text-sm font-medium text-black mb-1">
                     Status
                   </label>
                   <select
@@ -387,13 +387,13 @@ export default function AgenciesPage() {
               <table className="min-w-full divide-y divide-gray-200">
                 <thead className="bg-gray-50">
                   <tr>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
                       Name
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-medium text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-medium text-black uppercase tracking-wider">
                       Website
                     </th>
-                    <th className="px-6 py-3 text-left text-xs font-bold text-gray-700 uppercase tracking-wider">
+                    <th className="px-6 py-3 text-left text-xs font-bold text-black uppercase tracking-wider">
                       Total Awards
                     </th>
                   </tr>
@@ -421,7 +421,7 @@ export default function AgenciesPage() {
                               {entity.entity_name}
                             </Link>
                             {entity.parent_entity_id && (
-                              <p className="text-xs text-gray-700 mt-1">
+                              <p className="text-xs text-black mt-1">
                                 Parent: {entity.parent_entity_id}
                               </p>
                             )}
@@ -441,7 +441,7 @@ export default function AgenciesPage() {
                               {entity.website}
                             </a>
                           ) : (
-                            <span className="text-gray-700">N/A</span>
+                            <span className="text-black">N/A</span>
                           )}
                         </div>
                       </td>
@@ -461,7 +461,7 @@ export default function AgenciesPage() {
         {/* Pagination */}
         {totalPages > 1 && (
           <div className="flex items-center justify-between mt-6">
-            <div className="text-sm text-gray-700">
+            <div className="text-sm text-black">
               Page {currentPage} of {totalPages}
             </div>
             <div className="flex space-x-2">

@@ -128,7 +128,7 @@ export default function HistoricalPage() {
             <History className="h-8 w-8 text-blue-600" />
             <h1 className="text-3xl font-bold text-gray-900">Historical Contracts & Past Awards</h1>
           </div>
-          <p className="text-gray-600">
+          <p className="text-black">
             View completed contracts, past awards, and historical procurement data
           </p>
         </div>
@@ -139,7 +139,7 @@ export default function HistoricalPage() {
             <div className="flex items-center">
               <Award className="h-8 w-8 text-green-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Awards</p>
+                <p className="text-sm font-medium text-black">Total Awards</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {contracts.filter(c => c.status === 'awarded').length}
                 </p>
@@ -151,7 +151,7 @@ export default function HistoricalPage() {
             <div className="flex items-center">
               <TrendingUp className="h-8 w-8 text-blue-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Completed</p>
+                <p className="text-sm font-medium text-black">Completed</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {contracts.filter(c => c.status === 'completed').length}
                 </p>
@@ -163,7 +163,7 @@ export default function HistoricalPage() {
             <div className="flex items-center">
               <DollarSign className="h-8 w-8 text-yellow-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Total Value</p>
+                <p className="text-sm font-medium text-black">Total Value</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {formatCurrency(contracts.reduce((sum, c) => sum + (c.awarded_value || 0), 0))}
                 </p>
@@ -175,7 +175,7 @@ export default function HistoricalPage() {
             <div className="flex items-center">
               <Building className="h-8 w-8 text-purple-600" />
               <div className="ml-4">
-                <p className="text-sm font-medium text-gray-600">Unique Awardees</p>
+                <p className="text-sm font-medium text-black">Unique Awardees</p>
                 <p className="text-2xl font-bold text-gray-900">
                   {new Set(contracts.filter(c => c.awarded_to).map(c => c.awarded_to)).size}
                 </p>
@@ -205,7 +205,7 @@ export default function HistoricalPage() {
           {loading ? (
             <div className="p-8 text-center">
               <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600 mx-auto"></div>
-              <p className="mt-2 text-gray-600">Loading historical contracts...</p>
+              <p className="mt-2 text-black">Loading historical contracts...</p>
             </div>
           ) : filteredContracts.length > 0 ? (
             <div className="overflow-x-auto">
@@ -279,7 +279,7 @@ export default function HistoricalPage() {
           ) : (
             <div className="p-8 text-center">
               <History className="h-12 w-12 text-gray-400 mx-auto mb-4" />
-              <p className="text-gray-600">No historical contracts found matching your criteria.</p>
+              <p className="text-black">No historical contracts found matching your criteria.</p>
             </div>
           )}
         </div>

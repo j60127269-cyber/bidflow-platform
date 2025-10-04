@@ -415,7 +415,7 @@ export default function RecommendedPage() {
       <div className="flex items-center justify-center min-h-[400px]">
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto"></div>
-          <p className="mt-4 text-slate-600">Loading recommendations...</p>
+          <p className="mt-4 text-black">Loading recommendations...</p>
         </div>
       </div>
     );
@@ -427,14 +427,14 @@ export default function RecommendedPage() {
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-4 sm:space-y-0">
         <div>
           <h1 className="text-2xl font-bold text-slate-900">Recommended Bids</h1>
-          <p className="mt-1 text-sm text-slate-600">
+          <p className="mt-1 text-sm text-black">
             Personalized recommendations based on your profile and preferences
           </p>
         </div>
         <div className="flex flex-col sm:flex-row items-stretch sm:items-center space-y-2 sm:space-y-0 sm:space-x-2">
           <Link 
             href="/onboarding/preferences"
-            className="flex items-center justify-center px-3 py-2 text-slate-600 hover:text-slate-900 transition-colors text-sm"
+            className="flex items-center justify-center px-3 py-2 text-black hover:text-slate-900 transition-colors text-sm"
           >
             <Settings className="w-4 h-4 mr-2" />
             Update Preferences
@@ -450,7 +450,7 @@ export default function RecommendedPage() {
               <h2 className="text-lg font-semibold text-slate-900 mb-2">
                 Recommendations for {userProfile.company_name}
               </h2>
-              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm text-slate-600">
+              <div className="flex flex-col sm:flex-row sm:items-center space-y-2 sm:space-y-0 sm:space-x-6 text-sm text-black">
                 <span className="flex items-center">
                   <User className="w-4 h-4 mr-1" />
                   {userProfile.business_type}
@@ -475,7 +475,7 @@ export default function RecommendedPage() {
                              <div className="text-2xl font-bold text-blue-600">
                  {filteredContracts.filter(c => (c as { recommendationScore: number }).recommendationScore >= 60).length}
                </div>
-              <div className="text-sm text-slate-600">Good Matches</div>
+              <div className="text-sm text-black">Good Matches</div>
             </div>
           </div>
         </div>
@@ -541,11 +541,11 @@ export default function RecommendedPage() {
 
       {/* Results */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between space-y-2 sm:space-y-0">
-        <p className="text-sm text-slate-600">
+        <p className="text-sm text-black">
           Showing {filteredContracts.length} recommended contracts
         </p>
         <div className="flex items-center space-x-2">
-          <span className="text-sm text-slate-600">Sort by:</span>
+          <span className="text-sm text-black">Sort by:</span>
           <select className="text-sm border-0 bg-transparent text-blue-600 focus:outline-none focus:ring-0">
             <option>Recommendation Score</option>
             <option>Latest Posted</option>
@@ -562,7 +562,7 @@ export default function RecommendedPage() {
             <Star className="h-12 w-12 mx-auto" />
           </div>
           <h3 className="text-lg font-medium text-slate-900 mb-2">No recommendations found</h3>
-          <p className="text-slate-600">Try adjusting your search or update your preferences</p>
+          <p className="text-black">Try adjusting your search or update your preferences</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 xl:grid-cols-2 gap-6">
@@ -580,7 +580,7 @@ export default function RecommendedPage() {
                       <h3 className="text-lg font-semibold text-slate-900 mb-2">
                         {contract.title}
                       </h3>
-                      <div className="flex items-center text-sm text-slate-600 mb-2">
+                      <div className="flex items-center text-sm text-black mb-2">
                         <Building className="h-4 w-4 mr-1" />
                         {contract.procuring_entity}
                       </div>
@@ -605,15 +605,15 @@ export default function RecommendedPage() {
 
                   {/* Details */}
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-4">
-                    <div className="flex items-center text-sm text-slate-600">
+                    <div className="flex items-center text-sm text-black">
                       <MapPin className="h-4 w-4 mr-2" />
                       {contract.procuring_entity}
                     </div>
-                    <div className="flex items-center text-sm text-slate-600">
+                    <div className="flex items-center text-sm text-black">
                       <Calendar className="h-4 w-4 mr-2" />
                       Deadline: {formatDate(contract.submission_deadline)}
                     </div>
-                    <div className="flex items-center text-sm text-slate-600">
+                    <div className="flex items-center text-sm text-black">
                       <Calendar className="h-4 w-4 mr-2" />
                       Posted: {formatDate(contract.publish_date || contract.created_at)}
                     </div>
@@ -641,7 +641,7 @@ export default function RecommendedPage() {
                          <Eye className="h-4 w-4 mr-1" />
                          View Details
                        </Link>
-                       <button className="flex items-center px-3 py-2 text-sm font-medium text-slate-600 hover:text-slate-500 transition-colors">
+                       <button className="flex items-center px-3 py-2 text-sm font-medium text-black hover:text-slate-500 transition-colors">
                          <Bookmark className="h-4 w-4 mr-1" />
                          Save
                        </button>

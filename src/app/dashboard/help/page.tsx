@@ -36,7 +36,7 @@ export default function HelpPage() {
             </span>
           </h1>
           
-          <p className="text-xl sm:text-2xl text-slate-600 mb-12 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl sm:text-2xl text-black mb-12 max-w-3xl mx-auto leading-relaxed">
             We're building something amazing for you. Our comprehensive help center with guides, 
             tutorials, and support resources will be available soon.
           </p>
@@ -46,7 +46,7 @@ export default function HelpPage() {
             <div className="bg-white/80 backdrop-blur-sm rounded-2xl p-8 shadow-xl border border-white/20">
               <div className="flex items-center justify-center mb-6">
                 <Wrench className="w-6 h-6 text-orange-500 mr-3 animate-spin" />
-                <span className="text-lg font-semibold text-slate-700">Under Construction</span>
+                <span className="text-lg font-semibold text-black">Under Construction</span>
                 <Clock className="w-6 h-6 text-blue-500 ml-3 animate-pulse" />
               </div>
               
@@ -55,7 +55,7 @@ export default function HelpPage() {
                 <div className="bg-gradient-to-r from-orange-500 to-red-500 h-3 rounded-full animate-pulse" style={{width: '75%'}}></div>
               </div>
               
-              <p className="text-slate-600 text-sm">
+              <p className="text-black text-sm">
                 Development Progress: 75% Complete
               </p>
             </div>
@@ -69,7 +69,7 @@ export default function HelpPage() {
           <h2 className="text-3xl font-bold text-slate-900 mb-6">
             Need Help Right Now?
           </h2>
-          <p className="text-xl text-slate-600 mb-8">
+          <p className="text-xl text-black mb-8">
             While we're building the help center, you can still reach out to us for support.
           </p>
           
