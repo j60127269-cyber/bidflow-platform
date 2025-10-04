@@ -459,19 +459,19 @@ export default function Home() {
                   <div className="grid grid-cols-4 gap-2 text-center text-xs">
                     <div className="bg-blue-100 p-2 rounded">
                       <div className="font-bold text-blue-600">12</div>
-                      <div>Identified</div>
+                      <div className="text-black">Identified</div>
                     </div>
                     <div className="bg-yellow-100 p-2 rounded">
                       <div className="font-bold text-yellow-600">8</div>
-                      <div>In Progress</div>
+                      <div className="text-black">In Progress</div>
                     </div>
                     <div className="bg-orange-100 p-2 rounded">
                       <div className="font-bold text-orange-600">5</div>
-                      <div>Submitted</div>
+                      <div className="text-black">Submitted</div>
                     </div>
                     <div className="bg-green-100 p-2 rounded">
                       <div className="font-bold text-green-600">3</div>
-                      <div>Won</div>
+                      <div className="text-black">Won</div>
                     </div>
                   </div>
                   

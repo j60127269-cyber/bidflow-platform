@@ -59,7 +59,7 @@ export const OpportunityPipeline: React.FC<OpportunityPipelineProps> = ({
           <div key={stage.key} className="space-y-3">
             <div className="flex items-center justify-between">
               <h3 className="font-semibold text-slate-800">{stage.label}</h3>
-              <span className="text-sm text-slate-600">
+              <span className="text-sm text-black">
                 {getStageCount(stage.key)}
               </span>
             </div>
@@ -77,7 +77,7 @@ export const OpportunityPipeline: React.FC<OpportunityPipelineProps> = ({
                       <h4 className="font-medium text-slate-800 text-sm">
                         {opportunity.title}
                       </h4>
-                      <div className="flex items-center justify-between text-xs text-slate-600">
+                      <div className="flex items-center justify-between text-xs text-black">
                         <div className="flex items-center space-x-1">
                           <Calendar className="w-3 h-3" />
                           <span>{opportunity.deadline}</span>
@@ -87,7 +87,7 @@ export const OpportunityPipeline: React.FC<OpportunityPipelineProps> = ({
                           <span>{opportunity.teamSize}</span>
                         </div>
                       </div>
-                      <div className="text-xs font-medium text-slate-700">
+                      <div className="text-xs font-medium text-black">
                         {opportunity.value}
                       </div>
                       <div className="flex items-center justify-between">
